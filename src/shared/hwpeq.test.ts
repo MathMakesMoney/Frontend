@@ -3,6 +3,10 @@ import { toLatex } from './hwpeq'
 
 // 입력은 실제 작업(/api/jobs/1)과 PoC 결과 JSON 에서 뽑은 한글 수식 스크립트
 const cases: [string, string][] = [
+  // 이중 프라임: 따옴표를 붙여 써야 KaTeX 가 이중 위첨자로 보지 않는다 (광덕고 20-2번 풀이)
+  ["f''(x)", "f '' ( x )"],
+  ["overline{A'Q}=overline{A''Q}", "\\overline{A ' Q} = \\overline{A '' Q}"],
+  ["A'''", "A '''"],
   // 분수: over 는 양옆 한 덩어리(그룹이나 토큰)를 묶는다
   ['{1} over {2}', '\\frac{1}{2}'],
   ['a over b', '\\frac{a}{b}'],

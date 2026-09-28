@@ -268,7 +268,8 @@ class Parser {
   }
 
   join(atoms: Atom[]): string {
-    return atoms.map((a) => a.s).join(' ')
+    // 이어진 프라임은 붙여 쓴다 (' ' 는 KaTeX 가 이중 위첨자 오류로 본다)
+    return atoms.map((a) => a.s).join(' ').replace(/'(?: ')+/g, (m) => m.replace(/ /g, ''))
   }
 }
 
