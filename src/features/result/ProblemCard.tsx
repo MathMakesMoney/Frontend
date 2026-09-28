@@ -4,7 +4,8 @@ import { figureUrl, type Problem } from '../../shared/api'
 // 문항 한 개: 검토 필요면 사유를 그대로 보여 주고 정답처럼 보이지 않게 한다
 export function ProblemCard({ jobId, problem }: { jobId: string; problem: Problem }) {
   const needsReview = problem.review !== null
-  const label = problem.printedNo != null ? `원본 ${problem.printedNo}번` : `${problem.no}번`
+  // 백엔드가 정한 표시 번호 (겹치면 20-1, 번호 없으면 2-1)
+  const label = `${problem.label ?? problem.no}번`
 
   return (
     <article className={`problem-card${needsReview ? ' needs-review' : ''}`}>

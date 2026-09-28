@@ -82,7 +82,7 @@ export function JobDetailPage() {
       )}
 
       {job.files.hwpx && (
-        <HaesolPreview jobId={job.id} version={`${job.stage}-${job.solvedCount}-${job.reviewCount}`} />
+        <HaesolPreview jobId={job.id} header={job.header ?? ''} version={`${job.stage}-${job.solvedCount}-${job.reviewCount}`} />
       )}
 
       {problems.length > 0 && (

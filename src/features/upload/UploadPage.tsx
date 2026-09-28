@@ -16,6 +16,10 @@ export function UploadPage() {
   const [title, setTitle] = useState('')
   const [scope, setScope] = useState('')
   const [pages, setPages] = useState('')
+  const [school, setSchool] = useState('')
+  const [grade, setGrade] = useState('')
+  const [exam, setExam] = useState('')
+  const [range, setRange] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -40,6 +44,10 @@ export function UploadPage() {
         title,
         scope,
         pages: isPdf(file) && pages.trim() ? pages.trim() : undefined,
+        school: school.trim(),
+        grade: grade.trim(),
+        exam: exam.trim(),
+        range: range.trim(),
       })
       navigate(`/jobs/${id}`)
     } catch (err) {
@@ -83,6 +91,35 @@ export function UploadPage() {
             placeholder="예: 수학1 지수함수와 로그함수"
             required
           />
+        </label>
+
+        {/* 해설지 머리말에 들어갈 시험 정보 (선택) */}
+        <label>
+          학교 (선택)
+          <input type="text" value={school} onChange={(e) => setSchool(e.target.value)} placeholder="예: 한국고" />
+        </label>
+        <label>
+          학년 (선택)
+          <input type="text" value={grade} onChange={(e) => setGrade(e.target.value)} placeholder="예: 1" />
+        </label>
+        <label>
+          시험 이름 (선택)
+          <input
+            type="text"
+            value={exam}
+            onChange={(e) => setExam(e.target.value)}
+            placeholder="예: 2023학년도 2학기 중간고사"
+          />
+        </label>
+        <label>
+          시험 범위 (선택)
+          <input
+            type="text"
+            value={range}
+            onChange={(e) => setRange(e.target.value)}
+            placeholder="예: 수학(하) 집합~함수"
+          />
+          <span className="hint">비우면 해설지에 임시 문구로 들어가고 한글에서 고칠 수 있습니다</span>
         </label>
 
         {file && isPdf(file) && (

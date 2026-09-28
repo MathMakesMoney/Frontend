@@ -293,10 +293,33 @@ button {
   font-size: 13.3px;
   line-height: 1.7;
   color: #000;
+  text-align: left;
 }
 
+/* 머리말: 작은 글씨 한 줄, 아래 가는 선. 쪽 번호: 가운데. 높이를 고정해 본문 높이를 계산한다 */
+.haesol-header {
+  box-sizing: border-box;
+  height: 20px;
+  margin-bottom: 10px;
+  border-bottom: 0.5px solid #000;
+  font-size: 10.5px;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.haesol-footer {
+  height: 16px;
+  margin-top: 10px;
+  font-size: 10.5px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* 본문 높이 = 쪽 높이 - 머리말(20+10) - 쪽 번호(16+10). flex 로 두면 쪽 나누기 계산이 어긋난다 */
 .haesol-body {
-  height: 100%;
+  height: calc(100% - 56px);
   column-count: 2;
   column-gap: 30px;
   column-rule: 1px solid #000;
@@ -320,6 +343,7 @@ button {
 .haesol-fig {
   display: block;
   max-width: 227px;
+  height: auto;
   margin: 4px 0;
 }
 

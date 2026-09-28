@@ -13,16 +13,27 @@ function Line({ jobId, text }: { jobId: string; text: string }) {
 }
 
 // 줄들을 쪽마다 나눈다: 쪽 본문(2단, 왼쪽 단부터 채움)이 넘쳐 셋째 단이 생기면 그 줄부터 다음 쪽
+// 줄 복사본: 그림은 원본의 실제 크기를 적어 두어 복사본이 로드되기 전에도 높이가 맞게 잡히게 한다
+function copy(line: Element): Node {
+  const out = line.cloneNode(true) as Element
+  const img = line instanceof HTMLImageElement ? line : null
+  if (img && out instanceof HTMLImageElement) {
+    out.width = img.naturalWidth
+    out.height = img.naturalHeight
+  }
+  return out
+}
+
 async function paginate(source: HTMLElement, page: HTMLElement): Promise<number[]> {
   await Promise.all([...source.querySelectorAll('img')].map((img) => img.decode().catch(() => undefined)))
   const starts = [0]
   page.replaceChildren()
   const lines = [...source.children]
   lines.forEach((line, i) => {
-    page.appendChild(line.cloneNode(true))
+    page.appendChild(copy(line))
     if (page.scrollWidth > page.clientWidth + 1 && page.children.length > 1) {
       starts.push(i)
-      page.replaceChildren(line.cloneNode(true))
+      page.replaceChildren(copy(line))
     }
   })
   return starts
@@ -30,7 +41,8 @@ async function paginate(source: HTMLElement, page: HTMLElement): Promise<number[
 
 // 해설지 미리보기: 받을 해설지와 같은 내용(글·그림·검토 필요)을 A4 2단으로 그린다. 수식은 KaTeX
 // 한글 파일 렌더러(@rhwp/core)는 키 큰 수식·긴 수식에서 줄이 겹치고 쪽 끝이 잘려 쓰지 않는다
-export function HaesolPreview({ jobId, version }: { jobId: string; version: string }) {
+// 쪽마다 위에 머리말(시험 정보), 아래에 쪽 번호를 단다
+export function HaesolPreview({ jobId, version, header }: { jobId: string; version: string; header: string }) {
   const [open, setOpen] = useState(false)
   const [lines, setLines] = useState<string[] | null>(null)
   const [starts, setStarts] = useState<number[]>([])
@@ -80,13 +92,19 @@ export function HaesolPreview({ jobId, version }: { jobId: string; version: stri
             <div ref={source} className="haesol-source">
               {lines.map((l, i) => <Line key={i} jobId={jobId} text={l} />)}
             </div>
-            <div className="preview-page"><div ref={measure} className="haesol-body" /></div>
+            <div className="preview-page">
+              <div className="haesol-header">{header}</div>
+              <div ref={measure} className="haesol-body" />
+              <div className="haesol-footer">- 1 -</div>
+            </div>
           </div>
           {pages.map((page, p) => (
             <div key={p} className="preview-page">
+              <div className="haesol-header">{header}</div>
               <div className="haesol-body">
                 {page.map((l, i) => <Line key={i} jobId={jobId} text={l} />)}
               </div>
+              <div className="haesol-footer">- {p + 1} -</div>
             </div>
           ))}
         </div>

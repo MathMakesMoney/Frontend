@@ -12,6 +12,7 @@
 | `title` | O | 해설지 제목 |
 | `scope` | O | 교과 범위 문구 (예 문구는 `solution/infrastructure/ai/CLAUDE.md`) |
 | `pages` | PDF 만 | 쪽 범위, 예 `1-8,13-16` |
+| `school`, `grade`, `exam`, `range` | X | 해설지 머리말용 학교, 학년, 시험 이름(예 2023학년도 2학기 중간고사), 시험 범위(예 수학(하) 집합~함수). 비우면 임시 문구로 들어가고 한글에서 고칠 수 있다고 안내 |
 | `mode` | O | `api` 또는 `mcp` |
 
 ## 화면 규칙

@@ -9,6 +9,7 @@ export interface Verification {
 
 export interface Problem {
   no: number
+  label?: string
   printedNo: number | null
   stem: string
   choices: string[]
@@ -35,6 +36,12 @@ export interface Job {
   reviewCount: number
   files: { hwp: boolean; hwpx: boolean }
   problems?: Problem[]
+  // 해설지 머리말용 시험 정보. 예전 작업에는 없을 수 있다
+  school?: string
+  grade?: string
+  exam?: string
+  range?: string
+  header?: string
 }
 
 // 백엔드 400 응답 모양
@@ -73,6 +80,10 @@ export interface CreateJobInput {
   title: string
   scope: string
   pages?: string
+  school: string
+  grade: string
+  exam: string
+  range: string
 }
 
 export async function createJob(input: CreateJobInput): Promise<{ id: string }> {
@@ -81,6 +92,10 @@ export async function createJob(input: CreateJobInput): Promise<{ id: string }> 
   form.set('title', input.title)
   form.set('scope', input.scope)
   if (input.pages) form.set('pages', input.pages)
+  form.set('school', input.school)
+  form.set('grade', input.grade)
+  form.set('exam', input.exam)
+  form.set('range', input.range)
   const res = await fetch('/api/jobs', { method: 'POST', body: form })
   return handle<{ id: string }>(res)
 }
