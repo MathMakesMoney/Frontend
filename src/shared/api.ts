@@ -1,0 +1,106 @@
+// 백엔드 JSON 모양 그대로 옮긴 타입, 필드 이름을 바꾸지 않는다
+export type Stage = 'uploaded' | 'problems' | 'figures' | 'solving' | 'done'
+export type InputType = 'PDF' | 'HWP' | 'HWPX'
+
+export interface Verification {
+  pass: boolean
+  reason: string
+}
+
+export interface Problem {
+  no: number
+  printedNo: number | null
+  stem: string
+  choices: string[]
+  figures: string[]
+  answer: string | null
+  steps: string[]
+  verification: Verification | null
+  blindAnswer: string | null
+  review: string | null
+  revisionCount?: number
+}
+
+export interface Job {
+  id: string
+  title: string
+  scope: string
+  inputType: InputType
+  pages: number
+  createdAt: string
+  sourceName: string
+  stage: Stage
+  problemCount: number
+  solvedCount: number
+  reviewCount: number
+  files: { hwp: boolean; hwpx: boolean }
+  problems?: Problem[]
+}
+
+// 백엔드 400 응답 모양
+export interface ApiError {
+  error: string
+}
+
+class ApiRequestError extends Error {
+  status: number
+  constructor(status: number, message: string) {
+    super(message)
+    this.status = status
+  }
+}
+
+// 공통 에러 처리: 400 사유 그대로, 404 는 없는 작업
+async function handle<T>(res: Response): Promise<T> {
+  if (res.ok) return res.json() as Promise<T>
+  if (res.status === 404) throw new ApiRequestError(404, '없는 작업입니다')
+  const body = (await res.json().catch(() => null)) as ApiError | null
+  throw new ApiRequestError(res.status, body?.error ?? '요청에 실패했습니다')
+}
+
+export async function fetchJobs(): Promise<Job[]> {
+  const res = await fetch('/api/jobs')
+  return handle<Job[]>(res)
+}
+
+export async function fetchJob(id: string): Promise<Job> {
+  const res = await fetch(`/api/jobs/${id}`)
+  return handle<Job>(res)
+}
+
+export interface CreateJobInput {
+  file: File
+  title: string
+  scope: string
+  pages?: string
+}
+
+export async function createJob(input: CreateJobInput): Promise<{ id: string }> {
+  const form = new FormData()
+  form.set('file', input.file)
+  form.set('title', input.title)
+  form.set('scope', input.scope)
+  if (input.pages) form.set('pages', input.pages)
+  const res = await fetch('/api/jobs', { method: 'POST', body: form })
+  return handle<{ id: string }>(res)
+}
+
+export async function deleteJob(id: string): Promise<void> {
+  const res = await fetch(`/api/jobs/${id}`, { method: 'DELETE' })
+  if (!res.ok && res.status !== 404) {
+    throw new ApiRequestError(res.status, '삭제에 실패했습니다')
+  }
+}
+
+// 그림·원본 쪽 이미지 URL 헬퍼
+export function figureUrl(jobId: string, path: string): string {
+  return `/api/jobs/${jobId}/files?path=${encodeURIComponent(path)}`
+}
+
+export function pageImageUrl(jobId: string, page: number): string {
+  return `/api/jobs/${jobId}/pages/${page}.png`
+}
+
+export function haesolUrl(jobId: string, ext: 'hwp' | 'hwpx'): string {
+  return `/api/jobs/${jobId}/haesol.${ext}`
+}

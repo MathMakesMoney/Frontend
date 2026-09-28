@@ -1,0 +1,337 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  background: #f7f7f8;
+  color: #1a1a1a;
+}
+
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+a {
+  color: #2563eb;
+}
+
+.button,
+button {
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.button {
+  display: inline-block;
+  background: #2563eb;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  border: none;
+}
+
+.button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.button-danger {
+  background: #dc2626;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+}
+
+.button-plain {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #2563eb;
+  padding: 4px 0;
+}
+
+.copy-button {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 4px;
+  padding: 4px 10px;
+}
+
+/* 표 */
+.job-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.job-table th,
+.job-table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.review-count {
+  color: #dc2626;
+  font-weight: bold;
+}
+
+/* 업로드 폼 */
+.upload-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 480px;
+}
+
+.upload-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.upload-form input[type='text'] {
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.hint {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.error {
+  color: #dc2626;
+  font-size: 13px;
+}
+
+/* MCP 안내 */
+.mcp-guide {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.mcp-step {
+  margin-bottom: 12px;
+}
+
+.code-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f3f4f6;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.code-row code {
+  flex: 1;
+  overflow-x: auto;
+  white-space: nowrap;
+  font-family: ui-monospace, 'SF Mono', monospace;
+}
+
+/* 수식·그림 표시 */
+.eq-chip {
+  display: inline-block;
+  font-family: ui-monospace, 'SF Mono', monospace;
+  background: #eef2ff;
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin: 0 2px;
+}
+
+.figure-tag {
+  display: inline-block;
+  background: #fef3c7;
+  border-radius: 4px;
+  padding: 0 6px;
+  margin: 0 2px;
+  font-size: 12px;
+}
+
+/* 원본 쪽 보기 */
+.original-pages {
+  margin: 16px 0;
+}
+
+.page-images {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.page-images img {
+  max-width: 100%;
+  border: 1px solid #e5e7eb;
+}
+
+/* 다운로드 */
+.downloads {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+/* 문항 카드 */
+.problem-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.problem-card.needs-review {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.problem-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.problem-no {
+  font-weight: bold;
+}
+
+.review-badge {
+  color: #b45309;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.problem-stem {
+  margin: 8px 0;
+}
+
+.choices {
+  margin: 8px 0;
+  padding-left: 4px;
+  list-style: none;
+}
+
+.figures img {
+  max-width: 100%;
+  margin: 8px 0;
+  border: 1px solid #e5e7eb;
+}
+
+.field-label {
+  display: inline-block;
+  font-weight: bold;
+  min-width: 90px;
+  color: #4b5563;
+  font-size: 13px;
+}
+
+.answer-row,
+.verification-row {
+  margin: 6px 0;
+}
+
+.answer-unconfirmed {
+  color: #b45309;
+  font-weight: bold;
+}
+
+.answer {
+  font-weight: bold;
+}
+
+.steps {
+  margin: 8px 0;
+}
+
+.pass {
+  color: #16a34a;
+}
+
+.fail {
+  color: #dc2626;
+}
+
+/* 해설지 미리보기: A4 종이(794x1123px), 옆 여백 8mm, 2단(단 사이 8mm, 구분선), 왼쪽 단부터 채움 */
+.preview-pages {
+  margin: 12px 0 24px;
+  overflow-x: auto;
+}
+
+.preview-page {
+  box-sizing: border-box;
+  width: 794px;
+  height: 1123px;
+  padding: 76px 30px 57px;
+  margin: 0 auto 16px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  font-family: 'AppleMyungjo', 'Batang', 'Noto Serif KR', serif;
+  font-size: 13.3px;
+  line-height: 1.7;
+  color: #000;
+}
+
+.haesol-body {
+  height: 100%;
+  column-count: 2;
+  column-gap: 30px;
+  column-rule: 1px solid #000;
+  column-fill: auto;
+  overflow: hidden;
+}
+
+.haesol-head {
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.haesol-gap {
+  height: 12px;
+}
+
+.haesol-review {
+  color: #b42318;
+}
+
+.haesol-fig {
+  display: block;
+  max-width: 227px;
+  margin: 4px 0;
+}
+
+.haesol-body > *,
+.haesol-source > * {
+  break-inside: avoid;
+}
+
+/* 쪽 나누기 계산용: 화면 밖에 같은 크기로 그린다 */
+.haesol-measure {
+  position: absolute;
+  left: -10000px;
+  top: 0;
+  visibility: hidden;
+}
