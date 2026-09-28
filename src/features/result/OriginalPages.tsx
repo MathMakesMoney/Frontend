@@ -66,6 +66,13 @@ export function OriginalPages({ job }: { job: Job }) {
       <button type="button" className="button-plain" onClick={() => setUserOpen(!open)}>
         {open ? '▼' : '▶'} 원본 시험지
       </button>
+      {/* 정답 쪽은 준비 단계에서 뺀다. 글자층이 없는 스캔본은 못 거른다 */}
+      {job.answerPages && job.answerPages.length > 0 && (
+        <p className="job-meta">정답 쪽(원본 {job.answerPages.join(', ')}쪽)은 모델에게 보내지 않습니다.</p>
+      )}
+      {job.textLayer === false && (
+        <p className="job-meta">스캔본이라 정답 쪽을 자동으로 거를 수 없습니다. 정답 쪽은 쪽 범위에서 빼고 올려 주세요.</p>
+      )}
       {open && job.inputType === 'PDF' && (
         <div className="page-images">
           {/* 쪽 번호는 1부터 pages 까지 (백엔드가 고른 쪽만 모아 1쪽부터 다시 매김) */}

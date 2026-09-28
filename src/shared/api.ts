@@ -44,6 +44,9 @@ export interface Job {
   header?: string
   // 지금까지 저장된 풀이로 만든 해설지 줄 (haesol_pdf.txt 와 같은 모양). 예전 백엔드에는 없다
   draft?: string[]
+  // PDF 에서 뺀 정답표 쪽(원본 쪽 번호)과 글자층 유무(false 면 스캔본). 예전 백엔드에는 없다
+  answerPages?: number[]
+  textLayer?: boolean
 }
 
 // 백엔드 400 응답 모양
