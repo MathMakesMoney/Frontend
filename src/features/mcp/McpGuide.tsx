@@ -28,7 +28,7 @@ export function McpGuide({ jobId }: { jobId: string }) {
       <h2>MCP 로 풀이 진행하기</h2>
 
       <div className="mcp-step">
-        <p>1. Claude Code 에서 한 번만 연결하세요</p>
+        <p>1. MCP 를 지원하는 프로그램(Claude Code, Codex CLI, Gemini CLI 등)에서 한 번만 연결하세요 (아래는 Claude Code 명령)</p>
         <div className="code-row">
           <code>{connectCmd}</code>
           <CopyButton text={connectCmd} />
@@ -44,8 +44,8 @@ export function McpGuide({ jobId }: { jobId: string }) {
       </div>
 
       <p className="hint">
-        Claude Desktop, claude.ai 같은 커넥터는 로컬 서버에 접속할 수 없습니다. Claude Code 를
-        사용하세요.
+        Claude Desktop, claude.ai, ChatGPT 는 내 컴퓨터(localhost)에 접속할 수 없어 로컬 PoC 에서는 쓸 수
+        없습니다.
       </p>
     </section>
   )

@@ -208,7 +208,7 @@ button {
   font-size: 12px;
 }
 
-/* 원본 쪽 보기 */
+/* 원본 시험지 */
 .original-pages {
   margin: 16px 0;
 }
@@ -230,6 +230,7 @@ button {
   display: flex;
   gap: 8px;
   margin: 16px 0;
+  align-items: center;
 }
 
 /* 문항 카드 */
@@ -396,4 +397,18 @@ button {
   left: -10000px;
   top: 0;
   visibility: hidden;
+}
+
+/* 방금 들어온 문항: 노란 배경이 2초 동안 빠진다 */
+.haesol-new {
+  animation: haesol-new 2s ease-out;
+}
+
+@keyframes haesol-new {
+  from {
+    background: #fde68a;
+  }
+  to {
+    background: transparent;
+  }
 }

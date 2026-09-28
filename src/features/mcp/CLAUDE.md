@@ -1,6 +1,6 @@
 # mcp (MCP 버전 안내)
 
-MCP 버전 사용자가 Claude Desktop, claude.ai(ChatGPT 도 가능) 대화창에서 해설을 만들게 안내한다. 기준: `../Backend/src/main/java/com/mathmakesmoney/backend/mcp/CLAUDE.md`
+MCP 버전 사용자가 MCP 를 지원하는 프로그램 대화창에서 해설을 만들게 안내한다. 기준: `../Backend/src/main/java/com/mathmakesmoney/backend/mcp/CLAUDE.md`
 
 ## 흐름 (웹이 맡는 곳)
 
@@ -11,8 +11,9 @@ MCP 버전 사용자가 Claude Desktop, claude.ai(ChatGPT 도 가능) 대화창�
 
 ## 연결 안내 화면
 
-- 원격 MCP 서버 주소와 클라이언트별 연결 방법 (Claude Desktop, claude.ai). 연결할 때 우리 계정으로 OAuth 로그인
-- 인증 방식·주소는 미정. 정해지면 여기 적는다
+- 로컬 PoC: MCP 를 지원하는 프로그램(Claude Code, Codex CLI, Gemini CLI 등)에서 연결. 명령 예는 `claude mcp add --transport http mmm {origin}/mcp` (`McpGuide.tsx`)
+- Claude Desktop, claude.ai, ChatGPT 는 내 컴퓨터(localhost)에 접속할 수 없어 로컬 PoC 에서는 못 쓴다고 알린다
+- 원격 서버 주소·인증(OAuth) 방식은 미정. 정해지면 여기 적는다
 
 ## 알려 줄 것 (PoC 근거)
 

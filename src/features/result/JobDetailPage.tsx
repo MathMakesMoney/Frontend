@@ -1,6 +1,7 @@
+import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
-import { deleteJob, fetchJob, haesolUrl, type Problem } from '../../shared/api'
+import { deleteJob, fetchJob, haesolDraftUrl, haesolUrl, type Problem } from '../../shared/api'
 import { stageText } from '../../shared/stage'
 import { McpGuide } from '../mcp/McpGuide'
 import { ProblemCard } from './ProblemCard'
@@ -32,8 +33,15 @@ export function JobDetailPage() {
     queryFn: () => fetchJob(id!),
     enabled: !!id,
     retry: false, // 없는 작업(404)을 재시도로 붙들고 있지 않는다
-    refetchInterval: (query) => (query.state.data?.stage === 'done' ? false : 5000),
   })
+
+  // MCP 도구가 불릴 때마다 서버가 changed 를 보낸다: 작업을 다시 받는다 (끊기면 EventSource 가 알아서 다시 붙는다)
+  useEffect(() => {
+    if (!id) return
+    const events = new EventSource(`/api/jobs/${id}/events`)
+    events.addEventListener('changed', () => queryClient.invalidateQueries({ queryKey: ['job', id] }))
+    return () => events.close()
+  }, [id, queryClient])
 
   async function handleDelete() {
     if (!id) return
@@ -47,6 +55,7 @@ export function JobDetailPage() {
   if (error || !job) return <div className="page">없는 작업입니다</div>
 
   const problems = sortForReview(job.problems ?? [])
+  const draft = job.draft ?? []
 
   return (
     <div className="page">
@@ -62,7 +71,7 @@ export function JobDetailPage() {
         {stageText(job.stage, job.solvedCount, job.problemCount)}
       </p>
 
-      {job.inputType === 'PDF' && <OriginalPages jobId={job.id} pages={job.pages} />}
+      <OriginalPages job={job} />
 
       <McpGuide jobId={job.id} />
 
@@ -81,8 +90,25 @@ export function JobDetailPage() {
         </div>
       )}
 
-      {job.files.hwpx && (
-        <HaesolPreview jobId={job.id} header={job.header ?? ''} version={`${job.stage}-${job.solvedCount}-${job.reviewCount}`} />
+      {job.problemCount > 0 && job.stage !== 'done' && (
+        <div className="downloads">
+          <a className="button" href={haesolDraftUrl(job.id, 'hwp')}>
+            지금까지 풀이로 해설지 받기 (HWP)
+          </a>
+          <a className="button" href={haesolDraftUrl(job.id, 'hwpx')}>
+            지금까지 풀이로 해설지 받기 (HWPX)
+          </a>
+          <span className="hint">안 푼 문항은 검토 필요: 풀이 누락 으로 들어갑니다</span>
+        </div>
+      )}
+
+      {draft.length > 0 && (
+        <HaesolPreview
+          jobId={job.id}
+          header={job.header ?? ''}
+          lines={draft}
+          progress={job.stage === 'done' ? '' : `풀이 저장 ${job.solvedCount}/${job.problemCount}`}
+        />
       )}
 
       {problems.length > 0 && (

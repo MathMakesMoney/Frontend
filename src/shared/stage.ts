@@ -5,11 +5,11 @@ const STAGE_LABEL: Record<Stage, string> = {
   uploaded: '업로드됨',
   problems: '문항 저장됨',
   figures: '문항 저장됨',
-  solving: '풀이 중',
+  solving: '풀이 저장',
   done: '완료',
 }
 
 export function stageText(stage: Stage, solved: number, total: number): string {
-  if (stage === 'solving') return `풀이 중 ${solved}/${total}`
+  if (stage === 'solving') return `풀이 저장 ${solved}/${total}`
   return STAGE_LABEL[stage]
 }

@@ -12,7 +12,7 @@
 | 항목 | 결정 |
 |---|---|
 | 프레임워크 | React + TypeScript + Vite |
-| 서버 상태 | TanStack Query (작업 상세는 완료 전까지 5초 폴링) |
+| 서버 상태 | TanStack Query (작업 상세는 SSE `changed` 이벤트를 받으면 다시 받는다, `src/features/result/CLAUDE.md`) |
 | 라우팅 | React Router |
 | 스타일 | 일반 CSS 한 파일 (`src/styles.css`), 프레임워크 없음 |
 | 테스트 | Vitest (수식 나누기 등 순수 로직만, PoC 단계라 Playwright e2e는 아직 없음) |
@@ -64,7 +64,6 @@ src
 
 - 로그인 방식 (추천: 카카오 + 이메일, 세션 쿠키)
 - 결제 화면 (PG 미정, 요금 금액 미정)
-- 작업 상태 실시간 방식 (추천: 폴링. SSE 는 필요해지면)
 
 ## 문서 규칙
 

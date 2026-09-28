@@ -42,6 +42,8 @@ export interface Job {
   exam?: string
   range?: string
   header?: string
+  // 지금까지 저장된 풀이로 만든 해설지 줄 (haesol_pdf.txt 와 같은 모양). 예전 백엔드에는 없다
+  draft?: string[]
 }
 
 // 백엔드 400 응답 모양
@@ -118,4 +120,9 @@ export function pageImageUrl(jobId: string, page: number): string {
 
 export function haesolUrl(jobId: string, ext: 'hwp' | 'hwpx'): string {
   return `/api/jobs/${jobId}/haesol.${ext}`
+}
+
+// 다 풀기 전 지금까지 저장된 풀이로 만든 해설지 (받을 때마다 새로 만든다)
+export function haesolDraftUrl(jobId: string, ext: 'hwp' | 'hwpx'): string {
+  return `/api/jobs/${jobId}/haesol-draft.${ext}`
 }
