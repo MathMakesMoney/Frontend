@@ -1,3 +1,4 @@
+import { labelText } from '../../shared/labelText'
 import { RichText } from '../../shared/RichText'
 import { figureUrl, type Problem } from '../../shared/api'
 
@@ -5,7 +6,7 @@ import { figureUrl, type Problem } from '../../shared/api'
 export function ProblemCard({ jobId, problem }: { jobId: string; problem: Problem }) {
   const needsReview = problem.review !== null
   // 백엔드가 정한 표시 번호 (겹치면 20-1, 번호 없으면 2-1)
-  const label = `${problem.label ?? problem.no}번`
+  const label = labelText(problem.label ?? problem.no)
 
   return (
     <article className={`problem-card${needsReview ? ' needs-review' : ''}`}>

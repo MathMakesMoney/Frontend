@@ -1,0 +1,67 @@
+/* 해설지 보기: 화면 전체 폭 3칸 (왼쪽 썸네일 | 가운데 쪽 | 오른쪽 문항 목록). 각 칸의 안쪽 모양은 칸마다 따로 된 css 파일 */
+.viewer {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 54px); /* 위 앱 헤더(약 53px) 빼고 */
+  padding: 12px 16px 16px;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.viewer-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.viewer-title {
+  flex: 1;
+  margin: 0;
+  font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.viewer-downloads {
+  display: flex;
+  gap: 8px;
+}
+
+.viewer-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr) 300px;
+  gap: 12px;
+}
+
+/* 세 칸 공통 판: 흰 바탕 둥근 상자, 칸 안에서만 스크롤 */
+.viewer-panel {
+  min-height: 0;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.viewer-empty {
+  padding: 48px;
+  text-align: center;
+  color: #6b7280;
+}
+
+/* 좁은 화면: 가운데 쪽만 (썸네일·목록은 위아래로) */
+@media (max-width: 1000px) {
+  .viewer {
+    height: auto;
+  }
+
+  .viewer-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -1,0 +1,110 @@
+/* 가운데 칸: 회색 바탕 위에 쪽들을 세로로 이어 붙이고, 오른쪽 아래에 떠 있는 쪽 번호·확대 조작 */
+.page-stage {
+  position: relative;
+  min-height: 0;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.page-stage-scroll {
+  height: 100%;
+  overflow: auto;
+  padding: 24px 24px 72px; /* 아래는 조작줄 자리 */
+  box-sizing: border-box;
+}
+
+/* 확대한 크기만큼 자리를 차지해야 스크롤이 맞는다 */
+.page-stage-box {
+  margin: 0 auto 16px;
+}
+
+/* 폭을 쪽 크기로 고정해야 한다: 안 그러면 바깥 상자(확대된 폭)만큼 늘어난 뒤 또 확대돼 쪽이 오른쪽으로 밀린다 */
+.page-stage-inner {
+  width: 794px;
+  transform-origin: top left;
+}
+
+.page-stage-inner .preview-page {
+  margin-bottom: 0;
+}
+
+/* 고른 문항 테두리(outline-offset 2px)가 본문 가장자리(맨 왼쪽·오른쪽 단 바깥, 맨 위)에서 잘리지 않게 6px 여유를 둔다.
+   쪽 나누기 계산용 본문은 그대로 hidden (scrollWidth 로 넘침을 잰다) */
+.page-stage-inner .haesol-body {
+  overflow: clip;
+  overflow-clip-margin: 6px;
+}
+
+/* 마우스를 올린 문항도 네모로 (고른 문항보다 옅게) */
+.page-stage-inner .haesol-keep[data-label] {
+  cursor: pointer;
+}
+
+.page-stage-inner .haesol-keep[data-label]:hover:not(.haesol-active) {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+  border-radius: 4px;
+  background: #f8fbff;
+}
+
+.page-stage-zoom {
+  position: absolute;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 999px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+}
+
+.page-stage-zoom {
+  right: 16px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.page-stage-zoom span {
+  min-width: 42px;
+  text-align: center;
+}
+
+.page-stage-zoom button {
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #111827;
+}
+
+.page-stage-zoom button:hover:not(:disabled),
+.page-stage-zoom button.on {
+  background: #e5e7eb;
+}
+
+.page-stage-zoom button:disabled {
+  color: #d1d5db;
+  cursor: default;
+}
+
+.page-stage-count {
+  min-width: 56px;
+  padding-right: 6px;
+  border-right: 1px solid #e5e7eb;
+  text-align: center;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 좁은 화면은 칸 높이가 정해지지 않으니 화면 높이로 */
+@media (max-width: 1000px) {
+  .page-stage {
+    height: 80vh;
+  }
+}

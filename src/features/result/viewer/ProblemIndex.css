@@ -1,0 +1,140 @@
+/* 해설지 보기 오른쪽 칸: 쪽별 문항 목록 */
+.pindex {
+  padding: 12px;
+}
+
+.pindex-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.pindex-count {
+  margin-left: auto;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.pindex-head .pindex-count {
+  margin-left: 0;
+}
+
+.pindex-badge {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fffbeb;
+  border: 1px solid #f59e0b;
+  color: #b45309;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pindex-group {
+  margin-bottom: 8px;
+  padding: 6px;
+  border-radius: 10px;
+}
+
+.pindex-group.current {
+  background: #f1f5f9;
+}
+
+.pindex-group-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pindex-chevron {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+/* 왼쪽 세로 안내선 */
+.pindex-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 4px 0 2px 11px;
+  padding-left: 10px;
+  border-left: 2px solid #cbd5e1;
+}
+
+.pindex-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+  padding: 8px 10px;
+  text-align: left;
+  font: inherit;
+  font-size: 13px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.pindex-row.active {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+/* 검토 필요는 확정 답처럼 보이지 않게 경고 색 (선택돼도 유지) */
+.pindex-row.review {
+  color: #b45309;
+  background: #fffbeb;
+  border-color: #f59e0b;
+}
+
+.pindex-row.review.active {
+  box-shadow: 0 0 0 2px #2563eb;
+}
+
+.pindex-row-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pindex-fig {
+  padding: 0 6px;
+  border-radius: 4px;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 11px;
+}
+
+.pindex-muted {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.pindex-row.review .pindex-muted {
+  color: #b45309;
+}
+
+.pindex-answer {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden; /* 분수·근호처럼 키 큰 수식에 세로 스크롤 화살표가 생기지 않게 */
+  padding: 2px 0;
+  overflow-wrap: anywhere;
+}
+
+.pindex-reason {
+  font-size: 12px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}

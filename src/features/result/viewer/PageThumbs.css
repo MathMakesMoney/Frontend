@@ -1,0 +1,80 @@
+/* 왼쪽 쪽 썸네일 목록. 썸네일 폭 180px = 794px 쪽의 180/794 배 */
+.page-thumbs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.page-thumbs-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.page-thumbs-count {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.page-thumb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  padding: 8px;
+  font: inherit;
+  cursor: pointer;
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.page-thumb:hover {
+  border-color: #2563eb;
+}
+
+.page-thumb.current {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+/* 높이 = 1123 * 180 / 794 */
+.page-thumb-clip {
+  position: relative;
+  width: 180px;
+  height: 254.6px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  box-sizing: content-box;
+}
+
+.page-thumb-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 794px;
+  transform: scale(0.2267);
+  transform-origin: top left;
+  pointer-events: none;
+}
+
+.page-thumb-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #374151;
+}
+
+.page-thumb-badge {
+  padding: 1px 8px;
+  font-size: 11px;
+  color: #2563eb;
+  background: #dbeafe;
+  border-radius: 999px;
+}

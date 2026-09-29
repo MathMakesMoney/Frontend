@@ -1,22 +1,11 @@
 import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useNavigate, useParams } from 'react-router-dom'
-import { deleteJob, fetchJob, haesolDraftUrl, haesolUrl, type Problem } from '../../shared/api'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { deleteJob, fetchJob, haesolDraftUrl, haesolUrl } from '../../shared/api'
 import { stageText } from '../../shared/stage'
 import { McpGuide } from '../mcp/McpGuide'
-import { ProblemCard } from './ProblemCard'
+import { ProblemBrowser } from './ProblemBrowser'
 import { OriginalPages } from './OriginalPages'
-import { HaesolPreview } from './HaesolPreview'
-
-// 검토 필요 문항을 앞으로 정렬
-function sortForReview(problems: Problem[]): Problem[] {
-  return [...problems].sort((a, b) => {
-    const aReview = a.review !== null ? 0 : 1
-    const bReview = b.review !== null ? 0 : 1
-    if (aReview !== bReview) return aReview - bReview
-    return a.no - b.no
-  })
-}
 
 // 작업 상세: MCP 안내, 진행 상태, 문항별 결과, 다운로드
 export function JobDetailPage() {
@@ -54,7 +43,7 @@ export function JobDetailPage() {
   if (isLoading) return <div className="page">불러오는 중...</div>
   if (error || !job) return <div className="page">없는 작업입니다</div>
 
-  const problems = sortForReview(job.problems ?? [])
+  const problems = job.problems ?? []
   const draft = job.draft ?? []
 
   return (
@@ -74,6 +63,15 @@ export function JobDetailPage() {
       <OriginalPages job={job} />
 
       <McpGuide jobId={job.id} />
+
+      {draft.length > 0 && (
+        <div className="downloads">
+          <Link className="button" to={`/jobs/${job.id}/haesol`}>
+            해설지 보기
+          </Link>
+          <span className="hint">쪽 목록 · 해설지 · 문항 목록을 한 화면에서 봅니다</span>
+        </div>
+      )}
 
       {(job.files.hwp || job.files.hwpx) && (
         <div className="downloads">
@@ -102,23 +100,7 @@ export function JobDetailPage() {
         </div>
       )}
 
-      {draft.length > 0 && (
-        <HaesolPreview
-          jobId={job.id}
-          header={job.header ?? ''}
-          lines={draft}
-          progress={job.stage === 'done' ? '' : `풀이 저장 ${job.solvedCount}/${job.problemCount}`}
-        />
-      )}
-
-      {problems.length > 0 && (
-        <section className="problems">
-          <h2>문항별 결과</h2>
-          {problems.map((problem) => (
-            <ProblemCard key={problem.no} jobId={job.id} problem={problem} />
-          ))}
-        </section>
-      )}
+      {problems.length > 0 && <ProblemBrowser jobId={job.id} problems={problems} />}
     </div>
   )
 }

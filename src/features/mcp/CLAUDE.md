@@ -11,7 +11,8 @@ MCP 버전 사용자가 MCP 를 지원하는 프로그램 대화창에서 해설
 
 ## 연결 안내 화면
 
-- 로컬 PoC: MCP 를 지원하는 프로그램(Claude Code, Codex CLI, Gemini CLI 등)에서 연결. 명령 예는 `claude mcp add --transport http mmm {origin}/mcp` (`McpGuide.tsx`)
+- 로컬 PoC: 터미널에 붙일 명령 한 줄 `claude mcp add -s user --transport http mmm {origin}/mcp ; claude "작업 N 해설지 만들어줘. ..."` 과 복사 버튼 (`McpGuide.tsx`). 붙여넣기 두 번이 번거롭다는 요청(2026-09-29)으로 연결과 실행을 합쳤다. 이미 연결돼 있으면 add 가 오류만 내고 `;` 뒤로 넘어간다(PowerShell, 맥·리눅스 셸 모두). 다른 MCP 프로그램(Codex CLI, Gemini CLI 등)은 서버 주소와 문장을 한 줄로 안내
+- 웹 버튼으로 터미널을 열어 실행하는 건 브라우저가 막는다. 하려면 PC 마다 URL 프로토콜 처리기를 설치해야 한다 (안 함)
 - Claude Desktop, claude.ai, ChatGPT 는 내 컴퓨터(localhost)에 접속할 수 없어 로컬 PoC 에서는 못 쓴다고 알린다
 - 원격 서버 주소·인증(OAuth) 방식은 미정. 정해지면 여기 적는다
 

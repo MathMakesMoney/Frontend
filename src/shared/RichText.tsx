@@ -21,10 +21,11 @@ function renderTextPart(text: string, key: string) {
 }
 
 // 한글 수식 스크립트를 LaTeX 로 바꿔 KaTeX 로 그린다. 실패하면 스크립트 원문 칩
-function Equation({ script }: { script: string }) {
+// display: 한글 수식 편집기처럼 분수·lim 아래 첨자를 크게 (해설지 쪽 모양을 한글과 맞출 때)
+function Equation({ script, display }: { script: string; display?: boolean }) {
   let html = ''
   try {
-    html = katex.renderToString(toLatex(script), { throwOnError: false, strict: false })
+    html = katex.renderToString((display ? String.raw`\displaystyle ` : '') + toLatex(script), { throwOnError: false, strict: false })
   } catch {
     // 아래에서 원문 칩으로 보여 준다
   }
@@ -39,13 +40,13 @@ function Equation({ script }: { script: string }) {
 }
 
 // 본문(발문·풀이 등)을 수식 + 그림 태그로 렌더링
-export function RichText({ text }: { text: string }) {
+export function RichText({ text, display }: { text: string; display?: boolean }) {
   const parts = splitEquation(text)
   return (
     <>
       {parts.map((part, i) =>
         part.type === 'eq' ? (
-          <Equation key={i} script={part.value} />
+          <Equation key={i} script={part.value} display={display} />
         ) : (
           <span key={i}>{renderTextPart(part.value, String(i))}</span>
         ),
