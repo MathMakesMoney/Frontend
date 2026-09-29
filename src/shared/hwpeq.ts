@@ -69,14 +69,14 @@ const ENVS: Record<string, string> = {
 // 단어 하나로 쓰이는 문자 (유니코드 기호 포함)
 const CHARS: Record<string, string> = {
   '#': '\\#', '%': '\\%', '&': '\\&', $: '\\$', '\\': '\\backslash', '`': '\\,', '~': '\\ ',
-  '->': '\\to', '<=': '\\leq', '>=': '\\geq', '!=': '\\neq',
+  '+-': '\\pm', '-+': '\\mp', '->': '\\to', '<=': '\\leq', '>=': '\\geq', '!=': '\\neq',
   '±': '\\pm', '∓': '\\mp', '≠': '\\neq', '→': '\\to', '←': '\\leftarrow', '∞': '\\infty', '≤': '\\leq',
   '≥': '\\geq', '×': '\\times', '·': '\\cdot', '÷': '\\div', '∈': '\\in', '∠': '\\angle', '△': '\\triangle',
   '⊥': '\\perp', '∥': '\\parallel', '∴': '\\therefore', '′': "'", '…': '\\ldots', '⋯': '\\cdots',
 }
 
 // aLEFT 처럼 붙여 쓴 LEFT, RIGHT 는 떼어 읽는다
-const TOKEN = /"[^"]*"?|[A-Za-z]+?(?=(?:LEFT|RIGHT)(?![A-Za-z]))|[A-Za-z]+|\d+(?:\.\d+)?|[가-힣ㄱ-ㅎㅏ-ㅣ]+|->|<=|>=|!=|##|\S/gu
+const TOKEN = /"[^"]*"?|[A-Za-z]+?(?=(?:LEFT|RIGHT)(?![A-Za-z]))|[A-Za-z]+|\d+(?:\.\d+)?|[가-힣ㄱ-ㅎㅏ-ㅣ]+|\+-|-\+|->|<=|>=|!=|##|\S/gu
 const HANGUL = /^[가-힣ㄱ-ㅎㅏ-ㅣ]/u
 const SPACE = /\s/
 

@@ -3,6 +3,9 @@ import { toLatex } from './hwpeq'
 
 // 입력은 실제 작업(/api/jobs/1)과 PoC 결과 JSON 에서 뽑은 한글 수식 스크립트
 const cases: [string, string][] = [
+  // 한글 수식의 ± 는 +-, ∓ 는 -+ (서버 hwp_fix.normalize_eq 가 pm 을 +- 로 바꾼다)
+  ['x= +- r', 'x = \\pm r'],
+  ['a -+ b', 'a \\mp b'],
   // 이중 프라임: 따옴표를 붙여 써야 KaTeX 가 이중 위첨자로 보지 않는다 (광덕고 20-2번 풀이)
   ["f''(x)", "f '' ( x )"],
   ["overline{A'Q}=overline{A''Q}", "\\overline{A ' Q} = \\overline{A '' Q}"],
