@@ -31,8 +31,11 @@ function HwpPages({ jobId, path }: { jobId: string; path: string }) {
     Promise.all([loadRhwp(), fetch(figureUrl(jobId, path)).then((res) => res.arrayBuffer())])
       .then(([core, buf]) => {
         const doc = new core.HwpDocument(new Uint8Array(buf))
+        // 글상자 안쪽 영역 자르기는 뺀다: 한글은 글상자 안 개체(<보기> 테두리 상자)가 안쪽 여백을 넘어도 그대로 그린다 (경안고)
         made = Array.from({ length: doc.pageCount() }, (_, i) =>
-          URL.createObjectURL(new Blob([doc.renderPageSvg(i)], { type: 'image/svg+xml' })),
+          URL.createObjectURL(
+            new Blob([doc.renderPageSvg(i).replace(/ clip-path="url\(#textbox-clip-\d+\)"/g, '')], { type: 'image/svg+xml' }),
+          ),
         )
         doc.free()
         if (alive) setUrls(made)
@@ -81,7 +84,7 @@ export function OriginalPages({ job }: { job: Job }) {
           ))}
         </div>
       )}
-      {open && job.inputType === 'HWPX' && <HwpPages jobId={job.id} path="source.hwpx" />}
+      {open && job.inputType === 'HWPX' && <HwpPages jobId={job.id} path="view.hwpx" />}
       {open && job.inputType === 'HWP' && <HwpPages jobId={job.id} path="source.hwp" />}
     </section>
   )
