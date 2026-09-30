@@ -58,8 +58,9 @@ function copy(line: Element): Node {
 }
 
 // 덩어리들을 쪽마다 나눈다: 쪽 본문(2단, 왼쪽 단부터 채움)이 넘쳐 셋째 단이 생기면 그 덩어리부터 다음 쪽
+// 1쪽은 제목 칸만큼 본문이 낮아 first 로 재고, 둘째 쪽부터 page 로 잰다
 // 혼자서도 한 쪽을 넘치는 덩어리는 tooBig 으로 알린다 (줄마다 나눠 다시 계산)
-async function paginate(source: HTMLElement, page: HTMLElement): Promise<{ starts: number[]; tooBig: number[] }> {
+async function paginate(source: HTMLElement, first: HTMLElement, rest: HTMLElement): Promise<{ starts: number[]; tooBig: number[] }> {
   // 그림 크기를 알 때까지 기다린다 (decode 는 화면 밖 숨긴 그림에서 끝나지 않아 load 로 본다)
   await Promise.all(
     [...source.querySelectorAll('img')].map((img) =>
@@ -73,13 +74,17 @@ async function paginate(source: HTMLElement, page: HTMLElement): Promise<{ start
   )
   const starts = [0]
   const tooBig: number[] = []
+  let page = first
   const overflow = () => page.scrollWidth > page.clientWidth + 1
-  page.replaceChildren()
+  first.replaceChildren()
+  rest.replaceChildren()
   const lines = [...source.children]
   lines.forEach((line, i) => {
     page.appendChild(copy(line))
     if (overflow() && page.children.length > 1) {
       starts.push(i)
+      page.lastChild?.remove()
+      page = rest
       page.replaceChildren(copy(line))
     }
     if (overflow()) tooBig.push(i)
@@ -94,6 +99,7 @@ export interface HaesolPageData {
 }
 
 export interface HaesolLayout {
+  title: string // 1쪽 맨 위에 크게 쓰는 해설지 제목 (해설지 첫 줄). 본문에서는 뺀다
   lines: string[]
   labels: string[] // 줄마다 속한 문항 label
   pages: HaesolPageData[]
@@ -104,16 +110,19 @@ export interface HaesolLayout {
 export function useHaesolLayout(jobId: string, header: string, lines: string[], enabled = true): HaesolLayout {
   const labels = labelsOf(lines)
   const [split, setSplit] = useState<ReadonlySet<number>>(new Set()) // 줄마다 나눌 문항 (머리 줄 번호)
-  const blocks = blocksOf(lines, split)
+  // 첫 줄이 문항이 아니면 해설지 제목: 본문 덩어리에서 빼고 1쪽 머리에 따로 그린다 (한글 해설지 파일과 같은 모양)
+  const title = lines.length > 0 && lines[0].trim() !== '' && !HEAD.test(lines[0]) ? lines[0] : ''
+  const blocks = blocksOf(lines, split).filter((b) => !(title && b.length === 1 && b[0] === 0))
   const [starts, setStarts] = useState<number[]>([])
   const source = useRef<HTMLDivElement>(null)
+  const measureFirst = useRef<HTMLDivElement>(null)
   const measureBody = useRef<HTMLDivElement>(null)
 
   // 줄이 바뀌거나 켜지면 쪽 나누기를 다시 한다. 한 쪽을 넘는 문항이 나오면 그 문항만 줄마다 나눠 다시 계산
   useLayoutEffect(() => {
-    if (!enabled || !source.current || !measureBody.current) return
+    if (!enabled || !source.current || !measureFirst.current || !measureBody.current) return
     let alive = true
-    paginate(source.current, measureBody.current).then(({ starts, tooBig }) => {
+    paginate(source.current, measureFirst.current, measureBody.current).then(({ starts, tooBig }) => {
       if (!alive) return
       const heads = tooBig.map((b) => blocks[b]).filter((b) => b.length > 2 && HEAD.test(lines[b[0]])).map((b) => b[0])
       if (heads.length > 0) setSplit(new Set([...split, ...heads]))
@@ -138,14 +147,29 @@ export function useHaesolLayout(jobId: string, header: string, lines: string[], 
         ))}
       </div>
       <div className="preview-page">
-        <div className="haesol-header">{header}</div>
-        <div ref={measureBody} className="haesol-body" />
+        <PageHead title={title} header={header} first />
+        <div ref={measureFirst} className={`haesol-body${title ? ' first' : ''}`} />
         <div className="haesol-footer">- 1 -</div>
+      </div>
+      <div className="preview-page">
+        <PageHead title={title} header={header} first={false} />
+        <div ref={measureBody} className="haesol-body" />
+        <div className="haesol-footer">- 2 -</div>
       </div>
     </div>
   ) : null
 
-  return { lines, labels, pages, measure }
+  return { title, lines, labels, pages, measure }
+}
+
+// 쪽 머리: 1쪽은 큰 굵은 제목과 그 아래 시험 정보 줄(머리말과 같은 모양), 둘째 쪽부터는 머리말만
+function PageHead({ title, header, first }: { title: string; header: string; first: boolean }) {
+  return (
+    <>
+      {first && title && <div className="haesol-title">{title}</div>}
+      <div className="haesol-header">{header}</div>
+    </>
+  )
 }
 
 // 덩어리 하나를 한 요소로 감싸 단·쪽이 함께 넘어가게 한다. data-label 로 문항 위치를 찾는다 (해설지 보기에서 문항으로 이동)
@@ -178,8 +202,8 @@ export function HaesolPage({ jobId, header, layout, index, fresh, active }: {
 }) {
   return (
     <div className="preview-page">
-      <div className="haesol-header">{header}</div>
-      <div className="haesol-body">
+      <PageHead title={layout.title} header={header} first={index === 0} />
+      <div className={`haesol-body${index === 0 && layout.title ? ' first' : ''}`}>
         {layout.pages[index].blocks.map((b, i) => (
           <Block key={i} jobId={jobId} lines={layout.lines} labels={layout.labels} block={b} fresh={fresh} active={active} />
         ))}

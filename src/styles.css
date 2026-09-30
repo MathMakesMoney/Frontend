@@ -439,6 +439,20 @@ button {
   text-align: center;
 }
 
+/* 1쪽 맨 위 해설지 제목: 크고 굵게 한 줄 (한글 해설지 파일의 16pt 굵은 제목). 높이를 고정해 1쪽 본문 높이를 계산한다 */
+.haesol-title {
+  box-sizing: border-box;
+  height: 34px;
+  margin-bottom: 6px;
+  font-size: 21.3px;
+  font-weight: 800;
+  line-height: 34px;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* 본문 높이 = 쪽 높이 - 머리말(20+10) - 쪽 번호(16+10). flex 로 두면 쪽 나누기 계산이 어긋난다 */
 .haesol-body {
   height: calc(100% - 56px);
@@ -448,6 +462,11 @@ button {
   background: linear-gradient(#000, #000) center / 1px 100% no-repeat;
   column-fill: auto;
   overflow: hidden;
+}
+
+/* 1쪽 본문은 제목 칸(34+6)만큼 낮다 */
+.haesol-body.first {
+  height: calc(100% - 96px);
 }
 
 .haesol-head {
