@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { reviseCommand } from './ReviseRequest'
+import { revisePrompt } from './ReviseRequest'
 
-describe('reviseCommand', () => {
-  it('작업 번호·문항 번호·요청을 한 줄 명령으로, 큰따옴표는 작은따옴표로', () => {
-    expect(reviseCommand('9', '4번', '좌표를 먼저 "쓰고"\n계산해')).toBe(
-      `claude "작업 9 4번 해설을 고쳐줘: 좌표를 먼저 '쓰고' 계산해. mmm 도구 get_problem 으로 문항을 보고 save_revision 으로 저장해."`,
-    )
+describe('revisePrompt', () => {
+  it('터미널 명령 없이 제목·문항·주소를 담은 프롬프트를 만든다', () => {
+    const command = revisePrompt('9', '중간고사', '4번', "좌표 ' $HOME `whoami`\n계산해", 'https://study.example')
+    expect(command).toContain("중간고사 4번")
+    expect(command).toContain("좌표 ' $HOME `whoami` 계산해")
+    expect(command).toContain('https://study.example/jobs/9')
+    expect(command).toContain('풀이담(pulidam) 도구')
+    expect(command).not.toContain('작업 9')
+    expect(command).not.toMatch(/^claude /)
   })
 })

@@ -4,7 +4,7 @@ import { shortLabel, labelText } from '../../shared/labelText'
 import { ProblemCard } from './ProblemCard'
 
 // 문항별 결과: 오른쪽 번호판에서 고른 문항 한 개만 보인다 (전체 보기를 누르면 모두). 검토 필요 번호는 경고 색, 처음엔 첫 검토 필요 문항
-export function ProblemBrowser({ jobId, problems }: { jobId: string; problems: Problem[] }) {
+export function ProblemBrowser({ jobId, jobTitle, problems }: { jobId: string; jobTitle: string; problems: Problem[] }) {
   const [picked, setPicked] = useState<number | null>(null)
   const [all, setAll] = useState(false)
   const top = useRef<HTMLElement>(null)
@@ -28,9 +28,9 @@ export function ProblemBrowser({ jobId, problems }: { jobId: string; problems: P
       <div className="problem-browser">
         <div>
           {all ? (
-            problems.map((p) => <ProblemCard key={p.no} jobId={jobId} problem={p} />)
+            problems.map((p) => <ProblemCard key={p.no} jobId={jobId} jobTitle={jobTitle} problem={p} />)
           ) : (
-            <ProblemCard key={current.no} jobId={jobId} problem={current} />
+            <ProblemCard key={current.no} jobId={jobId} jobTitle={jobTitle} problem={current} />
           )}
         </div>
         <nav className="problem-nav" aria-label="문항 번호">

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
-import { fetchJob, haesolUrl } from '../../../shared/api'
+import { fetchJob, haesolDraftUrl, haesolUrl } from '../../../shared/api'
 import { useHaesolLayout } from '../haesolPages'
 import { PageThumbs } from './PageThumbs'
 import { PageStage } from './PageStage'
@@ -76,8 +76,17 @@ export function HaesolViewerPage() {
         <div className="viewer-downloads">
           {job.files.hwp && <a className="button" href={haesolUrl(job.id, 'hwp')}>HWP 다운로드</a>}
           {job.files.hwpx && <a className="button" href={haesolUrl(job.id, 'hwpx')}>HWPX 다운로드</a>}
+          {job.problemCount > 0 && job.stage !== 'done' && (
+            <>
+              <a className="button" href={haesolDraftUrl(job.id, 'hwp')}>초안 HWP 다운로드</a>
+              <a className="button" href={haesolDraftUrl(job.id, 'hwpx')}>초안 HWPX 다운로드</a>
+            </>
+          )}
         </div>
       </div>
+      {job.problemCount > 0 && job.stage !== 'done' && (
+        <p className="hint">지금까지 저장된 풀이로 받습니다 · 안 푼 문항은 검토 필요: 풀이 누락으로 표시됩니다</p>
+      )}
       {layout.measure}
       {(job.draft ?? []).length === 0 ? (
         <p className="viewer-empty">아직 저장된 풀이가 없습니다</p>

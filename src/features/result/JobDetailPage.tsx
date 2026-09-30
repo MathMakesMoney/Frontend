@@ -37,7 +37,7 @@ export function JobDetailPage() {
     if (!confirm('이 작업을 삭제할까요? 되돌릴 수 없습니다.')) return
     await deleteJob(id)
     queryClient.removeQueries({ queryKey: ['job', id] })
-    navigate('/')
+    navigate('/jobs')
   }
 
   if (isLoading) return <div className="page">불러오는 중...</div>
@@ -62,7 +62,7 @@ export function JobDetailPage() {
 
       <OriginalPages job={job} />
 
-      <McpGuide jobId={job.id} />
+      <McpGuide jobId={job.id} jobTitle={job.title} />
 
       {draft.length > 0 && (
         <div className="downloads">
@@ -100,7 +100,7 @@ export function JobDetailPage() {
         </div>
       )}
 
-      {problems.length > 0 && <ProblemBrowser jobId={job.id} problems={problems} />}
+      {problems.length > 0 && <ProblemBrowser jobId={job.id} jobTitle={job.title} problems={problems} />}
     </div>
   )
 }

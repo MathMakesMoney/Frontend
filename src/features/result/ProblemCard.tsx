@@ -4,7 +4,7 @@ import { figureUrl, type Problem } from '../../shared/api'
 import { ReviseRequest } from './ReviseRequest'
 
 // 문항 한 개: 검토 필요면 사유를 그대로 보여 주고 정답처럼 보이지 않게 한다
-export function ProblemCard({ jobId, problem }: { jobId: string; problem: Problem }) {
+export function ProblemCard({ jobId, jobTitle, problem }: { jobId: string; jobTitle: string; problem: Problem }) {
   const needsReview = problem.review !== null
   // 백엔드가 정한 표시 번호 (겹치면 20-1, 번호 없으면 2-1)
   const label = labelText(problem.label ?? problem.no)
@@ -77,7 +77,7 @@ export function ProblemCard({ jobId, problem }: { jobId: string; problem: Proble
       {!!problem.revisionCount && problem.revisionCount > 0 && (
         <p className="hint">다시 저장 {problem.revisionCount}번</p>
       )}
-      <ReviseRequest jobId={jobId} label={label} requests={problem.editRequests ?? []} />
+      <ReviseRequest jobId={jobId} jobTitle={jobTitle} label={label} requests={problem.editRequests ?? []} />
     </article>
   )
 }

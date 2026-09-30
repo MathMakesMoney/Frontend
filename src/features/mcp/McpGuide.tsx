@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { mcpCommand, mcpPrompt, type CommandShell } from '../../shared/mcpCommand'
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
@@ -17,19 +18,27 @@ function CopyButton({ text }: { text: string }) {
   )
 }
 
-// MCP 안내: 터미널에 붙여넣을 명령 한 줄 (연결 + Claude Code 실행 + 문장 입력), 다른 프로그램용 주소, 로컬 접속 주의
-// 연결은 이미 돼 있으면 "이미 있음" 오류만 내고 넘어간다. ; 는 PowerShell, 맥·리눅스 터미널에서 모두 다음 명령으로 이어진다
-export function McpGuide({ jobId }: { jobId: string }) {
-  const mcpUrl = `${window.location.origin}/mcp`
-  const prompt = `작업 ${jobId} 해설지 만들어줘. mmm 도구를 써서 끝까지 진행해.`
-  const command = `claude mcp add -s user --transport http mmm ${mcpUrl} ; claude "${prompt}"`
+// 현재 사이트 주소와 작업 제목으로 연결 및 실행 명령을 만든다
+export function McpGuide({ jobId, jobTitle }: { jobId: string; jobTitle: string }) {
+  const [shell, setShell] = useState<CommandShell>('powershell')
+  const origin = window.location.origin
+  const mcpUrl = `${origin}/mcp`
+  const prompt = mcpPrompt(origin, jobId, jobTitle)
+  const command = mcpCommand(origin, jobId, jobTitle, shell)
+  const local = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname)
 
   return (
     <section className="mcp-guide">
       <h2>MCP 로 풀이 진행하기</h2>
 
       <div className="mcp-step">
-        <p>터미널(윈도우는 PowerShell)에 아래 명령을 붙여넣으세요. Claude Code 가 켜지면서 바로 해설을 만듭니다</p>
+        <p>터미널에 아래 명령을 붙여넣으세요. Claude Code가 켜지면서 바로 해설을 만듭니다</p>
+        <label>사용하는 터미널{' '}
+          <select value={shell} onChange={(e) => setShell(e.target.value as CommandShell)}>
+            <option value="powershell">윈도우 PowerShell</option>
+            <option value="posix">맥 · 리눅스</option>
+          </select>
+        </label>
         <div className="code-row">
           <code>{command}</code>
           <CopyButton text={command} />
@@ -38,8 +47,8 @@ export function McpGuide({ jobId }: { jobId: string }) {
 
       <p className="hint">
         다른 MCP 프로그램(Codex CLI, Gemini CLI 등)은 서버 주소 {mcpUrl} 를 연결한 뒤 대화창에 &quot;{prompt}&quot; 를
-        입력하세요. Claude Desktop, claude.ai, ChatGPT 는 내 컴퓨터(localhost)에 접속할 수 없어 로컬 PoC 에서는 쓸 수
-        없습니다.
+        입력하세요. 연결 이름은 pulidam입니다.
+        {local && ' 현재 주소는 내 컴퓨터(localhost)용입니다. 원격 AI에서는 접근할 수 없으므로 웹에서 연결하는 방식은 배포 후 사용하세요.'}
       </p>
     </section>
   )

@@ -1,17 +1,16 @@
 import { useState } from 'react'
 
-// 해설 수정 요청: 강사가 고칠 내용을 쓰면 Claude Code 에 붙여넣을 명령 한 줄을 만든다.
-// 사용자의 Claude 가 mmm 도구 get_problem 으로 문항을 보고 save_revision 으로 그 문항만 고쳐 저장한다 (MCP 버전, 우리 서버는 AI 를 부르지 않는다)
-export function reviseCommand(jobId: string, label: string, request: string): string {
-  const text = request.trim().replace(/\s+/g, ' ').replace(/"/g, "'")
-  return `claude "작업 ${jobId} ${label} 해설을 고쳐줘: ${text}. mmm 도구 get_problem 으로 문항을 보고 save_revision 으로 저장해."`
+// 작업 제목과 주소를 포함해 풀이담에 문항 수정을 요청한다
+export function revisePrompt(jobId: string, jobTitle: string, label: string, request: string, origin: string): string {
+  const text = request.trim().replace(/\s+/g, ' ')
+  return `${jobTitle} ${label} 해설을 고쳐줘: ${text}. 작업 주소: ${origin}/jobs/${encodeURIComponent(jobId)}. 풀이담(pulidam) 도구 get_problem으로 문항을 보고 save_revision으로 저장해.`
 }
 
-export function ReviseRequest({ jobId, label, requests }: { jobId: string; label: string; requests: string[] }) {
+export function ReviseRequest({ jobId, jobTitle, label, requests }: { jobId: string; jobTitle: string; label: string; requests: string[] }) {
   const [open, setOpen] = useState(false)
   const [request, setRequest] = useState('')
   const [copied, setCopied] = useState(false)
-  const command = request.trim() ? reviseCommand(jobId, label, request) : ''
+  const command = request.trim() ? revisePrompt(jobId, jobTitle, label, request, window.location.origin) : ''
 
   async function copy() {
     await navigator.clipboard.writeText(command)
@@ -44,11 +43,11 @@ export function ReviseRequest({ jobId, label, requests }: { jobId: string; label
             <div className="code-row">
               <code>{command}</code>
               <button type="button" className="copy-button" onClick={copy}>
-                {copied ? '복사됨' : '명령 복사'}
+                {copied ? '복사됨' : '프롬프트 복사'}
               </button>
             </div>
           )}
-          <p className="hint">터미널(PowerShell)에 붙여넣으면 Claude Code 가 이 문항만 고쳐 저장하고 해설지를 다시 만듭니다. 끝나면 이 화면이 새로 고쳐집니다.</p>
+          <p className="hint">풀이담 도구를 연결한 AI 대화창에 붙여넣으면 AI가 이 문항만 고쳐 저장하고 해설지를 다시 만듭니다. 끝나면 이 화면이 새로 고쳐집니다.</p>
         </div>
       )}
     </div>
