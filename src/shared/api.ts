@@ -18,6 +18,9 @@ export interface Problem {
   steps: string[]
   verification: Verification | null
   blindAnswer: string | null
+  // 강사가 수정 요청(mmm save_revision)으로 고친 문항과 요청 원문. 예전 백엔드에는 없다
+  editedByTeacher?: boolean
+  editRequests?: string[]
   review: string | null
   revisionCount?: number
 }

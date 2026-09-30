@@ -764,3 +764,50 @@ button {
     text-align: left;
   }
 }
+
+/* 해설 수정 요청 (문항 카드 아래) */
+.revise {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed #e5e7eb;
+}
+
+.revise-history {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: #475467;
+}
+
+.revise-history span + span::before {
+  content: ', ';
+}
+
+.revise-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.revise-box label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #344054;
+}
+
+.revise-box textarea {
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 10px;
+  border: 1px solid #d0d5dd;
+  border-radius: 6px;
+  resize: vertical;
+}
+
+.edited-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1d4ed8;
+  background: #e8f0fe;
+  border-radius: 4px;
+  padding: 2px 6px;
+}

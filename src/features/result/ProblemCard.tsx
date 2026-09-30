@@ -1,6 +1,7 @@
 import { labelText } from '../../shared/labelText'
 import { RichText } from '../../shared/RichText'
 import { figureUrl, type Problem } from '../../shared/api'
+import { ReviseRequest } from './ReviseRequest'
 
 // 문항 한 개: 검토 필요면 사유를 그대로 보여 주고 정답처럼 보이지 않게 한다
 export function ProblemCard({ jobId, problem }: { jobId: string; problem: Problem }) {
@@ -13,6 +14,7 @@ export function ProblemCard({ jobId, problem }: { jobId: string; problem: Proble
       <header className="problem-header">
         <span className="problem-no">{label}</span>
         {needsReview && <span className="review-badge">검토 필요: {problem.review}</span>}
+        {problem.editedByTeacher && <span className="edited-badge">강사 수정</span>}
       </header>
 
       <p className="problem-stem">
@@ -75,6 +77,7 @@ export function ProblemCard({ jobId, problem }: { jobId: string; problem: Proble
       {!!problem.revisionCount && problem.revisionCount > 0 && (
         <p className="hint">다시 저장 {problem.revisionCount}번</p>
       )}
+      <ReviseRequest jobId={jobId} label={label} requests={problem.editRequests ?? []} />
     </article>
   )
 }
