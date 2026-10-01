@@ -67,13 +67,18 @@ export function JobDetailPage() {
       {(draft.length > 0 || job.files.hwp || job.files.hwpx || (job.problemCount > 0 && job.stage !== 'done')) && (
         <div className="job-document-toolbar" aria-label="해설지 보기 및 다운로드">
           {draft.length > 0 && <Link className="button" to={`/jobs/${job.id}/haesol`} title="쪽 목록 · 해설지 · 문항 목록 보기">해설지 보기</Link>}
-          {job.files.hwp && <a className="job-download-link" href={haesolUrl(job.id, 'hwp')}>HWP 다운로드</a>}
-          {job.files.hwpx && <a className="job-download-link" href={haesolUrl(job.id, 'hwpx')}>HWPX 다운로드</a>}
+          {(job.files.hwp || job.files.hwpx || (job.problemCount > 0 && job.stage !== 'done')) && (
+            <div className="job-download-group">
+              <span className="job-download-label">다운로드</span>
+          {job.files.hwp && <a className="job-download-link" href={haesolUrl(job.id, 'hwp')}>HWP</a>}
+          {job.files.hwpx && <a className="job-download-link" href={haesolUrl(job.id, 'hwpx')}>HWPX</a>}
           {job.problemCount > 0 && job.stage !== 'done' && <>
             <a className="job-download-link" href={haesolDraftUrl(job.id, 'hwp')}>진행본 HWP</a>
             <a className="job-download-link" href={haesolDraftUrl(job.id, 'hwpx')}>진행본 HWPX</a>
             <span className="job-download-note">미완료 문항은 검토 필요로 표시됩니다</span>
           </>}
+            </div>
+          )}
         </div>
       )}
 
