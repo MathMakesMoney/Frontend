@@ -31,3 +31,16 @@ it('Claude와 Codex 모두 인증 입력 없이 한 줄로 연결하고 실행�
     }
   }
 })
+
+it('풀이담 MCP 도구만 자동 승인한다', () => {
+  for (const shell of ['posix', 'powershell'] as const) {
+    const claude = mcpCommand('https://study.example', '2', '시험', shell, 'claude')
+    const codex = mcpCommand('https://study.example', '2', '시험', shell, 'codex')
+    expect(claude).toContain("--allowedTools 'mcp__pulidam__*'")
+    expect(codex).toContain('mcp_servers.pulidam.default_tools_approval_mode="approve"')
+    for (const command of [claude, codex]) {
+      expect(command).not.toContain('--dangerously')
+      expect(command).not.toContain('--ask-for-approval')
+    }
+  }
+})

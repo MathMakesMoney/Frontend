@@ -14,5 +14,8 @@ export function mcpCommand(origin: string, jobId: string, title: string, shell: 
   const url = shellArgument(`${origin}/mcp`, shell)
   const prompt = shellArgument(mcpPrompt(origin, jobId, title), shell)
   const connect = client === 'claude' ? `claude mcp add -s user --transport http pulidam ${url}` : `codex mcp add pulidam --url ${url}`
-  return `${connect} ; ${client} ${prompt}`
+  const approval = client === 'claude'
+    ? "--allowedTools 'mcp__pulidam__*'"
+    : `-c ${shellArgument('mcp_servers.pulidam.default_tools_approval_mode="approve"', shell)}`
+  return `${connect} ; ${client} ${approval} ${prompt}`
 }
