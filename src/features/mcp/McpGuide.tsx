@@ -54,7 +54,7 @@ export function McpGuide({ jobId, jobTitle }: { jobId: string; jobTitle: string 
           {copied ? '복사 완료 ✓' : `${name} 연결 명령 복사`}<span aria-hidden="true"> ↗</span>
         </button>
       </div>
-      <p className="mcp-connect-note">예상 소요 시간 약 30~60분 · 30문항 시험지는 약 41분 걸린 사례가 있습니다. 문항 수와 AI에 따라 더 걸릴 수 있습니다.</p>
+      <p className="mcp-connect-note">예상 소요 시간 약 5~15분 · 문항 수와 AI에 따라 달라지며, 검증과 파일 생성에 시간이 더 걸릴 수 있습니다.</p>
       <p className="mcp-connect-note">{name} 설치와 계정 로그인이 필요합니다. 연결 명령 하나로 시작할 수 있습니다.</p>
       <p className="mcp-copy-feedback" role="status">{copyError ? '복사하지 못했습니다. 아래 연결 명령을 펼쳐 직접 복사해 주세요.' : copied ? '복사한 명령을 터미널에 붙여넣으면 AI가 시작됩니다.' : ''}</p>
       <details className="mcp-command-details"><summary>연결 명령 보기</summary><pre><code>{command}</code></pre></details>
