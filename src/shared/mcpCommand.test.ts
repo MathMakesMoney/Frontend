@@ -12,6 +12,7 @@ describe('복사 명령', () => {
     expect(prompt).toContain('중간고사 해설지')
     expect(prompt).toContain('https://study.example/jobs/7')
     expect(prompt).toContain('풀이담')
+    expect(prompt).toContain('기본 사용자 1')
     expect(prompt).not.toContain('작업 7')
     expect(mcpCommand('https://study.example', '7', '중간고사', 'posix')).toContain("'https://study.example/mcp'")
   })

@@ -7,7 +7,7 @@ export function shellArgument(text: string, shell: CommandShell): string {
 }
 
 export function mcpPrompt(origin: string, jobId: string, title: string): string {
-  return `${title} 해설지 만들어줘. 작업 주소: ${origin}/jobs/${encodeURIComponent(jobId)}. 풀이담(pulidam) 도구를 써서 이 주소의 작업을 끝까지 진행해.`
+  return `${title} 해설지 만들어줘. 기본 사용자 1의 작업: ${origin}/jobs/${encodeURIComponent(jobId)}. 풀이담(pulidam) 도구로 끝까지 진행해.`
 }
 
 export function mcpCommand(origin: string, jobId: string, title: string, shell: CommandShell, client: McpClient = 'claude'): string {
