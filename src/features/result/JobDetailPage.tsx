@@ -47,7 +47,7 @@ export function JobDetailPage() {
   const draft = job.draft ?? []
 
   return (
-    <div className="page">
+    <div className="page job-detail-page">
       <div className="page-header">
         <h1>{job.title}</h1>
         <button type="button" className="button-danger" onClick={handleDelete}>
