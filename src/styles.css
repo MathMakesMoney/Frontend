@@ -1625,3 +1625,11 @@ button {
   .mcp-connect-action { align-items: stretch; flex-direction: column; gap: 18px; }
   .mcp-copy-action { width: 100%; }
 }
+
+/* 해설 보기와 파일 다운로드를 한 도구 모음으로 묶는다. */
+.job-document-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 24px 0; }
+.job-document-toolbar .button { border-radius: 10px; padding: 11px 18px; font-weight: 600; }
+.job-download-link { display: inline-flex; align-items: center; min-height: 42px; padding: 10px 16px; border: 1px solid #dde3eb; border-radius: 10px; background: #fff; color: #445064; font-size: 13px; text-decoration: none; white-space: nowrap; }
+.job-download-link:hover { border-color: #2563eb; color: #2563eb; }
+.job-download-note { color: #8b95a1; font-size: 12px; margin-left: auto; }
+@media (max-width: 760px) { .job-download-note { flex-basis: 100%; margin-left: 0; } }

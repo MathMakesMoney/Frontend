@@ -64,39 +64,16 @@ export function JobDetailPage() {
 
       <McpGuide jobId={job.id} jobTitle={job.title} />
 
-      {draft.length > 0 && (
-        <div className="downloads">
-          <Link className="button" to={`/jobs/${job.id}/haesol`}>
-            해설지 보기
-          </Link>
-          <span className="hint">쪽 목록 · 해설지 · 문항 목록을 한 화면에서 봅니다</span>
-        </div>
-      )}
-
-      {(job.files.hwp || job.files.hwpx) && (
-        <div className="downloads">
-          {job.files.hwp && (
-            <a className="button" href={haesolUrl(job.id, 'hwp')}>
-              해설지 HWP 다운로드
-            </a>
-          )}
-          {job.files.hwpx && (
-            <a className="button" href={haesolUrl(job.id, 'hwpx')}>
-              해설지 HWPX 다운로드
-            </a>
-          )}
-        </div>
-      )}
-
-      {job.problemCount > 0 && job.stage !== 'done' && (
-        <div className="downloads">
-          <a className="button" href={haesolDraftUrl(job.id, 'hwp')}>
-            지금까지 풀이로 해설지 받기 (HWP)
-          </a>
-          <a className="button" href={haesolDraftUrl(job.id, 'hwpx')}>
-            지금까지 풀이로 해설지 받기 (HWPX)
-          </a>
-          <span className="hint">안 푼 문항은 검토 필요: 풀이 누락 으로 들어갑니다</span>
+      {(draft.length > 0 || job.files.hwp || job.files.hwpx || (job.problemCount > 0 && job.stage !== 'done')) && (
+        <div className="job-document-toolbar" aria-label="해설지 보기 및 다운로드">
+          {draft.length > 0 && <Link className="button" to={`/jobs/${job.id}/haesol`} title="쪽 목록 · 해설지 · 문항 목록 보기">해설지 보기</Link>}
+          {job.files.hwp && <a className="job-download-link" href={haesolUrl(job.id, 'hwp')}>HWP 다운로드</a>}
+          {job.files.hwpx && <a className="job-download-link" href={haesolUrl(job.id, 'hwpx')}>HWPX 다운로드</a>}
+          {job.problemCount > 0 && job.stage !== 'done' && <>
+            <a className="job-download-link" href={haesolDraftUrl(job.id, 'hwp')}>진행본 HWP</a>
+            <a className="job-download-link" href={haesolDraftUrl(job.id, 'hwpx')}>진행본 HWPX</a>
+            <span className="job-download-note">미완료 문항은 검토 필요로 표시됩니다</span>
+          </>}
         </div>
       )}
 
