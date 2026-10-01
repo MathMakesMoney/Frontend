@@ -1,9 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://api.math2hwp.com./api/:path*" },
-    { "source": "/mcp", "destination": "https://api.math2hwp.com./mcp" },
-    { "source": "/mcp/:path*", "destination": "https://api.math2hwp.com./mcp/:path*" },
+    { "source": "/api/:path*", "destination": "https://api.math2hwp.com/api/:path*" },
+    { "source": "/mcp", "destination": "https://api.math2hwp.com/mcp" },
+    { "source": "/mcp/:path*", "destination": "https://api.math2hwp.com/mcp/:path*" },
     { "source": "/:path*", "destination": "/index.html" }
   ]
 }
