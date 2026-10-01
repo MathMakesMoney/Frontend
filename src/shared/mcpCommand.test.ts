@@ -17,19 +17,16 @@ describe('복사 명령', () => {
   })
 })
 
-it('Codex 연결과 실행에 현재 작업 및 환경 변수 인증을 사용한다', () => {
+it('Claude와 Codex 모두 인증 입력 없이 한 줄로 연결하고 실행한다', () => {
   for (const shell of ['posix', 'powershell'] as const) {
-    const command = mcpCommand('https://www.math2hwp.com', '2', "중간 ' $시험", shell, 'codex')
-    expect(command).toContain("codex mcp add pulidam --url 'https://www.math2hwp.com/mcp'")
-    expect(command).toContain('mcp_servers.pulidam.env_http_headers={Authorization="MMM_MCP_AUTH"}')
-    expect(command).toContain('jobs/2')
-    expect(command).not.toContain('claude ')
-    expect(command).toContain(shell === 'posix' ? 'read -r -s mmm_password' : 'Read-Host -AsSecureString')
+    for (const client of ['claude', 'codex'] as const) {
+      const command = mcpCommand('https://www.math2hwp.com', '2', "중간 ' $시험", shell, client)
+      expect(command).toContain("'https://www.math2hwp.com/mcp'")
+      expect(command).toContain('jobs/2')
+      expect(command).toContain(`${client} `)
+      expect(command).not.toContain('MMM_MCP_AUTH')
+      expect(command).not.toContain('Read-Host')
+      expect(command).not.toContain('read -r')
+    }
   }
-})
-
-it('로컬 Codex 연결에는 원격 서버 비밀번호를 요구하지 않는다', () => {
-  const command = mcpCommand('http://localhost:5173', '1', '시험', 'posix', 'codex')
-  expect(command).toContain('codex mcp add pulidam --url')
-  expect(command).not.toContain('MMM_MCP_AUTH')
 })

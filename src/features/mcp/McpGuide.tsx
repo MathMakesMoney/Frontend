@@ -8,7 +8,6 @@ export function McpGuide({ jobId, jobTitle }: { jobId: string; jobTitle: string 
   const [copyError, setCopyError] = useState(false)
   const shell: CommandShell = /Win/i.test(navigator.platform) ? 'powershell' : 'posix'
   const origin = window.location.origin
-  const local = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname)
   const command = mcpCommand(origin, jobId, jobTitle, shell, client)
   const name = client === 'claude' ? 'Claude Code' : 'Codex'
 
@@ -55,7 +54,7 @@ export function McpGuide({ jobId, jobTitle }: { jobId: string; jobTitle: string 
           {copied ? '복사 완료 ✓' : `${name} 연결 명령 복사`}<span aria-hidden="true"> ↗</span>
         </button>
       </div>
-      <p className="mcp-connect-note">{local ? '로컬 서버를 실행한 컴퓨터에서 연결하세요.' : '실행 중 서버 접근 비밀번호를 입력합니다.'} {name} 설치와 계정 로그인이 필요합니다.</p>
+      <p className="mcp-connect-note">{name} 설치와 계정 로그인이 필요합니다. 연결 명령 하나로 시작할 수 있습니다.</p>
       <p className="mcp-copy-feedback" role="status">{copyError ? '복사하지 못했습니다. 아래 연결 명령을 펼쳐 직접 복사해 주세요.' : copied ? '복사한 명령을 터미널에 붙여넣으면 AI가 시작됩니다.' : ''}</p>
       <details className="mcp-command-details"><summary>연결 명령 보기</summary><pre><code>{command}</code></pre></details>
     </section>
