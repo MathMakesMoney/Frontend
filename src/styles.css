@@ -1429,7 +1429,7 @@ button {
 .jobs-page .jobs-upload { display: inline-flex; align-items: center; gap: 18px; padding: 14px 18px; border-radius: 11px; background: #2868e8; border: 0; font-size: 14px; font-weight: 650; white-space: nowrap; }
 .jobs-page .job-list { border: 0; border-radius: 0; background: transparent; overflow: visible; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
 .jobs-page .job-list li + li { border-top: 0; }
-.jobs-page .job-row { display: block; height: 100%; background: #fff; border: 2px solid #cdd3d0; border-radius: 16px; padding: 0; overflow: hidden; box-shadow: 0 4px 14px rgb(25 31 40 / 3%); }
+.jobs-page .job-row { display: block; height: 100%; background: #fff; border: 1px solid #dcdedb; border-radius: 16px; padding: 0; overflow: hidden; box-shadow: 0 4px 14px rgb(25 31 40 / 3%); }
 .jobs-page .job-row:hover { background: #fbfcff; border-color: #c4d5f8; }
 .jobs-page .job-title { font-size: 16px; font-weight: 650; }
 .jobs-page .job-date { color: #8b97a8; font-size: 12px; margin-top: 7px; }
