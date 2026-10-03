@@ -17,5 +17,6 @@ export function mcpCommand(origin: string, jobId: string, title: string, shell: 
   const approval = client === 'claude'
     ? "--allowedTools 'mcp__pulidam__*'"
     : `-c ${shellArgument('mcp_servers.pulidam.default_tools_approval_mode="approve"', shell)}`
-  return `${connect} ; ${client} ${approval} ${prompt}`
+  // claude --allowedTools 는 값을 여러 개 받아 뒤에 오는 요청 글까지 먹으므로 요청을 먼저 둔다
+  return client === 'claude' ? `${connect} ; claude ${prompt} ${approval}` : `${connect} ; codex ${approval} ${prompt}`
 }
