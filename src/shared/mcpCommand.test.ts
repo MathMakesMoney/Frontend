@@ -44,3 +44,12 @@ it('풀이담 MCP 도구만 자동 승인한다', () => {
     }
   }
 })
+
+it('Claude 요청 글을 --allowedTools 앞에 둔다 (여러 값을 받는 옵션이라 뒤에 두면 요청이 도구 이름으로 먹힌다)', () => {
+  for (const shell of ['posix', 'powershell'] as const) {
+    const command = mcpCommand('https://study.example', '2', '시험', shell, 'claude')
+    const run = command.split(' ; ')[1]
+    expect(run.indexOf('해설지 만들어줘')).toBeLessThan(run.indexOf('--allowedTools'))
+    expect(run.trimEnd().endsWith("--allowedTools 'mcp__pulidam__*'")).toBe(true)
+  }
+})
