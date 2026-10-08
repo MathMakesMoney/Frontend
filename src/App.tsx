@@ -39,6 +39,7 @@ export default function App() {
         <Route path="/new" element={<UploadPage />} />
         <Route path="/jobs/:id" element={<JobDetailPage />} />
         <Route path="/jobs/:id/haesol" element={<HaesolViewerPage />} />
+        <Route path="/jobs/:id/variant" element={<HaesolViewerPage variant />} />
       </Routes>
     </div>} />
     </Routes>

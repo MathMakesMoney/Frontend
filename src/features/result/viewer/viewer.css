@@ -32,6 +32,106 @@
   gap: 8px;
 }
 
+/* 변형문제 [문제지] [정답+해설] 탭 */
+.viewer-tabs {
+  display: flex;
+  padding: 3px;
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.viewer-tabs button {
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #475569;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.viewer-tabs button.on {
+  background: #fff;
+  color: #1d4ed8;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 12%);
+}
+
+/* 학생용 문제지 쪽: 한글 문제지(MunjeWriter)처럼 세로 2단, 단마다 위아래 2칸. 긴 문항은 단 전체 */
+.munje-student {
+  height: 22px;
+  margin: -4px 0 8px;
+  font-size: 13px;
+  line-height: 22px;
+}
+
+.munje-body {
+  height: calc(100% - 56px);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  column-gap: 30px;
+  /* 단 구분선 (해설지 쪽과 같은 모양) */
+  background: linear-gradient(#000, #000) center / 1px 100% no-repeat;
+}
+
+.munje-body.first {
+  height: calc(100% - 126px);
+}
+
+.munje-cell {
+  min-height: 0;
+  overflow: hidden;
+  padding-top: 4px;
+}
+
+/* 문항 번호: 윗줄에 굵고 조금 크게 (원본 시험지처럼), 발문은 다음 줄부터 */
+.munje-no {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+/* <보기>·조건 상자: 가는 테두리, <보 기> 제목은 위 테두리 가운데에 걸친다 */
+.munje-box {
+  position: relative;
+  margin: 12px 4px 6px;
+  padding: 12px 10px 6px;
+  border: 1px solid #000;
+}
+
+.munje-box-title {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -55%);
+  padding: 0 6px;
+  background: #fff;
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* 상자 줄 내어쓰기: 표시(ㄱ. / (가)) 칸과 글 칸을 나눠 넘어간 줄이 글 칸에서 시작 */
+.munje-hang {
+  display: flex;
+  align-items: baseline; /* 분수·극한처럼 높은 수식 옆에서도 표시가 글 기준선에 */
+}
+
+.munje-mark {
+  flex: none;
+  margin-right: 0.4em;
+}
+
+.munje-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 22px;
+  margin-top: 10px;
+  font-size: 13px;
+}
+
 .viewer-grid {
   flex: 1;
   min-height: 0;

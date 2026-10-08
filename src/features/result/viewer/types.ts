@@ -1,4 +1,4 @@
-import type { HaesolLayout } from '../haesolPages'
+import type { ReactNode } from 'react'
 
 // 해설지 보기(3칸) 부품끼리 주고받는 값. 쪽 번호 page 는 0부터
 
@@ -13,9 +13,8 @@ export interface ProblemEntry {
 
 // 왼쪽: 쪽 썸네일 목록
 export interface PageThumbsProps {
-  jobId: string
-  header: string
-  layout: HaesolLayout
+  pageCount: number
+  renderPage: (index: number) => ReactNode // 쪽 한 장 (해설지 쪽 또는 문제지 쪽)
   current: number
   entries: ProblemEntry[]
   onSelect: (page: number) => void
@@ -23,9 +22,8 @@ export interface PageThumbsProps {
 
 // 가운데: 고른 쪽 한 장을 크게. active 문항이 있으면 그 문항 위치로 스크롤하고 표시한다
 export interface PageStageProps {
-  jobId: string
-  header: string
-  layout: HaesolLayout
+  pageCount: number
+  renderPage: (index: number, active: string | null) => ReactNode
   current: number
   active: string | null
   onChange: (page: number) => void
@@ -38,5 +36,6 @@ export interface ProblemIndexProps {
   pageCount: number
   current: number
   active: string | null
+  hideAnswers?: boolean // 학생용 문제지 보기: 정답·검토 사유를 숨긴다
   onSelect: (entry: ProblemEntry) => void
 }

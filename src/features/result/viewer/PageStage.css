@@ -37,12 +37,14 @@
   overflow-clip-margin: 6px;
 }
 
-/* 마우스를 올린 문항도 네모로 (고른 문항보다 옅게) */
-.page-stage-inner .haesol-keep[data-label] {
+/* 마우스를 올린 문항도 네모로 (고른 문항보다 옅게). 해설지 문항 덩어리와 변형 문제지 칸 모두 */
+.page-stage-inner .haesol-keep[data-label],
+.page-stage-inner .munje-cell[data-label] {
   cursor: pointer;
 }
 
-.page-stage-inner .haesol-keep[data-label]:hover:not(.haesol-active) {
+.page-stage-inner .haesol-keep[data-label]:hover:not(.haesol-active),
+.page-stage-inner .munje-cell[data-label]:hover:not(.haesol-active) {
   outline: 2px solid #93c5fd;
   outline-offset: 2px;
   border-radius: 4px;

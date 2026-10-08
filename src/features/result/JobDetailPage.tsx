@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { deleteJob, fetchJob, haesolDraftUrl, haesolUrl } from '../../shared/api'
+import { deleteJob, fetchJob, fetchVariantLines, haesolDraftUrl, haesolUrl, variantUrl } from '../../shared/api'
 import { stageText } from '../../shared/stage'
 import { McpGuide } from '../mcp/McpGuide'
 import { ProblemBrowser } from './ProblemBrowser'
@@ -24,11 +24,21 @@ export function JobDetailPage() {
     retry: false, // 없는 작업(404)을 재시도로 붙들고 있지 않는다
   })
 
+  // 변형문제 정답+해설지 줄: make_variant_docs 뒤에만 있다 (없으면 null)
+  const { data: variantLines } = useQuery({
+    queryKey: ['variant', id],
+    queryFn: () => fetchVariantLines(id!),
+    enabled: !!id,
+  })
+
   // MCP 도구가 불릴 때마다 서버가 changed 를 보낸다: 작업을 다시 받는다 (끊기면 EventSource 가 알아서 다시 붙는다)
   useEffect(() => {
     if (!id) return
     const events = new EventSource(`/api/jobs/${id}/events`)
-    events.addEventListener('changed', () => queryClient.invalidateQueries({ queryKey: ['job', id] }))
+    events.addEventListener('changed', () => {
+      queryClient.invalidateQueries({ queryKey: ['job', id] })
+      queryClient.invalidateQueries({ queryKey: ['variant', id] })
+    })
     return () => events.close()
   }, [id, queryClient])
 
@@ -79,6 +89,17 @@ export function JobDetailPage() {
           </>}
             </div>
           )}
+        </div>
+      )}
+
+      {variantLines && (
+        <div className="job-document-toolbar" aria-label="변형문제 보기 및 다운로드">
+          <Link className="button" to={`/jobs/${job.id}/variant`}>변형문제 보기</Link>
+          <div className="job-download-group">
+            <span className="job-download-label">변형문제</span>
+            <a className="job-download-link" href={variantUrl(job.id, 'munje')}>문제지 HWP</a>
+            <a className="job-download-link" href={variantUrl(job.id, 'haesol')}>정답+해설 HWP</a>
+          </div>
         </div>
       )}
 

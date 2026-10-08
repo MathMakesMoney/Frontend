@@ -1,5 +1,4 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { HaesolPage } from '../haesolPages'
 import type { PageStageProps } from './types'
 import './PageStage.css'
 
@@ -13,13 +12,13 @@ const clamp = (v: number) => Math.min(MAX, Math.max(MIN, v))
 
 // 가운데 칸: 모든 쪽을 세로로 이어 붙여 스크롤로 넘긴다. 화면에 걸친 쪽이 지금 쪽(current)이 되고,
 // 다른 칸에서 쪽·문항을 고르면 그 자리로 스크롤한다. 확대·축소, ←/→ 로 앞뒤 쪽
-export function PageStage({ jobId, header, layout, current, active, onChange, onPick }: PageStageProps) {
+export function PageStage({ pageCount, renderPage, current, active, onChange, onPick }: PageStageProps) {
   const scroller = useRef<HTMLDivElement>(null)
   const reported = useRef(current) // 스크롤로 알린 쪽: 이 값으로 current 가 바뀌면 다시 스크롤하지 않는다
   const picked = useRef<string | null>(null) // 쪽 위에서 눌러 고른 문항: 이미 보고 있으니 스크롤하지 않는다
   const [width, setWidth] = useState(0)
   const [zoom, setZoom] = useState<number | null>(null) // null 이면 폭 맞춤
-  const count = layout.pages.length
+  const count = pageCount
 
   // 칸 폭 재기
   useLayoutEffect(() => {
@@ -91,10 +90,10 @@ export function PageStage({ jobId, header, layout, current, active, onChange, on
   return (
     <div className="page-stage">
       <div className="page-stage-scroll" ref={scroller} onScroll={onScroll} onClick={onClick}>
-        {layout.pages.map((_, i) => (
+        {Array.from({ length: pageCount }, (_, i) => (
           <div key={i} data-page={i} className="page-stage-box" style={{ width: PAGE_W * scale, height: PAGE_H * scale }}>
             <div className="page-stage-inner" style={{ transform: `scale(${scale})` }}>
-              <HaesolPage jobId={jobId} header={header} layout={layout} index={i} active={active} />
+              {renderPage(i, active)}
             </div>
           </div>
         ))}

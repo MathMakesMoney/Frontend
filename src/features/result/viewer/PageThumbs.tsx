@@ -1,10 +1,9 @@
 import { useEffect, useRef } from 'react'
-import { HaesolPage } from '../haesolPages'
 import type { PageThumbsProps } from './types'
 import './PageThumbs.css'
 
 // 왼쪽: 쪽 썸네일 목록. 카드를 누르면 그 쪽으로 (보기 전용)
-export function PageThumbs({ jobId, header, layout, current, entries, onSelect }: PageThumbsProps) {
+export function PageThumbs({ pageCount, renderPage, current, entries, onSelect }: PageThumbsProps) {
   const currentRef = useRef<HTMLButtonElement>(null)
 
   // 다른 칸에서 쪽이 바뀌어도 고른 카드가 보이게
@@ -16,9 +15,9 @@ export function PageThumbs({ jobId, header, layout, current, entries, onSelect }
     <aside className="viewer-panel page-thumbs">
       <div className="page-thumbs-head">
         <strong>쪽 목록</strong>
-        <span className="page-thumbs-count">{layout.pages.length}쪽</span>
+        <span className="page-thumbs-count">{pageCount}쪽</span>
       </div>
-      {layout.pages.map((_, i) => {
+      {Array.from({ length: pageCount }, (_, i) => {
         const count = entries.filter((e) => e.page === i).length
         const isCurrent = i === current
         return (
@@ -33,7 +32,7 @@ export function PageThumbs({ jobId, header, layout, current, entries, onSelect }
           >
             <span className="page-thumb-clip">
               <span className="page-thumb-inner">
-                <HaesolPage jobId={jobId} header={header} layout={layout} index={i} />
+                {renderPage(i)}
               </span>
             </span>
             <span className="page-thumb-meta">

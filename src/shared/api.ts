@@ -132,3 +132,32 @@ export function haesolUrl(jobId: string, ext: 'hwp' | 'hwpx'): string {
 export function haesolDraftUrl(jobId: string, ext: 'hwp' | 'hwpx'): string {
   return `/api/jobs/${jobId}/haesol-draft.${ext}`
 }
+
+// 변형문제 정답+해설지 줄 (make_variant_docs 가 만든 variant/haesol.txt, 작업 draft 와 같은 모양). 아직 안 만들었으면 null
+export async function fetchVariantLines(jobId: string): Promise<string[] | null> {
+  const res = await fetch(figureUrl(jobId, 'variant/haesol.txt'))
+  if (res.status === 404) return null
+  if (!res.ok) throw new ApiRequestError(res.status, '변형문제를 불러오지 못했습니다')
+  return (await res.text()).replace(/\s+$/, '').split(/\r?\n/)
+}
+
+// 변형문제 학생용 문제지 (make_variant_docs 가 만든 variant/munje.json). long 이면 단 전체(2칸)를 쓴다. 아직 안 만들었으면 null
+// parts: 발문 조각 ({text} 한 줄, {box, title} <보기>·조건 상자. 판정은 백엔드 MunjeWriter.parts). 예전 파일엔 없다
+export type MunjePart = { text: string } | { box: string[]; title: string }
+
+export interface VariantMunje {
+  title: string
+  items: { label: string; stem: string; parts?: MunjePart[]; choices: string[]; long: boolean }[]
+}
+
+export async function fetchVariantMunje(jobId: string): Promise<VariantMunje | null> {
+  const res = await fetch(figureUrl(jobId, 'variant/munje.json'))
+  if (res.status === 404) return null
+  if (!res.ok) throw new ApiRequestError(res.status, '변형문제 문제지를 불러오지 못했습니다')
+  return (await res.json()) as VariantMunje
+}
+
+// 변형문제 다운로드: 학생용 문제지(munje), 정답+해설지(haesol)
+export function variantUrl(jobId: string, kind: 'munje' | 'haesol'): string {
+  return `/api/jobs/${jobId}/variant-${kind}.hwp`
+}

@@ -5,7 +5,7 @@ import type { ProblemEntry, ProblemIndexProps } from './types'
 import './ProblemIndex.css'
 
 // 오른쪽 칸: 쪽별로 묶은 문항 목록 (보기 전용)
-export function ProblemIndex({ entries, pageCount, current, active, onSelect }: ProblemIndexProps) {
+export function ProblemIndex({ entries, pageCount, current, active, hideAnswers, onSelect }: ProblemIndexProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [closed, setClosed] = useState<Set<number>>(new Set()) // 접힌 쪽 (기본은 모두 펼침)
 
@@ -76,12 +76,12 @@ export function ProblemIndex({ entries, pageCount, current, active, onSelect }: 
                         <strong>{labelText(e.label)}</strong>
                         {e.hasFigure && <span className="pindex-fig">그림</span>}
                       </span>
-                      <span className="pindex-answer">
+                      {!hideAnswers && <span className="pindex-answer">
                         <span className="pindex-muted">정답</span>{' '}
                         {e.answer ? <RichText text={e.answer} /> : '-'}
                         {e.review != null && ' (미확정)'}
-                      </span>
-                      {e.review != null && (
+                      </span>}
+                      {!hideAnswers && e.review != null && (
                         <span className="pindex-reason">검토 필요: {e.review}</span>
                       )}
                     </button>
