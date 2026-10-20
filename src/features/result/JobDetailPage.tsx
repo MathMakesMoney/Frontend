@@ -78,7 +78,7 @@ export function JobDetailPage() {
 
       {(draft.length > 0 || job.files.hwp || job.files.hwpx || job.files.academyHwp || (job.problemCount > 0 && job.stage !== 'done')) && (
         <div className="job-document-toolbar" aria-label="해설지 보기 및 다운로드">
-          {draft.length > 0 && <Link className="button" to={`/jobs/${job.id}/haesol`} title="쪽 목록 · 해설지 · 문항 목록 보기">해설지 보기</Link>}
+          {job.inputType !== 'HML' && draft.length > 0 && <Link className="button" to={`/jobs/${job.id}/haesol`} title="쪽 목록 · 해설지 · 문항 목록 보기">해설지 보기</Link>}
           {(job.files.hwp || job.files.hwpx || job.files.academyHwp || (job.problemCount > 0 && job.stage !== 'done')) && (
             <div className="job-download-group">
               <span className="job-download-label">다운로드</span>
