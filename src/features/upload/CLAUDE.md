@@ -8,7 +8,7 @@
 
 | 필드 | 필수 | 설명 |
 |---|---|---|
-| `file` | O | PDF, HWP, HWPX 하나. 최대 50MB (제안) |
+| `file` | O | PDF, HWP, HWPX, HML 하나. 최대 50MB (제안) |
 | `title` | O | 해설지 제목 |
 | `scope` | O | 교과 범위 문구 (예 문구는 `solution/infrastructure/ai/CLAUDE.md`) |
 | `pages` | PDF 만 | 쪽 범위, 예 `1-8,13-16` |
@@ -16,6 +16,8 @@
 | `mode` | O | `api` 또는 `mcp` |
 
 ## 화면 규칙
+
+- HML (학원 시험지 타이핑 1단계, 계획 `../Backend/docs/exec-plans/active/academy-typing-server.md`): AI 단계 없이 업로드 때 학원 양식 문서가 바로 만들어진다. 그래서 파일이 `.hml` 이면 AI 이용 방식(MCP/API)과 시험 범위 칸을 숨긴다(머리 표 과목 칸은 교과 범위). 시험 정보 칸 안내는 학원 양식 머리 표에 들어간다는 뜻(시험 이름=연도·시험 칸, 학교를 비우면 시험지의 학교). 검사 실패는 백엔드 400 사유를 기존 오류 줄에 그대로 보인다
 
 - 입력 권장 순서를 안내한다: HWPX > HWP > PDF (HWPX·HWP 가 추출이 더 정확하고 싸다)
 - 확장자·크기는 먼저 화면에서 막고, 내용 검사(암호, 배포용 HWP, 쪽 수 초과, 형식 불명)는 백엔드 400 사유를 그대로 보여 준다

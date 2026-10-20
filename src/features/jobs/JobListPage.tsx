@@ -59,7 +59,7 @@ export function JobListPage() {
       <li key={job.id} data-status={job.stage === 'done' ? 'done' : job.stage === 'uploaded' ? 'uploaded' : 'working'} className={`job-card${featured ? ' job-card-featured' : ''}`}>
         <Link to={`/jobs/${job.id}`} className="job-row">
           <div className="job-cover" aria-hidden="true">
-            {job.inputType === 'PDF' ? cover : <HangulCover jobId={job.id} inputType={job.inputType} title={job.title} className="job-cover-preview">{cover}</HangulCover>}
+            {job.inputType !== 'HWP' && job.inputType !== 'HWPX' ? cover : <HangulCover jobId={job.id} inputType={job.inputType} title={job.title} className="job-cover-preview">{cover}</HangulCover>}
             {job.inputType === 'PDF' && <img className="job-cover-preview" src={`/api/jobs/${encodeURIComponent(job.id)}/pages/1.png`} alt="" loading="lazy" onError={event => { event.currentTarget.hidden = true }} />}
             <span className={`file-type${job.inputType === 'PDF' ? ' pdf' : ''}`}>{job.inputType}</span>
           </div>

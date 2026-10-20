@@ -4,10 +4,14 @@ import { createJob } from '../../shared/api'
 import { isValidPagesRange } from '../../shared/pagesRange'
 import { fileTitle } from './fileTitle'
 
-const ACCEPTED = ['.pdf', '.hwp', '.hwpx']
+export const ACCEPTED = ['.pdf', '.hwp', '.hwpx', '.hml']
 
 function isPdf(file: File): boolean {
   return file.name.toLowerCase().endsWith('.pdf')
+}
+
+function isHml(file: File | null): boolean {
+  return !!file && file.name.toLowerCase().endsWith('.hml')
 }
 
 // 작업 만들기(업로드) 화면
@@ -26,6 +30,7 @@ export function UploadPage() {
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
+  const hml = isHml(file)  // hml 은 AI 단계 없이 학원 양식 문서가 바로 만들어진다
   const pagesError = pages.trim() !== '' && !isValidPagesRange(pages)
 
   async function handleSubmit(e: FormEvent) {
@@ -64,9 +69,9 @@ export function UploadPage() {
     <div className="page upload-page">
       <p className="upload-eyebrow">시험지에서 해설지로</p>
       <h1>새 시험지를 올려주세요</h1>
-      <p className="hint">HWPX · HWP · PDF를 지원해요 · 더 정확한 추출을 위해 HWPX를 권장해요</p>
+      <p className="hint">HWPX · HWP · PDF · HML을 지원해요 · 더 정확한 추출을 위해 HWPX를 권장해요</p>
 
-      <div className="upload-mode" role="group" aria-label="AI 이용 방식">
+      {!hml && <div className="upload-mode" role="group" aria-label="AI 이용 방식">
         {(['mcp', 'api'] as const).map(mode => (
           <button type="button" key={mode} aria-pressed={apiMode === (mode === 'api')} disabled={submitting} onClick={() => {
             const next = new URLSearchParams(searchParams)
@@ -77,8 +82,8 @@ export function UploadPage() {
             {mode === 'mcp' ? '개인 AI 연결(MCP)' : '풀이담 AI'}
           </button>
         ))}
-      </div>
-      {apiMode && <p className="hint">AI 실행 기능은 준비 중입니다</p>}
+      </div>}
+      {!hml && apiMode && <p className="hint">AI 실행 기능은 준비 중입니다</p>}
 
       <form onSubmit={handleSubmit} className="upload-form">
         <label className="upload-file-field">
@@ -127,6 +132,7 @@ export function UploadPage() {
         {/* 해설지 머리말에 들어갈 선택 정보를 모은다 */}
         <fieldset className="upload-details">
         <legend>시험 정보 <span>선택</span></legend>
+        {hml && <p className="hint">학원 양식 문서의 머리 표에 들어갑니다 (시험 이름은 연도·시험 칸, 교과 범위는 과목 칸). 학교를 비우면 시험지의 학교를 씁니다</p>}
         <label>
           학교 (선택)
           <input type="text" value={school} onChange={(e) => setSchool(e.target.value)} placeholder="예: 한국고" />
@@ -144,7 +150,7 @@ export function UploadPage() {
             placeholder="예: 2023학년도 2학기 중간고사"
           />
         </label>
-        <label>
+        {!hml && <label>
           시험 범위 (선택)
           <input
             type="text"
@@ -153,7 +159,7 @@ export function UploadPage() {
             placeholder="예: 수학(하) 집합~함수"
           />
           <span className="hint">비우면 해설지에 임시 문구로 들어가고 한글에서 고칠 수 있습니다</span>
-        </label>
+        </label>}
 
         </fieldset>
 
@@ -176,7 +182,7 @@ export function UploadPage() {
         {error && <p className="error">{error}</p>}
 
         <button type="submit" className="button" disabled={submitting}>
-          {submitting ? '업로드 중...' : '해설지 만들기 시작'}
+          {submitting ? '업로드 중...' : hml ? '학원 양식으로 만들기' : '해설지 만들기 시작'}
         </button>
       </form>
     </div>

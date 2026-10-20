@@ -103,6 +103,9 @@ function HwpPages({ jobId, path }: { jobId: string; path: string }) {
 export function OriginalPages({ job }: { job: Job }) {
   const [open, setOpen] = useState(false)
 
+  // HML 작업은 쪽 이미지도 원본 미리보기도 없다
+  if (job.inputType === 'HML') return null
+
   return (
     <section className="original-pages">
       <button type="button" className="button-plain" onClick={() => setOpen(!open)}>

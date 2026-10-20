@@ -1,6 +1,6 @@
 // 백엔드 JSON 모양 그대로 옮긴 타입, 필드 이름을 바꾸지 않는다
 export type Stage = 'uploaded' | 'problems' | 'figures' | 'solving' | 'done'
-export type InputType = 'PDF' | 'HWP' | 'HWPX'
+export type InputType = 'PDF' | 'HWP' | 'HWPX' | 'HML'
 
 export interface Verification {
   pass: boolean
@@ -37,7 +37,8 @@ export interface Job {
   problemCount: number
   solvedCount: number
   reviewCount: number
-  files: { hwp: boolean; hwpx: boolean }
+  // academyHwp·academyHwpx: HML 작업에만 온다 (학원 양식 문제지)
+  files: { hwp: boolean; hwpx: boolean; academyHwp?: boolean; academyHwpx?: boolean }
   problems?: Problem[]
   // 해설지 머리말용 시험 정보. 예전 작업에는 없을 수 있다
   school?: string
@@ -126,6 +127,11 @@ export function pageImageUrl(jobId: string, page: number): string {
 
 export function haesolUrl(jobId: string, ext: 'hwp' | 'hwpx'): string {
   return `/api/jobs/${jobId}/haesol.${ext}`
+}
+
+// HML 작업의 학원 양식 문제지 (업로드 때 만든 파일)
+export function academyUrl(jobId: string, ext: 'hwp' | 'hwpx'): string {
+  return `/api/jobs/${jobId}/academy.${ext}`
 }
 
 // 다 풀기 전 지금까지 저장된 풀이로 만든 해설지 (받을 때마다 새로 만든다)

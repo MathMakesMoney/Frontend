@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-수학은 돈이된다 (MathMakesMoney) 프론트엔드. 강사가 시험지(HWPX, HWP, PDF)를 올리고, 작업 진행을 보고, 문항별 풀이를 확인·수정한 뒤 HWP/HWPX 해설지를 받는 웹사이트.
+수학은 돈이된다 (MathMakesMoney) 프론트엔드. 강사가 시험지(HWPX, HWP, PDF, HML)를 올리고, 작업 진행을 보고, 문항별 풀이를 확인·수정한 뒤 HWP/HWPX 해설지를 받는 웹사이트.
 
 - 원문: 노션 PRD `3e7d5061-49b7-80a0-88b0-fe3d067c83be`
 - 백엔드 사양이 기준이다: `../Backend/CLAUDE.md` 와 각 컨텍스트 CLAUDE.md. API 모양은 `../Backend/src/main/java/com/mathmakesmoney/backend/job/presentation/CLAUDE.md`, `account/CLAUDE.md`

@@ -6,6 +6,7 @@ import { stageText } from '../../shared/stage'
 import { McpGuide } from '../mcp/McpGuide'
 import { ProblemBrowser } from './ProblemBrowser'
 import { OriginalPages } from './OriginalPages'
+import { AcademyDownloads } from './AcademyDownloads'
 
 // 작업 상세: MCP 안내, 진행 상태, 문항별 결과, 다운로드
 export function JobDetailPage() {
@@ -72,16 +73,18 @@ export function JobDetailPage() {
 
       <OriginalPages job={job} />
 
-      <McpGuide jobId={job.id} jobTitle={job.title} />
+      {/* HML 작업은 AI 단계가 없어 MCP 연결 안내를 보이지 않는다 */}
+      {job.inputType !== 'HML' && <McpGuide jobId={job.id} jobTitle={job.title} />}
 
-      {(draft.length > 0 || job.files.hwp || job.files.hwpx || (job.problemCount > 0 && job.stage !== 'done')) && (
+      {(draft.length > 0 || job.files.hwp || job.files.hwpx || job.files.academyHwp || (job.problemCount > 0 && job.stage !== 'done')) && (
         <div className="job-document-toolbar" aria-label="해설지 보기 및 다운로드">
           {draft.length > 0 && <Link className="button" to={`/jobs/${job.id}/haesol`} title="쪽 목록 · 해설지 · 문항 목록 보기">해설지 보기</Link>}
-          {(job.files.hwp || job.files.hwpx || (job.problemCount > 0 && job.stage !== 'done')) && (
+          {(job.files.hwp || job.files.hwpx || job.files.academyHwp || (job.problemCount > 0 && job.stage !== 'done')) && (
             <div className="job-download-group">
               <span className="job-download-label">다운로드</span>
           {job.files.hwp && <a className="job-download-link" href={haesolUrl(job.id, 'hwp')}>HWP</a>}
           {job.files.hwpx && <a className="job-download-link" href={haesolUrl(job.id, 'hwpx')}>HWPX</a>}
+          <AcademyDownloads jobId={job.id} files={job.files} />
           {job.problemCount > 0 && job.stage !== 'done' && <>
             <a className="job-download-link" href={haesolDraftUrl(job.id, 'hwp')}>진행본 HWP</a>
             <a className="job-download-link" href={haesolDraftUrl(job.id, 'hwpx')}>진행본 HWPX</a>
