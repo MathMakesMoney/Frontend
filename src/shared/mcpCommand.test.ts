@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { shellArgument, mcpCommand, mcpPrompt } from './mcpCommand'
+import { shellArgument, mcpBatchPrompt, mcpCommand, mcpPrompt, mcpRunCommand } from './mcpCommand'
 
 describe('복사 명령', () => {
   it('셸별로 작은따옴표와 실행 문자를 문자 그대로 감싼다', () => {
@@ -52,4 +52,12 @@ it('Claude 요청 글을 --allowedTools 앞에 둔다 (여러 값을 받는 옵�
     expect(run.indexOf('해설지 만들어줘')).toBeLessThan(run.indexOf('--allowedTools'))
     expect(run.trimEnd().endsWith("--allowedTools 'mcp__pulidam__*'")).toBe(true)
   }
+})
+
+it('묶음은 get_batch 부터 시키고 묶음 주소로 구분한다', () => {
+  const prompt = mcpBatchPrompt('https://study.example', '5', '중간고사 묶음')
+  expect(prompt).toContain('묶음 5(중간고사 묶음) 처리해줘')
+  expect(prompt).toContain('get_batch 부터')
+  expect(prompt).toContain('https://study.example/batches/5')
+  expect(mcpRunCommand('https://study.example', prompt, 'posix', 'claude')).toContain('get_batch 부터')
 })

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Link, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { JobListPage } from './features/jobs/JobListPage'
+import { BatchPage } from './features/jobs/BatchPage'
 import { UploadPage } from './features/upload/UploadPage'
 import { JobDetailPage } from './features/result/JobDetailPage'
 import { HaesolViewerPage } from './features/result/viewer/HaesolViewerPage'
@@ -37,6 +38,7 @@ export default function App() {
       <Routes>
         <Route path="/jobs" element={<JobListPage />} />
         <Route path="/new" element={<UploadPage />} />
+        <Route path="/batches/:id" element={<BatchPage />} />
         <Route path="/jobs/:id" element={<JobDetailPage />} />
         <Route path="/jobs/:id/haesol" element={<HaesolViewerPage />} />
         <Route path="/jobs/:id/variant" element={<HaesolViewerPage variant />} />

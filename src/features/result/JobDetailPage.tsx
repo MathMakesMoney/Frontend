@@ -2,7 +2,9 @@ import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { deleteJob, fetchJob, fetchVariantLines, haesolDraftUrl, haesolUrl, variantUrl } from '../../shared/api'
-import { stageText } from '../../shared/stage'
+import { featureText, stageText } from '../../shared/stage'
+import { mcpPrompt } from '../../shared/mcpCommand'
+import { ProgressStatus } from '../../shared/ProgressStatus'
 import { McpGuide } from '../mcp/McpGuide'
 import { ProblemBrowser } from './ProblemBrowser'
 import { OriginalPages } from './OriginalPages'
@@ -71,10 +73,17 @@ export function JobDetailPage() {
         {stageText(job.stage, job.solvedCount, job.problemCount)}
       </p>
 
+      {/* 학원 시험지 작업: 고른 기능과 진행. 보류면 사람이 확인해야 한다 (결정 화면은 3단계) */}
+      {job.features && <p className="job-meta job-academy">
+        만들 기능: {featureText(job.features)} <ProgressStatus job={job} />
+        {job.batch && <> · <Link to={`/batches/${job.batch.id}`}>묶음 {job.batch.name}</Link></>}
+      </p>}
+      {job.progress === 'hold' && <p className="job-hold" role="status">검토 필요: 해설 판정에 사람이 확인할 문항이 있어 결과 문서를 만들지 않았어요</p>}
+
       <OriginalPages job={job} />
 
-      {/* HML 작업은 AI 단계가 없어 MCP 연결 안내를 보이지 않는다 */}
-      {job.inputType !== 'HML' && <McpGuide jobId={job.id} jobTitle={job.title} />}
+      {/* HML 작업은 해설·변형 차례일 때만 MCP 연결 안내를 보인다 (타이핑만이면 AI 단계가 없다) */}
+      {(job.inputType !== 'HML' || job.progress === 'haesol' || job.progress === 'variant') && <McpGuide prompt={mcpPrompt(window.location.origin, job.id, job.title)} />}
 
       {(draft.length > 0 || job.files.hwp || job.files.hwpx || job.files.academyHwp || (job.problemCount > 0 && job.stage !== 'done')) && (
         <div className="job-document-toolbar" aria-label="해설지 보기 및 다운로드">

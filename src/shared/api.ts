@@ -25,6 +25,16 @@ export interface Problem {
   revisionCount?: number
 }
 
+// 학원 시험지 제작: 고른 기능과 진행 (hml 작업만). haesol 해설 차례, hold 보류(검토 필요), variant 변형 차례, done 결과 문서 있음, failed 결과 문서 실패
+export type Feature = 'typing' | 'haesol' | 'variant'
+export type Progress = 'haesol' | 'hold' | 'variant' | 'done' | 'failed'
+export interface BatchInfo {
+  id: string
+  name: string
+  created: string
+  order: number
+}
+
 export interface Job {
   id: string
   title: string
@@ -39,6 +49,11 @@ export interface Job {
   reviewCount: number
   // academyHwp·academyHwpx: HML 작업에만 온다 (학원 양식 문제지)
   files: { hwp: boolean; hwpx: boolean; academyHwp?: boolean; academyHwpx?: boolean }
+  // 기능을 고른 작업에만 온다. batch 는 묶음으로 올린 작업만
+  features?: Feature[]
+  progress?: Progress
+  progressError?: string
+  batch?: BatchInfo
   problems?: Problem[]
   // 해설지 머리말용 시험 정보. 예전 작업에는 없을 수 있다
   school?: string
@@ -93,6 +108,7 @@ export interface CreateJobInput {
   grade: string
   exam: string
   range: string
+  features?: Feature[]
 }
 
 export async function createJob(input: CreateJobInput): Promise<{ id: string }> {
@@ -105,8 +121,62 @@ export async function createJob(input: CreateJobInput): Promise<{ id: string }> 
   form.set('grade', input.grade)
   form.set('exam', input.exam)
   form.set('range', input.range)
+  if (input.features) form.set('features', input.features.join(','))
   const res = await fetch('/api/jobs', { method: 'POST', body: form })
   return handle<{ id: string }>(res)
+}
+
+// 묶음으로 올릴 시험지 하나의 입력 (파일과 같은 순서)
+export interface BatchItem {
+  title: string
+  scope: string
+  school: string
+  grade: string
+  exam: string
+  range: string
+  features: Feature[]
+}
+
+// 묶음 올리기 응답: 거부된 시험지는 errors 에 파일별 사유
+export interface BatchCreated {
+  id: string
+  jobs: string[]
+  errors: { file: string; error: string }[]
+}
+
+export async function createBatch(files: File[], name: string, items: BatchItem[]): Promise<BatchCreated> {
+  const form = new FormData()
+  files.forEach(file => form.append('files', file))
+  form.set('name', name)
+  form.set('items', JSON.stringify(items))
+  const res = await fetch('/api/batches', { method: 'POST', body: form })
+  return handle<BatchCreated>(res)
+}
+
+// API 버전 묶음 실행 상태 (서버 메모리, 재시작하면 idle)
+export interface BatchRun {
+  state: 'idle' | 'running' | 'done' | 'failed' | 'cancelled'
+  current?: string | null
+  error?: string | null
+}
+
+export interface BatchView {
+  id: string
+  name: string
+  created: string
+  jobs: Job[]
+  run: BatchRun
+}
+
+export async function fetchBatch(id: string): Promise<BatchView> {
+  const res = await fetch(`/api/batches/${id}`)
+  return handle<BatchView>(res)
+}
+
+// 묶음 실행·중지: 503 키 없음, 409 실행 중(중지는 실행 중 아님)은 백엔드 사유를 그대로 던진다
+export async function controlBatch(id: string, action: 'run' | 'cancel'): Promise<void> {
+  const res = await fetch(`/api/batches/${id}/${action}`, { method: 'POST' })
+  await handle<unknown>(res)
 }
 
 export async function deleteJob(id: string): Promise<void> {

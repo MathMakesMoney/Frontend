@@ -21,6 +21,8 @@ MCP 버전 사용자가 MCP 를 지원하는 프로그램 대화창에서 해설
 - Claude Desktop, claude.ai, ChatGPT 는 내 컴퓨터(localhost)에 접속할 수 없어 로컬 PoC 에서는 못 쓴다고 알린다
 - 원격 서버 주소·인증(OAuth) 방식은 미정. 정해지면 여기 적는다
 
+- `McpGuide` 는 요청 글(`prompt`)을 받아 연결+실행 명령을 만든다 (`shared/mcpCommand.ts` `mcpRunCommand`). 작업은 `mcpPrompt`, 묶음은 `mcpBatchPrompt`(get_batch 부터, 백엔드 `prompts/batch.txt`)
+
 ## 알려 줄 것 (PoC 근거)
 
 - 오래 걸리고 사용자 구독 한도를 쓴다: 모평 30문항 41분, 한 세트에 구독 5시간 한도 약 14%. Pro 요금제로 한 세트가 되는지는 아직 모름
