@@ -14,8 +14,9 @@ export function stageText(stage: Stage, solved: number, total: number): string {
   return STAGE_LABEL[stage]
 }
 
-// 학원 시험지 제작 진행 (hml 작업). 내부 값 대신 강사 눈높이 말로 보인다
+// 학원 시험지 제작 진행 (기능을 고른 작업). 내부 값 대신 강사 눈높이 말로 보인다
 export const PROGRESS_LABEL: Record<Progress, string> = {
+  extract: '문항 뽑기 차례',
   haesol: '해설 진행 중',
   hold: '보류 · 검토 필요',
   variant: '변형 진행 중',

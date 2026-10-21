@@ -31,6 +31,16 @@ function FeaturePicker({ features, onChange, disabled }: { features: Feature[]; 
   )
 }
 
+// 묶음 시험지 하나만의 칸: PDF 는 쪽 범위, hml 이 아니면 시험 범위 (단일 업로드와 같은 칸)
+function FileFields({ file, row, onChange }: { file: File; row: Row; onChange: (next: Row) => void }) {
+  const pagesError = row.pages.trim() !== '' && !isValidPagesRange(row.pages)
+  return <>
+    {isPdf(file) && <label>쪽 범위 (선택)<input type="text" value={row.pages} onChange={e => onChange({ ...row, pages: e.target.value })} placeholder="예: 1-8,13-16" />
+      {pagesError && <span className="error">형식이 올바르지 않습니다</span>}</label>}
+    {!isHml(file) && <label>시험 범위 (선택)<input type="text" value={row.range} onChange={e => onChange({ ...row, range: e.target.value })} placeholder="예: 수학(하) 집합~함수" /></label>}
+  </>
+}
+
 // 묶음 한 칸(공통 값 또는 시험지 하나)의 입력 칸들
 function ExamFields({ value, onChange }: { value: Common; onChange: (next: Common) => void }) {
   const set = (key: 'scope' | 'school' | 'grade' | 'exam') => (e: { target: { value: string } }) => onChange({ ...value, [key]: e.target.value })
@@ -66,16 +76,21 @@ export function UploadPage() {
   const [submitting, setSubmitting] = useState(false)
 
   const file = files[0] ?? null
-  const batch = files.length >= 2  // hml 2개 이상은 묶음
-  const hml = batch || isHml(file)  // hml 은 AI 단계 없이 학원 양식 문서가 바로 만들어진다
-  const wantsAi = batch ? rows.some(r => r.features.includes('haesol')) : hml && features.includes('haesol')  // 해설·변형만 AI 를 쓴다
+  const batch = files.length >= 2  // 지원 파일 2개 이상은 묶음
+  const hml = !batch && isHml(file)  // hml 은 AI 없이 문항을 읽는다
+  // AI 를 쓰는지: hwp·hwpx·pdf 는 문항 뽑기부터 AI, hml 은 해설·변형만
+  const wantsAi = batch ? rows.some((r, i) => !isHml(files[i]) || r.features.includes('haesol')) : !hml || features.includes('haesol')
   const pagesError = pages.trim() !== '' && !isValidPagesRange(pages)
 
   // 고른 파일을 나눠 담는다: 묶음이면 시험지마다 입력 줄을 만든다
   function choose(picked: File[]) {
     const next = pickFiles(picked)
     if (next.files.length === 0 && next.skipped.length === 0) return
-    if (next.files.length === 1) setTitle(fileTitle(title, file?.name ?? '', next.files[0].name))
+    if (next.files.length === 1) {
+      setTitle(fileTitle(title, file?.name ?? '', next.files[0].name))
+      // 기본 기능: hml 은 타이핑, hwp·hwpx·pdf 는 지금까지처럼 해설
+      setFeatures(isHml(next.files[0]) ? ['typing'] : ['haesol'])
+    }
     setFiles(next.files)
     setSkipped(next.skipped)
     setRows(next.files.length >= 2 ? next.files.map(newRow) : [])
@@ -87,10 +102,14 @@ export function UploadPage() {
       setError('시험지마다 만들 기능을 하나 이상 고르세요')
       return
     }
+    if (rows.some(r => r.pages.trim() !== '' && !isValidPagesRange(r.pages))) {
+      setError('쪽 범위 형식이 올바르지 않습니다 (예: 1-8,13-16)')
+      return
+    }
     setError(null)
     setSubmitting(true)
     try {
-      const result = await createBatch(files, batchName.trim(), rows.map(r => ({ ...r, range: '' })))
+      const result = await createBatch(files, batchName.trim(), rows.map(r => ({ ...r, pages: r.pages.trim(), range: r.range.trim() })))
       if (result.errors.length === 0) navigate(`/batches/${result.id}`)
       else setCreated(result)  // 거부된 시험지를 파일별로 보여 준 뒤 묶음 화면으로
     } catch (err) {
@@ -112,7 +131,7 @@ export function UploadPage() {
       setError('쪽 범위 형식이 올바르지 않습니다 (예: 1-8,13-16)')
       return
     }
-    if (hml && features.length === 0) {
+    if (features.length === 0) {
       setError('만들 기능을 하나 이상 고르세요')
       return
     }
@@ -128,7 +147,7 @@ export function UploadPage() {
         grade: grade.trim(),
         exam: exam.trim(),
         range: range.trim(),
-        features: hml ? features : undefined,
+        features,
       })
       navigate(`/jobs/${id}`)
     } catch (err) {
@@ -155,9 +174,9 @@ export function UploadPage() {
     <div className="page upload-page">
       <p className="upload-eyebrow">시험지에서 해설지로</p>
       <h1>새 시험지를 올려주세요</h1>
-      <p className="hint">HWPX · HWP · PDF · HML을 지원해요 · 더 정확한 추출을 위해 HWPX를 권장해요 · HML을 2개 이상 고르면 묶음으로 올라가요</p>
+      <p className="hint">HWPX · HWP · PDF · HML을 지원해요 · 더 정확한 추출을 위해 HWPX를 권장해요 · 2개 이상 고르면 묶음으로 올라가요</p>
 
-      {(!hml || wantsAi) && <div className="upload-mode" role="group" aria-label="AI 이용 방식">
+      {wantsAi && <div className="upload-mode" role="group" aria-label="AI 이용 방식">
         {(['mcp', 'api'] as const).map(mode => (
           <button type="button" key={mode} aria-pressed={apiMode === (mode === 'api')} disabled={submitting} onClick={() => {
             const next = new URLSearchParams(searchParams)
@@ -169,13 +188,13 @@ export function UploadPage() {
           </button>
         ))}
       </div>}
-      {(!hml || wantsAi) && apiMode && <p className="hint">AI 실행 기능은 준비 중입니다</p>}
+      {wantsAi && apiMode && <p className="hint">AI 실행 기능은 준비 중입니다</p>}
 
       <form onSubmit={handleSubmit} className="upload-form">
         <label className="upload-file-field">
           <span className="upload-file-icon" aria-hidden="true">↑</span>
           <strong>{batch ? `시험지 ${files.length}개` : file ? file.name : '시험지 파일을 선택하세요'}</strong>
-          <span className="hint">쓰던 시험지 그대로, 한 파일 또는 HML 여러 개를 고르세요</span>
+          <span className="hint">쓰던 시험지 그대로, 한 파일 또는 여러 개를 고르세요</span>
           <span className="upload-file-picker" aria-hidden="true">파일 선택</span>
           <input
             type="file"
@@ -206,6 +225,7 @@ export function UploadPage() {
               <legend>{files[i].name}</legend>
               <label>제목<input type="text" value={row.title} required onChange={(e) => setRows(rows.map((r, j) => j === i ? { ...r, title: e.target.value } : r))} /></label>
               <ExamFields value={row} onChange={(next) => setRows(rows.map((r, j) => j === i ? { ...r, ...next } : r))} />
+              <FileFields file={files[i]} row={row} onChange={(next) => setRows(rows.map((r, j) => j === i ? next : r))} />
             </fieldset>
           ))}
         </>}
@@ -267,7 +287,7 @@ export function UploadPage() {
           />
           <span className="hint">비우면 해설지에 임시 문구로 들어가고 한글에서 고칠 수 있습니다</span>
         </label>}
-        {hml && <FeaturePicker features={features} onChange={setFeatures} />}
+        <FeaturePicker features={features} onChange={setFeatures} />
 
         </fieldset>}
 
@@ -290,7 +310,7 @@ export function UploadPage() {
         {error && <p className="error">{error}</p>}
 
         <button type="submit" className="button" disabled={submitting}>
-          {submitting ? '업로드 중...' : batch ? `묶음으로 올리기 (${files.length}개)` : hml ? '학원 양식으로 만들기' : '해설지 만들기 시작'}
+          {submitting ? '업로드 중...' : batch ? `묶음으로 올리기 (${files.length}개)` : hml ? '학원 양식으로 만들기' : '만들기 시작'}
         </button>
       </form>
     </div>

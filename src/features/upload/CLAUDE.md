@@ -9,6 +9,7 @@
 | 필드 | 필수 | 설명 |
 |---|---|---|
 | `file` | O | PDF, HWP, HWPX, HML 하나. 최대 50MB (제안) |
+| `features` | X | 만들 기능 쉼표 글자 (`typing,haesol,variant`). 화면은 늘 보낸다 (아래 기능 고르기) |
 | `title` | O | 해설지 제목 |
 | `scope` | O | 교과 범위 문구 (예 문구는 `solution/infrastructure/ai/CLAUDE.md`) |
 | `pages` | PDF 만 | 쪽 범위, 예 `1-8,13-16` |
@@ -33,8 +34,8 @@
 
 ## 학원 시험지 묶음·기능 고르기 (사이트 2단계, 계획 `../Backend/docs/exec-plans/active/academy-batch.md`)
 
-- 파일 선택은 여러 개, 폴더째 선택도 된다 (`batchFiles.ts` `pickFiles`). hml 이 2개 이상이면 묶음(hml 만 이름순, 나머지는 못 넣었다고 알림), 아니면 지원하는 첫 파일 하나. 폴더의 `.DS_Store` 같은 점 파일은 알리지 않는다
-- 묶음: `POST /api/batches` (`createBatch`). 묶음 이름, 공통 값(교과 범위·학교·학년·시험 이름·기능)과 `모든 시험지에 적용`(빈 칸은 시험지 값을 지우지 않고 기능은 덮어쓴다), 시험지마다 제목(파일명에서)·같은 칸들. 시험 범위(`range`)는 hml 이라 빈 값으로 보낸다
+- 파일 선택은 여러 개, 폴더째 선택도 된다 (`batchFiles.ts` `pickFiles`). 지원하는 파일(hml·hwp·hwpx·pdf)이 2개 이상이면 묶음(형식을 섞어도 되고 이름순, 지원하지 않는 파일은 못 넣었다고 알림), 하나면 그 파일. 폴더의 `.DS_Store` 같은 점 파일은 알리지 않는다 (4단계, 계획 `../Backend/docs/exec-plans/active/academy-typing-ai.md`)
+- 묶음: `POST /api/batches` (`createBatch`). 묶음 이름, 공통 값(교과 범위·학교·학년·시험 이름·기능)과 `모든 시험지에 적용`(빈 칸은 시험지 값을 지우지 않고 기능은 덮어쓴다), 시험지마다 제목(파일명에서)·같은 칸들. 시험지마다만 있는 칸(`FileFields`): PDF 는 쪽 범위(`pages`, 단일 업로드와 같은 형식 검사), hml 이 아니면 시험 범위(`range`). hml 의 시험 범위는 빈 값
 - 응답 `errors` 가 있으면 파일별 사유를 보이고 `묶음 화면으로` 링크를 준다 (없으면 바로 `/batches/{id}`). 하나도 못 만들면 400 사유를 기존 오류 줄에 보인다
-- 기능 체크 타이핑·해설·변형 (`FeaturePicker`, hml 만): 변형을 켜면 해설이 같이 켜지고 변형이 켜진 동안 해설은 끌 수 없다 (`toggleFeature`). 하나도 안 고르면 막는다. 단일 hml 은 `POST /api/jobs` 에 `features`(쉼표 글자). hwp·hwpx·pdf 에는 보내지 않는다 (백엔드가 400)
-- AI 이용 방식(MCP/API)은 hml 이어도 해설을 고르면 보인다 (타이핑만이면 AI 가 없어 숨김). 값은 기존 `mode` 쿼리를 따르고 서버에는 보내지 않는다
+- 기능 체크 타이핑·해설·변형 (`FeaturePicker`, 모든 형식): 변형을 켜면 해설이 같이 켜지고 변형이 켜진 동안 해설은 끌 수 없다 (`toggleFeature`). 하나도 안 고르면 막는다. 단일 업로드는 `POST /api/jobs` 에 `features`(쉼표 글자)를 늘 보낸다. 파일을 고르면 기본은 hml 타이핑, hwp·hwpx·pdf 해설 (지금까지 받던 해설지를 그대로 받게, 백엔드 계획의 확인 필요). 묶음 줄 기본은 타이핑
+- AI 이용 방식(MCP/API)은 AI 를 쓸 때만 보인다: hwp·hwpx·pdf 는 문항 뽑기부터 AI, hml 은 해설을 고를 때만 (타이핑만인 hml 은 숨김). 값은 기존 `mode` 쿼리를 따르고 서버에는 보내지 않는다

@@ -3,17 +3,21 @@ import { applyCommon, EMPTY_COMMON, newRow, pickFiles, toggleFeature } from './b
 
 const f = (name: string) => new File(['x'], name)
 
-it('hml 이 2개 이상이면 묶음: hml 만 이름순으로 담고 나머지는 알린다', () => {
-  const { files, skipped } = pickFiles([f('시험 10.hml'), f('시험 2.hml'), f('a.pdf'), f('.DS_Store')])
-  expect(files.map(x => x.name)).toEqual(['시험 2.hml', '시험 10.hml'])
-  expect(skipped).toEqual(['a.pdf'])
+it('지원하는 파일이 2개 이상이면 묶음: hml·hwp·hwpx·pdf 를 섞어 이름순으로 담고 나머지는 알린다', () => {
+  const { files, skipped } = pickFiles([f('시험 10.hml'), f('시험 2.hml'), f('a.pdf'), f('memo.txt'), f('.DS_Store')])
+  expect(files.map(x => x.name)).toEqual(['시험 2.hml', '시험 10.hml', 'a.pdf'])  // 한국어 이름순 (한글 먼저)
+  expect(skipped).toEqual(['memo.txt'])
 })
 
-it('hml 이 하나 이하면 지원하는 첫 파일 하나만 담는다', () => {
+it('지원하는 파일이 하나면 그 파일 하나만 담는다', () => {
   expect(pickFiles([f('a.hml')]).files.map(x => x.name)).toEqual(['a.hml'])
-  const { files, skipped } = pickFiles([f('a.pdf'), f('b.pdf'), f('memo.txt')])
+  const { files, skipped } = pickFiles([f('a.pdf'), f('memo.txt')])
   expect(files.map(x => x.name)).toEqual(['a.pdf'])
-  expect(skipped).toEqual(['b.pdf', 'memo.txt'])
+  expect(skipped).toEqual(['memo.txt'])
+})
+
+it('묶음 시험지 줄은 쪽 범위·시험 범위 칸을 비워 시작한다', () => {
+  expect(newRow(f('기말.pdf'))).toMatchObject({ title: '기말', pages: '', range: '', features: ['typing'] })
 })
 
 it('변형을 켜면 해설이 같이 켜지고, 변형이 켜진 동안 해설은 끌 수 없다', () => {

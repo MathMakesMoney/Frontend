@@ -39,9 +39,9 @@ export interface HoldDecision {
   stem?: boolean
 }
 
-// 학원 시험지 제작: 고른 기능과 진행 (hml 작업만). haesol 해설 차례, hold 보류(검토 필요), variant 변형 차례, done 결과 문서 있음, failed 결과 문서 실패
+// 학원 시험지 제작: 고른 기능과 진행 (기능을 고른 작업만). extract 문항 뽑기 차례(hwp·hwpx·pdf), haesol 해설 차례, hold 보류(검토 필요), variant 변형 차례, done 결과 문서 있음, failed 결과 문서 실패
 export type Feature = 'typing' | 'haesol' | 'variant'
-export type Progress = 'haesol' | 'hold' | 'variant' | 'done' | 'failed'
+export type Progress = 'extract' | 'haesol' | 'hold' | 'variant' | 'done' | 'failed'
 export interface BatchInfo {
   id: string
   name: string
@@ -61,7 +61,7 @@ export interface Job {
   problemCount: number
   solvedCount: number
   reviewCount: number
-  // academyHwp·academyHwpx: HML 작업에만 온다 (학원 양식 문제지)
+  // academyHwp·academyHwpx: 결과 문서가 있는 학원 작업에만 온다
   files: { hwp: boolean; hwpx: boolean; academyHwp?: boolean; academyHwpx?: boolean }
   // 기능을 고른 작업에만 온다. batch 는 묶음으로 올린 작업만
   features?: Feature[]
@@ -142,10 +142,11 @@ export async function createJob(input: CreateJobInput): Promise<{ id: string }> 
   return handle<{ id: string }>(res)
 }
 
-// 묶음으로 올릴 시험지 하나의 입력 (파일과 같은 순서)
+// 묶음으로 올릴 시험지 하나의 입력 (파일과 같은 순서). pages 는 PDF 쪽 범위, range 는 hml 이 아닌 시험지의 시험 범위
 export interface BatchItem {
   title: string
   scope: string
+  pages: string
   school: string
   grade: string
   exam: string
@@ -229,7 +230,7 @@ export function haesolUrl(jobId: string, ext: 'hwp' | 'hwpx'): string {
   return `/api/jobs/${jobId}/haesol.${ext}`
 }
 
-// HML 작업의 학원 양식 문제지 (업로드 때 만든 파일)
+// 학원 작업의 결과 문서 (고른 기능이 다 끝난 작업)
 export function academyUrl(jobId: string, ext: 'hwp' | 'hwpx'): string {
   return `/api/jobs/${jobId}/academy.${ext}`
 }
