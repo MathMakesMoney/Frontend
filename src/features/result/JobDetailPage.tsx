@@ -9,6 +9,7 @@ import { McpGuide } from '../mcp/McpGuide'
 import { ProblemBrowser } from './ProblemBrowser'
 import { OriginalPages } from './OriginalPages'
 import { AcademyDownloads } from './AcademyDownloads'
+import { HoldPanel } from './HoldPanel'
 
 // 작업 상세: MCP 안내, 진행 상태, 문항별 결과, 다운로드
 export function JobDetailPage() {
@@ -73,12 +74,18 @@ export function JobDetailPage() {
         {stageText(job.stage, job.solvedCount, job.problemCount)}
       </p>
 
-      {/* 학원 시험지 작업: 고른 기능과 진행. 보류면 사람이 확인해야 한다 (결정 화면은 3단계) */}
+      {/* 학원 시험지 작업: 고른 기능과 진행. 보류면 아래 보류 문항 목록에서 결정한다 */}
       {job.features && <p className="job-meta job-academy">
         만들 기능: {featureText(job.features)} <ProgressStatus job={job} />
         {job.batch && <> · <Link to={`/batches/${job.batch.id}`}>묶음 {job.batch.name}</Link></>}
       </p>}
       {job.progress === 'hold' && <p className="job-hold" role="status">검토 필요: 해설 판정에 사람이 확인할 문항이 있어 결과 문서를 만들지 않았어요</p>}
+      {/* 결정하면 응답의 새 작업으로 바로 그리고, 목록·묶음 화면도 새로 받게 한다 */}
+      <HoldPanel job={job} onDecided={next => {
+        queryClient.setQueryData(['job', id], next)
+        queryClient.invalidateQueries({ queryKey: ['jobs'] })
+        queryClient.invalidateQueries({ queryKey: ['batch'] })
+      }} />
 
       <OriginalPages job={job} />
 

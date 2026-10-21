@@ -2,10 +2,13 @@ import { labelText } from '../../shared/labelText'
 import { RichText } from '../../shared/RichText'
 import { figureUrl, type Problem } from '../../shared/api'
 import { ReviseRequest } from './ReviseRequest'
+import { decisionText } from './HoldPanel'
 
 // 문항 한 개: 검토 필요면 사유를 그대로 보여 주고 정답처럼 보이지 않게 한다
 export function ProblemCard({ jobId, jobTitle, problem }: { jobId: string; jobTitle: string; problem: Problem }) {
-  const needsReview = problem.review !== null
+  // 보류 결정으로 정한 문항(결정이 있고 남은 보류 사유가 없음)은 미확정으로 보이지 않는다
+  const decided = !!problem.decision && problem.hold === null
+  const needsReview = problem.review !== null && !decided
   // 백엔드가 정한 표시 번호 (겹치면 20-1, 번호 없으면 2-1)
   const label = labelText(problem.label ?? problem.no)
 
@@ -15,6 +18,7 @@ export function ProblemCard({ jobId, jobTitle, problem }: { jobId: string; jobTi
         <span className="problem-no">{label}</span>
         {needsReview && <span className="review-badge">검토 필요: {problem.review}</span>}
         {problem.editedByTeacher && <span className="edited-badge">강사 수정</span>}
+        {problem.decision && <span className="edited-badge">보류 결정: {decisionText(problem.decision)}</span>}
       </header>
 
       <p className="problem-stem">

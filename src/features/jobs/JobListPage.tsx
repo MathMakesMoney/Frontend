@@ -61,6 +61,8 @@ export function JobListPage() {
 
   // 삭제 버튼은 작업 링크 밖에 두고 확인 후 기존 API로 삭제한다
   function jobCard(job: Job, featured = false) {
+    // 학원 작업은 보류 문항 수(보류일 때만, 결정하면 줄어든다), 그 밖은 검토 필요 수
+    const reviews = job.progress ? (job.progress === 'hold' ? job.holdCount ?? 0 : 0) : job.reviewCount
     const cover = (<div className="job-cover-sheet">
               <span className="job-cover-details">{job.school || '시험지'}{job.grade ? ` · ${job.grade.endsWith('학년') ? job.grade : `${job.grade}학년`}` : ''}</span>
               <strong>{job.title}</strong>
@@ -86,7 +88,7 @@ export function JobListPage() {
             <div className="job-card-status">
               {job.progress ? <ProgressStatus job={job} /> : <span className={statusClass(job)}>{stageText(job.stage, job.solvedCount, job.problemCount)}</span>}
               {job.features && <span className="job-features">{featureText(job.features)}</span>}
-              {job.reviewCount > 0 && <span className="job-review">검토 필요 {job.reviewCount}</span>}
+              {reviews > 0 && <span className="job-review">검토 필요 {reviews}</span>}
               <span className="job-chevron" aria-hidden="true">↗</span>
             </div>
             {featured && <span className="job-feature-action">{job.stage === 'done' ? '해설지 다시 보기' : '이어서 보기'} <span aria-hidden="true">→</span></span>}

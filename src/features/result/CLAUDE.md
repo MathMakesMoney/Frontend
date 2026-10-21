@@ -41,7 +41,14 @@
 
 - HML 작업(`inputType` `HML`, 쪽 이미지·문항·풀이 없음, `stage` `done`): 원본 시험지 접기, MCP 연결 안내, 문항 목록을 보이지 않는다. `files.academyHwp`·`academyHwpx` 가 있으면 다운로드 줄에 `학원 양식 HWP`, `학원 양식 HWPX` (`AcademyDownloads.tsx`, `/api/jobs/{id}/academy.{hwp,hwpx}`). 목록 표지는 원본 미리보기 없이 글자 표지
 
-- 학원 시험지 작업(`features` 있음): 제목 아래에 만들 기능·진행·소속 묶음 링크. `progress` 가 hold 면 `검토 필요` 안내(결정 화면은 3단계). HML 이라도 `progress` 가 haesol·variant 면 MCP 연결 안내를 보인다
+- 학원 시험지 작업(`features` 있음): 제목 아래에 만들 기능·진행·소속 묶음 링크. `progress` 가 hold 면 `검토 필요` 안내와 보류 결정 목록. HML 이라도 `progress` 가 haesol·variant 면 MCP 연결 안내를 보인다
+
+## 보류 결정 (사이트 3단계, 기준 `../Backend/docs/exec-plans/active/academy-hold.md`)
+
+- `HoldPanel.tsx`: `progress` 가 hold 일 때 `hold` 가 있는 문항마다 사유, AI 답(`answer`), 독립 검증 답, 정답표 답(`keyAnswer`)과 다섯 버튼 (AI 답으로 정하기, 정답표 답으로 정하기, 발문·정답 직접 고치기, 해설 고쳐 달라고 하기, 문제 제외하기). 직접 고치기는 발문 전체(줄 수 그대로)와 정답 입력, 바뀐 것만 보낸다. 해설 고쳐 달라는 요청 입력
+- `POST /api/jobs/{id}/problems/{no}/decision` 응답(새 작업)으로 바로 다시 그리고 목록·묶음 질의를 새로 받게 한다. 400 사유는 그대로 보인다
+- 문항 카드: 결정이 있으면 `보류 결정: ...` 표시, 결정이 있고 `hold` 가 null 이면 미확정으로 보이지 않는다. 번호판은 처음에 첫 보류 문항
+- 해설 고쳐 달라고 하면 진행이 해설 차례(haesol)로 돌아가 MCP 안내가 보이고, AI 가 save_revision 으로 고치면 SSE 로 새로 고쳐진다
 
 - 해설지는 저장된 최신 결과로 그때 만든다. 수정 뒤 다시 받으라고 안내
 - 다 풀기 전(문항이 있고 완료 전): `haesol-draft.hwp`, `haesol-draft.hwpx` 로 지금까지 풀이로 만든 해설지를 받는 버튼. 받을 때마다 새로 만들고, 안 푼 문항은 `검토 필요: 풀이 누락` 으로 들어간다고 한 줄 알린다. 완료 뒤에는 최종 다운로드 버튼만

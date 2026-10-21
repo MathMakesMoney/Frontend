@@ -42,4 +42,4 @@
 - 목록 상태 묶음(업로드·진행 중·완료)은 `progress` 가 있으면 그것으로 가른다 (`jobPhase`). hml 은 `stage` 가 늘 `done` 이라 stage 로는 진행을 못 가른다
 - 목록은 `batch.id` 로 묶어 묶음 이름과 `묶음 화면` 링크 아래 시험지 순서(`batch.order`)대로 보이고 (`groupBatches`), 묶음 아닌 작업만 기존 상태별 묶음·최근 작업으로 나뉜다
 - 묶음 화면 `/batches/:id` (`BatchPage.tsx`): `GET /api/batches/{id}` 의 작업 목록·진행·결과 문서 내려받기, API 실행·중지(`POST /api/batches/{id}/run|cancel`, 503 키 없음·409 실행 중은 백엔드 사유를 그대로 보임, `run.state` 가 running 일 때만 5초 폴링), MCP 문장 복사(`묶음 N 처리해줘 ... get_batch 부터`, `mcpBatchPrompt`)와 연결 명령(`McpGuide`)
-- 보류 결정 선택지는 3단계. 지금은 `검토 필요` 표시만
+- 보류 결정(3단계)은 작업 상세에서 한다 (`src/features/result/CLAUDE.md` 보류 결정). 목록의 `검토 필요 N` 은 학원 작업이면 보류일 때의 `holdCount`(결정하면 줄고 done 이면 사라짐), 그 밖은 `reviewCount`. 묶음 화면은 `progress` 로 보류·완료가 바뀐다

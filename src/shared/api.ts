@@ -23,6 +23,20 @@ export interface Problem {
   editRequests?: string[]
   review: string | null
   revisionCount?: number
+  // 해설을 고른 학원 작업에만: 보류 사유(결정까지 덧씌운 해설 판정, 없으면 null), 보류 결정, 정답표 답
+  hold?: string | null
+  decision?: HoldDecision | null
+  keyAnswer?: string | null
+}
+
+// 보류 결정 (decisions.json 그 문항): ai AI 답, key 정답표 답, edit 직접 고침, revise 해설 고쳐 달라, exclude 문제 제외
+export type HoldChoice = 'ai' | 'key' | 'edit' | 'revise' | 'exclude'
+export interface HoldDecision {
+  choice: HoldChoice
+  at: string
+  answer?: string
+  request?: string
+  stem?: boolean
 }
 
 // 학원 시험지 제작: 고른 기능과 진행 (hml 작업만). haesol 해설 차례, hold 보류(검토 필요), variant 변형 차례, done 결과 문서 있음, failed 결과 문서 실패
@@ -53,6 +67,8 @@ export interface Job {
   features?: Feature[]
   progress?: Progress
   progressError?: string
+  // 해설을 고른 학원 작업의 보류 문항 수
+  holdCount?: number
   batch?: BatchInfo
   problems?: Problem[]
   // 해설지 머리말용 시험 정보. 예전 작업에는 없을 수 있다
@@ -177,6 +193,20 @@ export async function fetchBatch(id: string): Promise<BatchView> {
 export async function controlBatch(id: string, action: 'run' | 'cancel'): Promise<void> {
   const res = await fetch(`/api/batches/${id}/${action}`, { method: 'POST' })
   await handle<unknown>(res)
+}
+
+// 보류 문항 결정: 결정 뒤 작업을 돌려준다. 400 사유(보류 문항이 아님, 빈 입력 등)는 그대로 던진다
+export async function decideHold(
+  jobId: string,
+  no: number,
+  body: { choice: HoldChoice; stem?: string; answer?: string; request?: string },
+): Promise<Job> {
+  const res = await fetch(`/api/jobs/${jobId}/problems/${no}/decision`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  return handle<Job>(res)
 }
 
 export async function deleteJob(id: string): Promise<void> {

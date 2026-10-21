@@ -9,7 +9,7 @@ export function ProblemBrowser({ jobId, jobTitle, problems }: { jobId: string; j
   const [all, setAll] = useState(false)
   const top = useRef<HTMLElement>(null)
   const current =
-    problems.find((p) => p.no === picked) ?? problems.find((p) => p.review !== null) ?? problems[0]
+    problems.find((p) => p.no === picked) ?? problems.find((p) => p.hold) ?? problems.find((p) => p.review !== null) ?? problems[0]
   const reviewCount = problems.filter((p) => p.review !== null).length
 
   function pick(no: number | null) {
