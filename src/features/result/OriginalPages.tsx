@@ -67,7 +67,7 @@ function PageImages({ urls, name }: { urls: string[]; name: string }) {
 }
 
 // 한글 파일(url)을 쪽마다 SVG 로 그려 이미지로 보인다 (쪽끼리 SVG id 가 겹치지 않게 img 로 띄운다). 학원 양식 보기도 쓴다
-export function HwpPages({ url, name }: { url: string; name: string }) {
+export function HwpPages({ url, name, reflow = false }: { url: string; name: string; reflow?: boolean }) {
   const [urls, setUrls] = useState<string[] | null>(null)
   const [error, setError] = useState('')
 
@@ -77,6 +77,8 @@ export function HwpPages({ url, name }: { url: string; name: string }) {
     Promise.all([loadRhwp(), fetch(url, { cache: 'no-store' }).then((res) => res.arrayBuffer())])
       .then(([core, buf]) => {
         const doc = new core.HwpDocument(new Uint8Array(buf))
+        // 줄 배치를 비운 문단(학원 양식 미리보기 사본)은 rhwp 가 줄을 다시 나눈다. 원본 시험지는 한글이 저장한 줄 배치 그대로
+        if (reflow) doc.reflowLinesegs()
         // 글상자 안쪽 영역 자르기는 뺀다: 한글은 글상자 안 개체(<보기> 테두리 상자)가 안쪽 여백을 넘어도 그대로 그린다 (경안고)
         made = Array.from({ length: doc.pageCount() }, (_, i) =>
           URL.createObjectURL(
@@ -92,7 +94,7 @@ export function HwpPages({ url, name }: { url: string; name: string }) {
       alive = false
       made.forEach((u) => URL.revokeObjectURL(u))
     }
-  }, [url, name])
+  }, [url, name, reflow])
 
   if (error) return <p className="error">{error}</p>
   if (!urls) return <p className="job-meta">{name}를 그리는 중...</p>

@@ -233,8 +233,8 @@ export function haesolUrl(jobId: string, ext: 'hwp' | 'hwpx'): string {
 }
 
 // 학원 작업의 결과 문서 (고른 기능이 다 끝난 작업)
-export function academyUrl(jobId: string, ext: 'hwp' | 'hwpx'): string {
-  return `/api/jobs/${jobId}/academy.${ext}`
+export function academyUrl(jobId: string, ext: 'hwp' | 'hwpx' | 'view'): string {
+  return ext === 'view' ? `/api/jobs/${jobId}/academy-view.hwp` : `/api/jobs/${jobId}/academy.${ext}`
 }
 
 // 다 풀기 전 지금까지 저장된 풀이로 만든 해설지 (받을 때마다 새로 만든다)
