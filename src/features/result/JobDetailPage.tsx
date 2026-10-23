@@ -9,6 +9,7 @@ import { McpGuide } from '../mcp/McpGuide'
 import { ProblemBrowser } from './ProblemBrowser'
 import { OriginalPages } from './OriginalPages'
 import { AcademyDownloads } from './AcademyDownloads'
+import { AcademyPreview } from './AcademyPreview'
 import { HoldPanel } from './HoldPanel'
 
 // 작업 상세: MCP 안내, 진행 상태, 문항별 결과, 다운로드
@@ -19,6 +20,7 @@ export function JobDetailPage() {
 
   const {
     data: job,
+    dataUpdatedAt,
     isLoading,
     error,
   } = useQuery({
@@ -89,6 +91,8 @@ export function JobDetailPage() {
       }} />
 
       <OriginalPages job={job} />
+      {/* 작업을 다시 받을 때마다(SSE changed, 보류 결정) 펼쳐 둔 학원 양식을 새로 받는다 */}
+      <AcademyPreview job={job} version={dataUpdatedAt} />
 
       {/* HML 작업은 해설·변형 차례일 때만 MCP 연결 안내를 보인다 (타이핑만이면 AI 단계가 없다) */}
       {(job.inputType !== 'HML' || job.progress === 'haesol' || job.progress === 'variant') && <McpGuide prompt={mcpPrompt(window.location.origin, job.id, job.title)} />}

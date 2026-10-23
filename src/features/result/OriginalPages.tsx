@@ -4,7 +4,7 @@ import './OriginalPages.css'
 import { loadRhwp } from '../../shared/hangulRenderer'
 
 // 쪽 이미지 + 오른쪽 쪽 이동판 (PDF, 한글 공통)
-function PageImages({ urls }: { urls: string[] }) {
+function PageImages({ urls, name }: { urls: string[]; name: string }) {
   const box = useRef<HTMLDivElement>(null)
   const [cur, setCur] = useState(0)
 
@@ -37,10 +37,10 @@ function PageImages({ urls }: { urls: string[] }) {
     <div className="page-viewer">
       <div className="page-images" ref={box}>
         {urls.map((u, i) => (
-          <img key={u} src={u} alt={`원본 ${i + 1}쪽`} />
+          <img key={u} src={u} alt={`${name} ${i + 1}쪽`} />
         ))}
       </div>
-      <nav className="page-nav" aria-label="원본 시험지 쪽 이동">
+      <nav className="page-nav" aria-label={`${name} 쪽 이동`}>
         <div className="page-nav-count">
           {cur + 1} / {urls.length}
         </div>
@@ -66,15 +66,15 @@ function PageImages({ urls }: { urls: string[] }) {
   )
 }
 
-// 한글 원본을 쪽마다 SVG 로 그려 이미지로 보인다 (쪽끼리 SVG id 가 겹치지 않게 img 로 띄운다)
-function HwpPages({ jobId, path }: { jobId: string; path: string }) {
+// 한글 파일(url)을 쪽마다 SVG 로 그려 이미지로 보인다 (쪽끼리 SVG id 가 겹치지 않게 img 로 띄운다). 학원 양식 보기도 쓴다
+export function HwpPages({ url, name }: { url: string; name: string }) {
   const [urls, setUrls] = useState<string[] | null>(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
     let alive = true
     let made: string[] = []
-    Promise.all([loadRhwp(), fetch(figureUrl(jobId, path)).then((res) => res.arrayBuffer())])
+    Promise.all([loadRhwp(), fetch(url, { cache: 'no-store' }).then((res) => res.arrayBuffer())])
       .then(([core, buf]) => {
         const doc = new core.HwpDocument(new Uint8Array(buf))
         // 글상자 안쪽 영역 자르기는 뺀다: 한글은 글상자 안 개체(<보기> 테두리 상자)가 안쪽 여백을 넘어도 그대로 그린다 (경안고)
@@ -87,16 +87,16 @@ function HwpPages({ jobId, path }: { jobId: string; path: string }) {
         if (alive) setUrls(made)
         else made.forEach((u) => URL.revokeObjectURL(u))
       })
-      .catch(() => alive && setError('원본 시험지를 그리지 못했습니다'))
+      .catch(() => alive && setError(`${name}를 그리지 못했습니다`))
     return () => {
       alive = false
       made.forEach((u) => URL.revokeObjectURL(u))
     }
-  }, [jobId, path])
+  }, [url, name])
 
   if (error) return <p className="error">{error}</p>
-  if (!urls) return <p className="job-meta">원본 시험지를 그리는 중...</p>
-  return <PageImages urls={urls} />
+  if (!urls) return <p className="job-meta">{name}를 그리는 중...</p>
+  return <PageImages urls={urls} name={name} />
 }
 
 // 원본 시험지 (접기/펼치기). 기본은 접어 둔다 (쪽이 많으면 화면이 길어지고 그리는 데 오래 걸려서, 2026-09-29 요청)
@@ -120,10 +120,10 @@ export function OriginalPages({ job }: { job: Job }) {
       )}
       {open && job.inputType === 'PDF' && (
         // 쪽 번호는 1부터 pages 까지 (백엔드가 고른 쪽만 모아 1쪽부터 다시 매김)
-        <PageImages urls={Array.from({ length: job.pages }, (_, i) => pageImageUrl(job.id, i + 1))} />
+        <PageImages name="원본 시험지" urls={Array.from({ length: job.pages }, (_, i) => pageImageUrl(job.id, i + 1))} />
       )}
-      {open && job.inputType === 'HWPX' && <HwpPages jobId={job.id} path="view.hwpx" />}
-      {open && job.inputType === 'HWP' && <HwpPages jobId={job.id} path="source.hwp" />}
+      {open && job.inputType === 'HWPX' && <HwpPages name="원본 시험지" url={figureUrl(job.id, 'view.hwpx')} />}
+      {open && job.inputType === 'HWP' && <HwpPages name="원본 시험지" url={figureUrl(job.id, 'source.hwp')} />}
     </section>
   )
 }
