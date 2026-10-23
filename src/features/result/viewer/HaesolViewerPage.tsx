@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
-import { fetchJob, fetchVariantLines, fetchVariantMunje, haesolDraftUrl, haesolUrl, variantUrl } from '../../../shared/api'
+import { academyUrl, fetchJob, fetchVariantLines, fetchVariantMunje, haesolDraftUrl, haesolUrl, variantUrl } from '../../../shared/api'
 import { HEAD, HaesolPage, labelsOf, useHaesolLayout } from '../haesolPages'
+import { HwpPages } from '../OriginalPages'
+import { resultTabs } from '../resultTabs'
 import { MunjePage, munjeCells, munjePageCount } from './MunjePage'
 import { PageThumbs } from './PageThumbs'
 import { PageStage } from './PageStage'
@@ -10,14 +12,15 @@ import { ProblemIndex } from './ProblemIndex'
 import type { ProblemEntry } from './types'
 import './viewer.css'
 
-// 해설지 보기: 왼쪽 쪽 썸네일, 가운데 쪽 한 장, 오른쪽 쪽별 문항 목록 (타이퍼랩 문제 편집 화면 모양, 수정은 없음)
+// 결과물 보기: 해설지 탭은 왼쪽 쪽 썸네일, 가운데 쪽 한 장, 오른쪽 쪽별 문항 목록 (타이퍼랩 문제 편집 화면 모양, 수정은 없음).
+// 결과 문서 파일이 있으면 [결과 문서] 탭: 미리보기 사본을 쪽마다 그린다 (작업 상세의 결과 문서 보기와 같은 HwpPages). 타이핑만 한 작업은 이 탭만 있다
 // variant 면 변형문제: [문제지] 탭(처음, variant/munje.json 을 한글 문제지와 같은 2단 4칸으로, 정답 숨김)과
 // [정답+해설] 탭(variant/haesol.txt 를 해설지와 같은 모양으로)
 export function HaesolViewerPage({ variant = false }: { variant?: boolean }) {
   const { id } = useParams<{ id: string }>()
   const queryClient = useQueryClient()
   const [tab, setTab] = useState<'munje' | 'haesol'>('munje')
-  const { data: job, isLoading, error } = useQuery({
+  const { data: job, dataUpdatedAt, isLoading, error } = useQuery({
     queryKey: ['job', id],
     queryFn: () => fetchJob(id!),
     enabled: !!id,
@@ -46,12 +49,15 @@ export function HaesolViewerPage({ variant = false }: { variant?: boolean }) {
     return () => events.close()
   }, [id, queryClient])
 
+  const [resultTab, setResultTab] = useState<'haesol' | 'academy'>('haesol')
+  const tabs = job && !variant ? resultTabs(job) : []
+  const showAcademy = tabs.includes('academy') && (resultTab === 'academy' || !tabs.includes('haesol'))
   const showMunje = variant && tab === 'munje'
   const [current, setCurrent] = useState(0)
   const [active, setActive] = useState<string | null>(null)
   const header = job?.header ?? ''
   const lines = (variant ? variantLines : job?.draft) ?? []
-  const layout = useHaesolLayout(job?.id ?? '', header, lines, !!job && !showMunje)
+  const layout = useHaesolLayout(job?.id ?? '', header, lines, !!job && !showMunje && !showAcademy)
   const cells = munjeCells(munje?.items ?? [])
   const pageCount = showMunje ? munjePageCount(cells) : layout.pages.length
 
@@ -121,6 +127,18 @@ export function HaesolViewerPage({ variant = false }: { variant?: boolean }) {
             </button>
           </div>
         )}
+        {tabs.includes('academy') && (
+          <div className="viewer-tabs" role="tablist" aria-label="결과물 보기">
+            {tabs.includes('haesol') && (
+              <button type="button" role="tab" aria-selected={!showAcademy} className={!showAcademy ? 'on' : ''} onClick={() => setResultTab('haesol')}>
+                해설지
+              </button>
+            )}
+            <button type="button" role="tab" aria-selected={showAcademy} className={showAcademy ? 'on' : ''} onClick={() => setResultTab('academy')}>
+              결과 문서
+            </button>
+          </div>
+        )}
         <div className="viewer-downloads">
           {variant ? (
             <>
@@ -139,11 +157,14 @@ export function HaesolViewerPage({ variant = false }: { variant?: boolean }) {
           </>}
         </div>
       </div>
-      {!variant && job.problemCount > 0 && job.stage !== 'done' && (
+      {!variant && !showAcademy && job.problemCount > 0 && job.stage !== 'done' && (
         <p className="hint">지금까지 저장된 풀이로 받습니다 · 안 푼 문항은 검토 필요: 풀이 누락으로 표시됩니다</p>
       )}
-      {!showMunje && layout.measure}
-      {empty ? (
+      {!showMunje && !showAcademy && layout.measure}
+      {showAcademy ? (
+        // 작업을 다시 받을 때마다(SSE changed) 새로 받아 그린다
+        <HwpPages key={dataUpdatedAt} name="결과 문서" url={academyUrl(job.id, 'view')} reflow />
+      ) : empty ? (
         <p className="viewer-empty">{variant ? '아직 만든 변형문제가 없습니다' : '아직 저장된 풀이가 없습니다'}</p>
       ) : pageCount === 0 ? (
         <p className="viewer-empty">쪽을 나누는 중...</p>

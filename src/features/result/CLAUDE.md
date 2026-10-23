@@ -19,7 +19,7 @@
 - 문항 한 개: 발문, 선지, 그림, 답, 풀이 줄, 검증 결과, 독립 검증 답, 검토 사유, 조판 위반 수치
 - `answer` 가 null 이면(풀이 누락) 빈 답으로 보이고 검토 사유 `풀이 누락` 을 같이 보인다. 해설지에도 빈 값으로 나간다
 - 원본 시험지: 기본은 접어 둔다 (2026-09-29 요청, 쪽이 많으면 화면이 길고 그리는 데 오래 걸림). PDF 는 쪽 이미지, HWP·HWPX 는 원본 파일을 `@rhwp/core` 로 쪽마다 SVG 로 그린다. WASM 은 펼칠 때만 불러온다. 한글이 저장한 원본은 줄 배치 정보가 있어 잘 그려진다 (광덕고 HWP·HWPX 7쪽, 수식·그림 정상. `BOX`, `!=` 같은 일부 수식 명령은 글자 그대로 나온다)
-- 학원 양식 보기 (`AcademyPreview.tsx`, 2026-10-23): `files.academyHwp` 가 있는 작업에만. 미리보기 사본 `/api/jobs/{id}/academy-view.hwp` 를 원본 시험지와 같은 `HwpPages`(`OriginalPages.tsx`, `@rhwp/core`)로 쪽마다 그리고 `reflow` 로 `reflowLinesegs()` 를 부른다. 내려받는 academy.hwp 를 그대로 그리면 쪽 순서가 바뀌고 긴 발문이 칸 끝에서 잘렸다 (`../Backend/docs/design-docs/failures/040-academy-preview-rhwp-layout.md`, 칸 안 상자의 긴 줄은 아직 잘린다). 접어 두고 처음 펼칠 때만 WASM·파일을 부른다. 작업을 다시 받을 때마다(SSE `changed`, 보류 결정) `dataUpdatedAt` 을 key 로 새로 받고 `cache: 'no-store'`. 안내 한 줄: 한글과 줄 넘김·수식 크기가 조금 다를 수 있다, 최종 확인은 한글에서. 로컬 서버 작업 8·9 사본을 node 에서 그려 쪽마다 첫 문항이 01·05·08(09)… 순서 (브라우저 확인은 별도)
+- 결과 문서 보기 (`AcademyPreview.tsx`, 2026-10-23): `files.academyHwp` 가 있는 작업에만. 미리보기 사본 `/api/jobs/{id}/academy-view.hwp` 를 원본 시험지와 같은 `HwpPages`(`OriginalPages.tsx`, `@rhwp/core`)로 쪽마다 그리고 `reflow` 로 `reflowLinesegs()` 를 부른다. 내려받는 academy.hwp 를 그대로 그리면 쪽 순서가 바뀌고 긴 발문이 칸 끝에서 잘렸다 (`../Backend/docs/design-docs/failures/040-academy-preview-rhwp-layout.md`, 칸 안 상자의 긴 줄은 아직 잘린다). 접어 두고 처음 펼칠 때만 WASM·파일을 부른다. 작업을 다시 받을 때마다(SSE `changed`, 보류 결정) `dataUpdatedAt` 을 key 로 새로 받고 `cache: 'no-store'`. 안내 한 줄: 한글과 줄 넘김·수식 크기가 조금 다를 수 있다, 최종 확인은 한글에서. 로컬 서버 작업 8·9 사본을 node 에서 그려 쪽마다 첫 문항이 01·05·08(09)… 순서 (브라우저 확인은 별도)
 - 원본 시험지 아래 한 줄 안내: `answerPages` 가 있으면 뺀 정답 쪽 번호, `textLayer` 가 false(스캔본)면 정답 쪽을 쪽 범위에서 빼고 올리라는 말
 - 수식은 `src/shared` 수식 표시로
 
@@ -40,7 +40,7 @@
 
 ## 다운로드
 
-- HML 작업(`inputType` `HML`, 쪽 이미지·문항·풀이 없음, `stage` `done`): 원본 시험지 접기, MCP 연결 안내, 문항 목록을 보이지 않는다. `files.academyHwp`·`academyHwpx` 가 있으면 다운로드 줄에 `학원 양식 HWP`, `학원 양식 HWPX` (`AcademyDownloads.tsx`, `/api/jobs/{id}/academy.{hwp,hwpx}`). 목록 표지는 원본 미리보기 없이 글자 표지
+- HML 작업(`inputType` `HML`, 쪽 이미지·문항·풀이 없음, `stage` `done`): 원본 시험지 접기, MCP 연결 안내, 문항 목록을 보이지 않는다. `files.academyHwp`·`academyHwpx` 가 있으면 다운로드 줄에 `결과 문서 HWP`, `결과 문서 HWPX` (`AcademyDownloads.tsx`, `/api/jobs/{id}/academy.{hwp,hwpx}`). 목록 표지는 원본 미리보기 없이 글자 표지
 
 - 학원 시험지 작업(`features` 있음): 제목 아래에 만들 기능·진행·소속 묶음 링크. `progress` 가 hold 면 `검토 필요` 안내와 보류 결정 목록. HML 이라도 `progress` 가 haesol·variant 면 MCP 연결 안내를 보인다
 - 변형 선택 작업은 `변형 차례`, 끝나면 `변형 완료` 를 보인다. 변형 실패 사유(`variantError`)는 차례 옆에 그대로 보이고 진행은 variant 를 유지한다. API 실행이 해설 뒤 변형 문제·풀이와 결과 문서까지 만들며, 보류 결정 후 재실행·변형 실패 후 재실행은 남은 것부터 이어진다고 안내한다
@@ -57,6 +57,7 @@
 - 해설지 모양 보기는 해설지 보기 화면 하나로 (작업 상세의 미리보기는 겹쳐서 뺐다, 2026-09-29). 작업의 `draft` 줄을 A4 2단(왼쪽 단부터, 구분선)으로 그리고 수식은 KaTeX (`haesolPages.tsx`). 우리가 만든 해설지 파일은 줄 배치 정보가 없어 `@rhwp/core` 로 그리면 줄이 겹치고 쪽 끝이 잘려 HTML 로 그린다. 글꼴과 쪽 나뉘는 위치는 한글과 조금 다르다. 쪽마다 위에 머리말(작업의 `header`, 예전 작업은 빈 줄)과 가는 선, 아래 가운데 `- N -` 쪽 번호. 본문은 왼쪽 정렬
 - 풀이 저장 중에도 보인다 (단계 글은 `풀이 저장 n/m`: 서버는 모델이 지금 도는지 모르고 저장된 풀이 수만 안다): 푼 문항이 있으면 펼쳐 두고, 완료 전에는 제목에 `(풀이 저장 4/22)`. 문항 머리 줄은 다음 줄(그림이나 첫 풀이 줄)과 한 덩어리로 묶어 단·쪽 끝에 머리만 남지 않게 한다. 처음 보는 문항 번호의 줄만 2초 노란 강조 (같은 내용으로 다시 받으면 강조 안 함). 줄이 바뀌면 쪽 나누기를 다시 한다
 - 해설지에는 통과 문항 표시가 없고 실패 문항만 `검토 필요: 사유` 줄이 들어간다 (다운로드 전에 알려 줄 것)
-- 해설지 보기 `/jobs/{id}/haesol` (`viewer/`, 2026-09-29 타이퍼랩 문제 편집 화면을 본뜸, 수정 없음): 화면 전체 폭 3칸. 왼쪽 쪽 썸네일과 쪽마다 문항 수(`PageThumbs`), 가운데 쪽 한 장 크게 + 쪽 넘기기·확대(`PageStage`), 오른쪽 쪽별로 묶은 문항 목록(`ProblemIndex`, 누르면 그 쪽으로 가서 문항 표시). 작업 상세의 `해설지 보기` 버튼으로 간다. 쪽 나누기와 쪽 그리기는 미리보기와 같은 `haesolPages.tsx`, 칸끼리 주고받는 값은 `viewer/types.ts`
+- 해설지 보기 `/jobs/{id}/haesol` (`viewer/`, 2026-09-29 타이퍼랩 문제 편집 화면을 본뜸, 수정 없음): 화면 전체 폭 3칸. 왼쪽 쪽 썸네일과 쪽마다 문항 수(`PageThumbs`), 가운데 쪽 한 장 크게 + 쪽 넘기기·확대(`PageStage`), 오른쪽 쪽별로 묶은 문항 목록(`ProblemIndex`, 누르면 그 쪽으로 가서 문항 표시). 작업 상세의 `결과물 보기` 버튼으로 간다. 쪽 나누기와 쪽 그리기는 미리보기와 같은 `haesolPages.tsx`, 칸끼리 주고받는 값은 `viewer/types.ts`
+- 결과물 보기 (2026-10-23, `resultTabs.ts`): 버튼 `결과물 보기`와 화면 탭은 `resultTabs(job)` 한 곳에서 정한다. `해설지` 탭은 `draft` 가 있고 해설을 쓰는 작업(HML 은 `features` 에 haesol, 그 밖은 `draft` 만)일 때, `결과 문서` 탭은 `files.academyHwp` 가 있을 때. 결과 문서 탭은 작업 상세의 결과 문서 보기와 같은 `HwpPages reflow` + `academy-view.hwp` 이고 `dataUpdatedAt` 을 key 로 새로 받는다. 타이핑만 한 작업은 결과 문서 탭만 보인다. 예전엔 버튼이 `inputType !== 'HML'` 로만 가려 해설까지 끝낸 HML 작업(로컬 작업 10)에서 안 보였다 (`../Backend/docs/design-docs/failures/041-result-button-hml-haesol-hidden.md`)
 - 변형문제 (2026-10-08): `make_variant_docs` 가 만든 `variant/haesol.txt` 를 `files?path=` 로 받아(없으면 404 -> 안 보임) 작업 상세에 `변형문제 보기`, 문제지·정답+해설 HWP 다운로드(`/variant-munje.hwp`, `/variant-haesol.hwp`)를 보인다. 보기 화면 `/jobs/{id}/variant` 는 해설지 보기(`HaesolViewerPage variant`)에 [문제지] [정답+해설] 탭. 처음은 문제지: `variant/munje.json`(번호, 발문, 선지, long)을 한글 문제지와 같은 2단 4칸(긴 문항은 단 전체)으로 그리고(`viewer/MunjePage.tsx`, 칸 규칙은 백엔드 `MunjeWriter` 와 같다) 문항 목록의 정답·검토 사유를 숨긴다 (학생에게 보여 줄 수 있게, 2026-10-08). 번호는 윗줄에 굵고 크게, 발문은 `parts` 대로 줄과 상자(`<보 기>` 제목은 위 테두리 가운데)로 그린다. 상자 판정은 백엔드가 해서 보낸다. 상자 줄은 표시(ㄱ./(가))와 글을 나눠 내어쓰기 (`BoxLine`). 칸에 마우스를 올리면 해설지 보기와 같은 호버 표시. 정답+해설 탭은 `variant/haesol.txt` 줄을 해설지 보기 그대로 그리고, 문항 목록의 답·검토 사유는 그 줄의 머리 줄과 `검토 필요` 줄에서 읽는다 (작업 문항 정보에 변형이 없다). `PageThumbs`·`PageStage` 는 `renderPage` 로 두 쪽 모양을 다 그린다
 - 원본 미리보기 보정 (경안고 <보기> 상자): 단 비율로 적힌 개체 크기는 백엔드가 실제 크기(curSz)로 바꾼 사본 `view.hwpx` 를 그리고, 렌더러의 글상자 안쪽 자르기(`textbox-clip`)는 뺀다. 한글은 글상자 안 개체가 여백을 넘어도 그린다

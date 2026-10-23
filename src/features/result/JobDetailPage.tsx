@@ -11,6 +11,7 @@ import { OriginalPages } from './OriginalPages'
 import { AcademyDownloads } from './AcademyDownloads'
 import { AcademyPreview } from './AcademyPreview'
 import { HoldPanel } from './HoldPanel'
+import { resultTabs } from './resultTabs'
 
 // 작업 상세: MCP 안내, 진행 상태, 문항별 결과, 다운로드
 export function JobDetailPage() {
@@ -91,15 +92,15 @@ export function JobDetailPage() {
       }} />
 
       <OriginalPages job={job} />
-      {/* 작업을 다시 받을 때마다(SSE changed, 보류 결정) 펼쳐 둔 학원 양식을 새로 받는다 */}
+      {/* 작업을 다시 받을 때마다(SSE changed, 보류 결정) 펼쳐 둔 결과 문서을 새로 받는다 */}
       <AcademyPreview job={job} version={dataUpdatedAt} />
 
       {/* HML 작업은 해설·변형 차례일 때만 MCP 연결 안내를 보인다 (타이핑만이면 AI 단계가 없다) */}
       {(job.inputType !== 'HML' || job.progress === 'haesol' || job.progress === 'variant') && <McpGuide prompt={mcpPrompt(window.location.origin, job.id, job.title)} />}
 
       {(draft.length > 0 || job.files.hwp || job.files.hwpx || job.files.academyHwp || (job.problemCount > 0 && job.stage !== 'done')) && (
-        <div className="job-document-toolbar" aria-label="해설지 보기 및 다운로드">
-          {job.inputType !== 'HML' && draft.length > 0 && <Link className="button" to={`/jobs/${job.id}/haesol`} title="쪽 목록 · 해설지 · 문항 목록 보기">해설지 보기</Link>}
+        <div className="job-document-toolbar" aria-label="결과물 보기 및 다운로드">
+          {resultTabs(job).length > 0 && <Link className="button" to={`/jobs/${job.id}/haesol`} title="쪽 목록 · 해설지 · 결과 문서 보기">결과물 보기</Link>}
           {(job.files.hwp || job.files.hwpx || job.files.academyHwp || (job.problemCount > 0 && job.stage !== 'done')) && (
             <div className="job-download-group">
               <span className="job-download-label">다운로드</span>
