@@ -19,7 +19,7 @@
 | 수식 표시 | 한글 수식 스크립트를 `src/shared/hwpeq.ts` 로 LaTeX 로 바꾼 뒤 KaTeX 로 그린다. 실패하면 원문 칩 (`src/shared/CLAUDE.md`) |
 | 배포 | 미정. 로컬 개발은 Vite dev 서버 프록시로 `/api`, `/mcp` 를 백엔드(8080)로 넘긴다 |
 
-- 로그인, 결제, AI API 실행 버튼은 이번 PoC 범위 밖 (MCP 버전만 검증)
+- 로그인, 결제, 작업 상세의 단일 AI API 실행 버튼은 이번 PoC 범위 밖. 묶음 화면은 API 실행·중지를 지원하고, 변형을 골랐으면 해설 뒤 변형과 결과 문서까지 진행한다 (`src/features/jobs/CLAUDE.md`)
 
 ### 명령
 
@@ -56,6 +56,7 @@ src
 
 - 검토 필요 문항은 정답처럼 보이게 하지 않는다. 사유를 그대로 보여 주고, 해제는 강사가 직접 누를 때만 (`reviewResolved=true`). 자동 해제 금지
 - 학원 시험지 제작(타이핑·해설·변형)은 hml·hwp·hwpx·pdf 모두 기능을 고른다. 진행(`progress`)은 백엔드 값을 강사 말로만 바꿔 보인다 (`shared/stage.ts`, hwp·hwpx·pdf 는 `문항 뽑기 차례`부터)
+- 변형 실패는 `progress=variant` 와 `variantError` 사유를 보이고, 재실행하면 남은 변형부터 진행한다. `failed`·`progressError` 는 결과 문서 만들기 실패다
 - 학원 작업의 보류는 강사가 보류 문항마다 다섯 선택지 중 하나를 눌러 정한다 (`POST /api/jobs/{id}/problems/{no}/decision`, `src/features/result/CLAUDE.md` 보류 결정). 프론트가 답을 비교해 정하지 않는다
 - 수식은 LaTeX 가 아니라 한글 수식 스크립트다. 원문을 KaTeX 에 그대로 넣지 않고, 반드시 `hwpeq.ts` 로 바꾼 뒤 그린다 (`src/shared/CLAUDE.md`)
 - 판정·정규화·후처리는 백엔드 일이다. 프론트에서 답 비교, 검토 판정, 조판 후처리를 다시 구현하지 않는다

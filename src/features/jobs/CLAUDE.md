@@ -38,8 +38,9 @@
 
 ## 학원 시험지 진행·묶음 (사이트 2단계)
 
-- 작업 응답의 `features`, `progress`(extract 문항 뽑기 차례, haesol 해설 차례, hold 보류, variant 변형 차례, done 완료, failed 실패), `progressError`, `batch` {id, name, created, order} 는 기능을 고른 작업에만 온다 (hwp·hwpx·pdf 는 4단계부터 extract 로 시작). 강사 말로: 문항 뽑기 차례, 해설 진행 중, 보류 · 검토 필요, 변형 진행 중, 완료, 실패(+사유) (`shared/ProgressStatus.tsx`, `shared/stage.ts`)
+- 작업 응답의 `features`, `progress`(extract 문항 뽑기 차례, haesol 해설 차례, hold 보류, variant 변형 차례, done 완료, failed 결과 문서 실패), `progressError`, `variantError`, `batch` {id, name, created, order} 는 기능을 고른 작업에만 온다 (hwp·hwpx·pdf 는 4단계부터 extract 로 시작). 강사 말로: 문항 뽑기 차례, 해설 진행 중, 보류 · 검토 필요, 변형 차례, 완료(변형을 고르면 변형 완료), 실패(+사유). 변형 실패는 variant 그대로 `variantError` 를 보여 재실행할 수 있게 한다 (`shared/ProgressStatus.tsx`, `shared/stage.ts`)
 - 목록 상태 묶음(업로드·진행 중·완료)은 `progress` 가 있으면 그것으로 가른다 (`jobPhase`). hml 은 `stage` 가 늘 `done` 이라 stage 로는 진행을 못 가른다
 - 목록은 `batch.id` 로 묶어 묶음 이름과 `묶음 화면` 링크 아래 시험지 순서(`batch.order`)대로 보이고 (`groupBatches`), 묶음 아닌 작업만 기존 상태별 묶음·최근 작업으로 나뉜다
 - 묶음 화면 `/batches/:id` (`BatchPage.tsx`): `GET /api/batches/{id}` 의 작업 목록·진행·결과 문서 내려받기, API 실행·중지(`POST /api/batches/{id}/run|cancel`, 503 키 없음·409 실행 중은 백엔드 사유를 그대로 보임, `run.state` 가 running 일 때만 5초 폴링), MCP 문장 복사(`묶음 N 처리해줘 ... get_batch 부터`, `mcpBatchPrompt`)와 연결 명령(`McpGuide`)
+- API 실행 안내: 고른 기능을 차례로 처리하고 변형 선택 시 해설 뒤 변형 문제·풀이와 결과 문서까지 만든다. 보류는 상세에서 먼저 결정하고, 재실행은 남은 것부터 진행한다. 새 화면·단일 작업 실행 버튼은 추가하지 않는다
 - 보류 결정(3단계)은 작업 상세에서 한다 (`src/features/result/CLAUDE.md` 보류 결정). 목록의 `검토 필요 N` 은 학원 작업이면 보류일 때의 `holdCount`(결정하면 줄고 done 이면 사라짐), 그 밖은 `reviewCount`. 묶음 화면은 `progress` 로 보류·완료가 바뀐다

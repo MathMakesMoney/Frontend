@@ -19,7 +19,7 @@ export const PROGRESS_LABEL: Record<Progress, string> = {
   extract: '문항 뽑기 차례',
   haesol: '해설 진행 중',
   hold: '보류 · 검토 필요',
-  variant: '변형 진행 중',
+  variant: '변형 차례',
   done: '완료',
   failed: '실패',
 }

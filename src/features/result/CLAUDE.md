@@ -42,6 +42,7 @@
 - HML 작업(`inputType` `HML`, 쪽 이미지·문항·풀이 없음, `stage` `done`): 원본 시험지 접기, MCP 연결 안내, 문항 목록을 보이지 않는다. `files.academyHwp`·`academyHwpx` 가 있으면 다운로드 줄에 `학원 양식 HWP`, `학원 양식 HWPX` (`AcademyDownloads.tsx`, `/api/jobs/{id}/academy.{hwp,hwpx}`). 목록 표지는 원본 미리보기 없이 글자 표지
 
 - 학원 시험지 작업(`features` 있음): 제목 아래에 만들 기능·진행·소속 묶음 링크. `progress` 가 hold 면 `검토 필요` 안내와 보류 결정 목록. HML 이라도 `progress` 가 haesol·variant 면 MCP 연결 안내를 보인다
+- 변형 선택 작업은 `변형 차례`, 끝나면 `변형 완료` 를 보인다. 변형 실패 사유(`variantError`)는 차례 옆에 그대로 보이고 진행은 variant 를 유지한다. API 실행이 해설 뒤 변형 문제·풀이와 결과 문서까지 만들며, 보류 결정 후 재실행·변형 실패 후 재실행은 남은 것부터 이어진다고 안내한다
 
 ## 보류 결정 (사이트 3단계, 기준 `../Backend/docs/exec-plans/active/academy-hold.md`)
 

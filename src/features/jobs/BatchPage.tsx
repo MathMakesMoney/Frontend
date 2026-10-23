@@ -68,6 +68,7 @@ export function BatchPage() {
 
       <section className="batch-run" aria-label="묶음 실행">
         <h2>풀이담 AI로 진행</h2>
+        <p className="hint">실행하면 고른 기능을 차례로 처리해요. 변형을 골랐다면 해설 뒤 변형 문제·풀이와 결과 문서까지 만들어요. 보류 문항은 작업 상세에서 먼저 확인해 주세요. 다시 실행하면 남은 것부터 이어져요.</p>
         <p className="hint">상태: {RUN_TEXT[batch.run.state]}{running && current ? ` · ${current.title}` : ''}</p>
         {batch.run.state === 'failed' && batch.run.error && <p className="error">{batch.run.error}</p>}
         <div className="batch-run-actions">

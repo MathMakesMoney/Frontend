@@ -79,6 +79,7 @@ export function JobDetailPage() {
         만들 기능: {featureText(job.features)} <ProgressStatus job={job} />
         {job.batch && <> · <Link to={`/batches/${job.batch.id}`}>묶음 {job.batch.name}</Link></>}
       </p>}
+      {job.features?.includes('variant') && <p className="hint">풀이담 AI 실행은 해설 뒤 변형 문제·풀이와 결과 문서까지 만들어요. 보류 문항이 있으면 먼저 결정해 주세요. 변형 중 멈춰도 다시 실행하면 남은 것부터 이어져요.</p>}
       {job.progress === 'hold' && <p className="job-hold" role="status">검토 필요: 해설 판정에 사람이 확인할 문항이 있어 결과 문서를 만들지 않았어요</p>}
       {/* 결정하면 응답의 새 작업으로 바로 그리고, 목록·묶음 화면도 새로 받게 한다 */}
       <HoldPanel job={job} onDecided={next => {

@@ -11,6 +11,7 @@
   - 402: 크레딧 부족 안내 -> 요금제·크레딧 화면 링크
   - 404: 없는 작업 (다른 회원 작업도 404)
 - 응답 타입은 백엔드 문서 JSON 모양 그대로 TypeScript 타입으로 둔다. 필드 이름을 바꾸지 않는다
+- 학원 진행 표시는 `ProgressStatus.tsx` 를 목록·묶음·상세에서 함께 쓴다. 변형 완료는 `features` 에 variant 가 있고 progress done 일 때만, 변형 실패 사유는 progress variant 의 `variantError` 만 보인다. 결과 문서 실패는 failed 의 `progressError` 그대로다
 
 ## 수식 표시 (<<EQ>>)
 

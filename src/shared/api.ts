@@ -67,6 +67,8 @@ export interface Job {
   features?: Feature[]
   progress?: Progress
   progressError?: string
+  // 변형 단계 실패 사유. progress 는 variant 를 유지하고 다시 실행하면 남은 것부터 진행한다
+  variantError?: string
   // 해설을 고른 학원 작업의 보류 문항 수
   holdCount?: number
   batch?: BatchInfo
