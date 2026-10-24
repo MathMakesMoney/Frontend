@@ -100,6 +100,8 @@ const cases: [string, string][] = [
   ['box{X}', '\\boxed{X}'],
   ['가nin', '\\text{가} \\notin'],
   ['LEFT | x vert RIGHT |', '\\left| x \\vert \\right|'],
+  // 기록 054: 대각선 화살표 (증감표)
+  ['nearrow searrow nwarrow swarrow', '\\nearrow \\searrow \\nwarrow \\swarrow'],
   // 경우 나누기
   ['f(x)= cases {3x+a & (x LEQ 1) # 2 & (x>1)}', 'f ( x ) = \\begin{cases}3 x + a & ( x \\leq 1 ) \\\\ 2 & ( x > 1 )\\end{cases}'],
   ['CASES{5 &(x) # 1}', '\\begin{cases}5 & ( x ) \\\\ 1\\end{cases}'],
