@@ -28,6 +28,7 @@
 - `npm run build`: 타입 체크 + `dist/` 로 빌드
 - `npm test`: Vitest 실행 (`src/**/*.test.*` 만)
 - `npm run test:e2e`: Playwright 스모크 (처음 한 번 `npx playwright install chromium`). 개발 서버를 5190 에 직접 띄운다. 가짜 응답만 쓴다: `e2e/fixtures/` 는 지어낸 문제만 넣고 실제 시험지 글은 절대 넣지 않는다 (저장소가 공개될 수 있고 저작권). 응답 모양은 `src/shared/api.ts` 타입에서 가져온다. 결정과 이유: `e2e/DECISION.md`
+- main 으로 바로 푸시하면 git 훅 `.githooks/pre-push` 가 tsc, vitest, e2e 를 돌려 실패 시 막는다. 다른 브랜치는 PR CI. 켜기 `git config core.hooksPath .githooks` (사람마다 한 번)
 - `npm run preview`: 빌드 결과 미리보기
 
 ## 폴더 구조 (기능별)
