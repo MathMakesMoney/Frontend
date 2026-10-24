@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { markHover } from './markHover'
 import type { PageStageProps } from './types'
 import './PageStage.css'
 
@@ -12,7 +13,7 @@ const clamp = (v: number) => Math.min(MAX, Math.max(MIN, v))
 
 // 가운데 칸: 모든 쪽을 세로로 이어 붙여 스크롤로 넘긴다. 화면에 걸친 쪽이 지금 쪽(current)이 되고,
 // 다른 칸에서 쪽·문항을 고르면 그 자리로 스크롤한다. 확대·축소, ←/→ 로 앞뒤 쪽
-export function PageStage({ pageCount, renderPage, current, active, onChange, onPick }: PageStageProps) {
+export function PageStage({ pageCount, renderPage, current, active, hovered, listPicks = 0, onChange, onPick }: PageStageProps) {
   const scroller = useRef<HTMLDivElement>(null)
   const reported = useRef(current) // 스크롤로 알린 쪽: 이 값으로 current 가 바뀌면 다시 스크롤하지 않는다
   const picked = useRef<string | null>(null) // 쪽 위에서 눌러 고른 문항: 이미 보고 있으니 스크롤하지 않는다
@@ -54,14 +55,20 @@ export function PageStage({ pageCount, renderPage, current, active, onChange, on
     if (!el) return
     if (active && active === picked.current) {
       // 쪽 위에서 누른 문항: 그 자리 그대로
-    } else if (active) {
-      el.querySelector(`[data-label="${CSS.escape(active)}"]`)?.scrollIntoView({ block: 'center' })
+    } else if (active && el.querySelector(`[data-label="${CSS.escape(active)}"]`)) {
+      el.querySelector(`[data-label="${CSS.escape(active)}"]`)!.scrollIntoView({ block: 'center' })
     } else if (current !== reported.current) {
+      // 쪽 그림(결과 문서)처럼 문항 자리가 없으면 그 쪽 맨 위로
       el.querySelector(`[data-page="${current}"]`)?.scrollIntoView({ block: 'start' })
     }
     reported.current = current
     picked.current = null // 다음에 목록에서 고르면 다시 스크롤
-  }, [active, current])
+  }, [active, current, listPicks]) // listPicks: 이미 고른 문항을 목록에서 다시 눌러도 그 자리로
+
+  // 오른쪽 목록에서 마우스를 올린 문항을 옅은 네모로 (다시 그려지면 클래스가 지워지므로 렌더마다)
+  useEffect(() => {
+    if (scroller.current) markHover(scroller.current, hovered)
+  })
 
   // ←/→ 로 앞뒤 쪽 (입력 중엔 제외. 위아래 스크롤·PageUp/Down 은 브라우저 기본 동작)
   useEffect(() => {

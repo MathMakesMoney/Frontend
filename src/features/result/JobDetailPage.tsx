@@ -1,11 +1,17 @@
 import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { deleteJob, fetchJob, fetchVariantLines, haesolDraftUrl, haesolUrl, variantUrl } from '../../shared/api'
-import { stageText } from '../../shared/stage'
+import { deleteJob, fetchJob, fetchVariantLines, haesolDraftUrl, haesolUrl, variantUrl, type Job } from '../../shared/api'
+import { featureText, stageText } from '../../shared/stage'
+import { mcpPrompt } from '../../shared/mcpCommand'
+import { ProgressStatus } from '../../shared/ProgressStatus'
 import { McpGuide } from '../mcp/McpGuide'
 import { ProblemBrowser } from './ProblemBrowser'
 import { OriginalPages } from './OriginalPages'
+import { AcademyDownloads } from './AcademyDownloads'
+import { AcademyPreview } from './AcademyPreview'
+import { HoldPanel } from './HoldPanel'
+import { resultTabs } from './resultTabs'
 
 // 작업 상세: MCP 안내, 진행 상태, 문항별 결과, 다운로드
 export function JobDetailPage() {
@@ -15,6 +21,7 @@ export function JobDetailPage() {
 
   const {
     data: job,
+    dataUpdatedAt,
     isLoading,
     error,
   } = useQuery({
@@ -55,6 +62,12 @@ export function JobDetailPage() {
 
   const problems = job.problems ?? []
   const draft = job.draft ?? []
+  // 보류 결정·문항 손 수정 뒤: 응답의 새 작업으로 바로 그리고, 목록·묶음 화면도 새로 받게 한다
+  const onChanged = (next: Job) => {
+    queryClient.setQueryData(['job', id], next)
+    queryClient.invalidateQueries({ queryKey: ['jobs'] })
+    queryClient.invalidateQueries({ queryKey: ['batch'] })
+  }
 
   return (
     <div className="page job-detail-page">
@@ -70,18 +83,31 @@ export function JobDetailPage() {
         {stageText(job.stage, job.solvedCount, job.problemCount)}
       </p>
 
+      {/* 학원 시험지 작업: 고른 기능과 진행. 보류면 아래 보류 문항 목록에서 결정한다 */}
+      {job.features && <p className="job-meta job-academy">
+        만들 기능: {featureText(job.features)} <ProgressStatus job={job} />
+        {job.batch && <> · <Link to={`/batches/${job.batch.id}`}>묶음 {job.batch.name}</Link></>}
+      </p>}
+      {job.features?.includes('variant') && <p className="hint">풀이담 AI 실행은 해설 뒤 변형 문제·풀이와 결과 문서까지 만들어요. 보류 문항이 있으면 먼저 결정해 주세요. 변형 중 멈춰도 다시 실행하면 남은 것부터 이어져요.</p>}
+      {job.progress === 'hold' && <p className="job-hold" role="status">검토 필요: 해설 판정에 사람이 확인할 문항이 있어 결과 문서를 만들지 않았어요</p>}
+      <HoldPanel job={job} onDecided={onChanged} />
+
       <OriginalPages job={job} />
+      {/* 작업을 다시 받을 때마다(SSE changed, 보류 결정) 펼쳐 둔 결과 문서을 새로 받는다 */}
+      <AcademyPreview job={job} version={dataUpdatedAt} />
 
-      <McpGuide jobId={job.id} jobTitle={job.title} />
+      {/* HML 작업은 해설·변형 차례일 때만 MCP 연결 안내를 보인다 (타이핑만이면 AI 단계가 없다) */}
+      {(job.inputType !== 'HML' || job.progress === 'haesol' || job.progress === 'variant') && <McpGuide prompt={mcpPrompt(window.location.origin, job.id, job.title)} />}
 
-      {(draft.length > 0 || job.files.hwp || job.files.hwpx || (job.problemCount > 0 && job.stage !== 'done')) && (
-        <div className="job-document-toolbar" aria-label="해설지 보기 및 다운로드">
-          {draft.length > 0 && <Link className="button" to={`/jobs/${job.id}/haesol`} title="쪽 목록 · 해설지 · 문항 목록 보기">해설지 보기</Link>}
-          {(job.files.hwp || job.files.hwpx || (job.problemCount > 0 && job.stage !== 'done')) && (
+      {(draft.length > 0 || job.files.hwp || job.files.hwpx || job.files.academyHwp || (job.problemCount > 0 && job.stage !== 'done')) && (
+        <div className="job-document-toolbar" aria-label="결과물 보기 및 다운로드">
+          {resultTabs(job).length > 0 && <Link className="button" to={`/jobs/${job.id}/haesol`} title="쪽 목록 · 해설지 · 결과 문서 보기">결과물 보기</Link>}
+          {(job.files.hwp || job.files.hwpx || job.files.academyHwp || (job.problemCount > 0 && job.stage !== 'done')) && (
             <div className="job-download-group">
               <span className="job-download-label">다운로드</span>
           {job.files.hwp && <a className="job-download-link" href={haesolUrl(job.id, 'hwp')}>HWP</a>}
           {job.files.hwpx && <a className="job-download-link" href={haesolUrl(job.id, 'hwpx')}>HWPX</a>}
+          <AcademyDownloads jobId={job.id} files={job.files} />
           {job.problemCount > 0 && job.stage !== 'done' && <>
             <a className="job-download-link" href={haesolDraftUrl(job.id, 'hwp')}>진행본 HWP</a>
             <a className="job-download-link" href={haesolDraftUrl(job.id, 'hwpx')}>진행본 HWPX</a>
@@ -103,7 +129,7 @@ export function JobDetailPage() {
         </div>
       )}
 
-      {problems.length > 0 && <ProblemBrowser jobId={job.id} jobTitle={job.title} problems={problems} />}
+      {problems.length > 0 && <ProblemBrowser jobId={job.id} jobTitle={job.title} problems={problems} cellsEditable={job.inputType === 'HML'} typingOnly={!!job.features && !job.features.includes('haesol')} onSaved={onChanged} />}
     </div>
   )
 }

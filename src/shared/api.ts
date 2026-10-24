@@ -1,6 +1,6 @@
 // 백엔드 JSON 모양 그대로 옮긴 타입, 필드 이름을 바꾸지 않는다
 export type Stage = 'uploaded' | 'problems' | 'figures' | 'solving' | 'done'
-export type InputType = 'PDF' | 'HWP' | 'HWPX'
+export type InputType = 'PDF' | 'HWP' | 'HWPX' | 'HML'
 
 export interface Verification {
   pass: boolean
@@ -23,6 +23,59 @@ export interface Problem {
   editRequests?: string[]
   review: string | null
   revisionCount?: number
+  // 해설을 고른 학원 작업에만: 보류 사유(결정까지 덧씌운 해설 판정, 없으면 null), 보류 결정, 정답표 답
+  hold?: string | null
+  decision?: HoldDecision | null
+  // 해설 고쳐 달라는 요청을 이미 고쳤는지 (save_revision 뒤 true). 예전 백엔드에는 없다
+  revised?: boolean
+  keyAnswer?: string | null
+  // 학원 작업의 문항 데이터 (items.json, 문항 카드 손 수정용). 문항 뽑기 전·해설지 작업에는 없다
+  item?: AcademyItem
+}
+
+// 문항 데이터 조각: L 줄, S 배점, B 상자(text 제목, box 상자 줄), T 자료 표(text "행 열 [행,열,행 수,열 수].. [inbox] [noborder]", box 칸 글 행 순서), P 그림
+export interface AcademyPart {
+  kind: 'L' | 'S' | 'B' | 'T' | 'P'
+  text: string
+  box: string[]
+}
+export interface AcademyItem {
+  answer: string
+  parts: AcademyPart[]
+  choices: string[]
+}
+
+// 손 수정: 바뀐 것만. stem 해설용 발문 전체, choices 선지 전체(개수 그대로), cells 자료 표 칸, answer 정답
+export interface ItemCell {
+  part: number
+  index: number
+  text: string
+}
+export interface ItemFields {
+  stem?: string
+  choices?: string[]
+  cells?: ItemCell[]
+  answer?: string
+}
+
+// 보류 결정 (decisions.json 그 문항): ai AI 답, key 정답표 답, edit 직접 고침, revise 해설 고쳐 달라, exclude 문제 제외
+export type HoldChoice = 'ai' | 'key' | 'edit' | 'revise' | 'exclude'
+export interface HoldDecision {
+  choice: HoldChoice
+  at: string
+  answer?: string
+  request?: string
+  stem?: boolean
+}
+
+// 학원 시험지 제작: 고른 기능과 진행 (기능을 고른 작업만). extract 문항 뽑기 차례(hwp·hwpx·pdf), haesol 해설 차례, hold 보류(검토 필요), variant 변형 차례, done 결과 문서 있음, failed 결과 문서 실패
+export type Feature = 'typing' | 'haesol' | 'variant'
+export type Progress = 'extract' | 'haesol' | 'hold' | 'variant' | 'done' | 'failed'
+export interface BatchInfo {
+  id: string
+  name: string
+  created: string
+  order: number
 }
 
 export interface Job {
@@ -37,7 +90,17 @@ export interface Job {
   problemCount: number
   solvedCount: number
   reviewCount: number
-  files: { hwp: boolean; hwpx: boolean }
+  // academyHwp·academyHwpx: 결과 문서가 있는 학원 작업에만 온다
+  files: { hwp: boolean; hwpx: boolean; academyHwp?: boolean; academyHwpx?: boolean }
+  // 기능을 고른 작업에만 온다. batch 는 묶음으로 올린 작업만
+  features?: Feature[]
+  progress?: Progress
+  progressError?: string
+  // 변형 단계 실패 사유. progress 는 variant 를 유지하고 다시 실행하면 남은 것부터 진행한다
+  variantError?: string
+  // 해설을 고른 학원 작업의 보류 문항 수
+  holdCount?: number
+  batch?: BatchInfo
   problems?: Problem[]
   // 해설지 머리말용 시험 정보. 예전 작업에는 없을 수 있다
   school?: string
@@ -92,6 +155,7 @@ export interface CreateJobInput {
   grade: string
   exam: string
   range: string
+  features?: Feature[]
 }
 
 export async function createJob(input: CreateJobInput): Promise<{ id: string }> {
@@ -104,8 +168,87 @@ export async function createJob(input: CreateJobInput): Promise<{ id: string }> 
   form.set('grade', input.grade)
   form.set('exam', input.exam)
   form.set('range', input.range)
+  if (input.features) form.set('features', input.features.join(','))
   const res = await fetch('/api/jobs', { method: 'POST', body: form })
   return handle<{ id: string }>(res)
+}
+
+// 묶음으로 올릴 시험지 하나의 입력 (파일과 같은 순서). pages 는 PDF 쪽 범위, range 는 hml 이 아닌 시험지의 시험 범위
+export interface BatchItem {
+  title: string
+  scope: string
+  pages: string
+  school: string
+  grade: string
+  exam: string
+  range: string
+  features: Feature[]
+}
+
+// 묶음 올리기 응답: 거부된 시험지는 errors 에 파일별 사유
+export interface BatchCreated {
+  id: string
+  jobs: string[]
+  errors: { file: string; error: string }[]
+}
+
+export async function createBatch(files: File[], name: string, items: BatchItem[]): Promise<BatchCreated> {
+  const form = new FormData()
+  files.forEach(file => form.append('files', file))
+  form.set('name', name)
+  form.set('items', JSON.stringify(items))
+  const res = await fetch('/api/batches', { method: 'POST', body: form })
+  return handle<BatchCreated>(res)
+}
+
+// API 버전 묶음 실행 상태 (서버 메모리, 재시작하면 idle)
+export interface BatchRun {
+  state: 'idle' | 'running' | 'done' | 'failed' | 'cancelled'
+  current?: string | null
+  error?: string | null
+}
+
+export interface BatchView {
+  id: string
+  name: string
+  created: string
+  jobs: Job[]
+  run: BatchRun
+}
+
+export async function fetchBatch(id: string): Promise<BatchView> {
+  const res = await fetch(`/api/batches/${id}`)
+  return handle<BatchView>(res)
+}
+
+// 묶음 실행·중지: 503 키 없음, 409 실행 중(중지는 실행 중 아님)은 백엔드 사유를 그대로 던진다
+export async function controlBatch(id: string, action: 'run' | 'cancel'): Promise<void> {
+  const res = await fetch(`/api/batches/${id}/${action}`, { method: 'POST' })
+  await handle<unknown>(res)
+}
+
+// 보류 문항 결정: 결정 뒤 작업을 돌려준다. 400 사유(보류 문항이 아님, 빈 입력 등)는 그대로 던진다
+export async function decideHold(
+  jobId: string,
+  no: number,
+  body: { choice: HoldChoice; request?: string } & ItemFields,
+): Promise<Job> {
+  const res = await fetch(`/api/jobs/${jobId}/problems/${no}/decision`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  return handle<Job>(res)
+}
+
+// 문항 카드 손 수정 (학원 작업, 보류가 아니어도): 고친 뒤 작업을 돌려준다. 400 사유(고친 곳이 없다 등)는 그대로 던진다
+export async function editItem(jobId: string, no: number, fields: ItemFields): Promise<Job> {
+  const res = await fetch(`/api/jobs/${jobId}/problems/${no}/item`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(fields),
+  })
+  return handle<Job>(res)
 }
 
 export async function deleteJob(id: string): Promise<void> {
@@ -126,6 +269,11 @@ export function pageImageUrl(jobId: string, page: number): string {
 
 export function haesolUrl(jobId: string, ext: 'hwp' | 'hwpx'): string {
   return `/api/jobs/${jobId}/haesol.${ext}`
+}
+
+// 학원 작업의 결과 문서 (고른 기능이 다 끝난 작업)
+export function academyUrl(jobId: string, ext: 'hwp' | 'hwpx' | 'view'): string {
+  return ext === 'view' ? `/api/jobs/${jobId}/academy-view.hwp` : `/api/jobs/${jobId}/academy.${ext}`
 }
 
 // 다 풀기 전 지금까지 저장된 풀이로 만든 해설지 (받을 때마다 새로 만든다)

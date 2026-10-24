@@ -165,3 +165,43 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* 결과 문서 쪽 그림 (rhwp SVG, 해설지 쪽과 같은 크기) */
+.academy-page {
+  display: block;
+  width: 794px;
+  height: 1123px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* 결과 문서 쪽 그림 위에 겹치는 문항 자리: 평소엔 투명, 올리거나 고르면 해설지 쪽과 같은 네모 (.haesol-active 는 styles.css) */
+.academy-sheet {
+  position: relative;
+}
+
+.academy-box {
+  position: absolute;
+  cursor: pointer;
+}
+
+/* 결과 문서 쪽 그림 위 웹 수식 층 (rhwp 수식을 뺀 자리). 문항 네모 아래에 두고 누르기는 네모가 받는다 */
+.academy-eqs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.academy-eq {
+  position: absolute;
+  white-space: nowrap;
+  line-height: normal;
+  transform-origin: 0 0;
+}
+
+/* 높이 0 표시: 위치가 곧 수식 기준선 (EquationLayer 가 잰다) */
+.academy-eq-base {
+  display: inline-block;
+  width: 0;
+  height: 0;
+}

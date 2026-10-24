@@ -3,7 +3,7 @@ import type { PageThumbsProps } from './types'
 import './PageThumbs.css'
 
 // 왼쪽: 쪽 썸네일 목록. 카드를 누르면 그 쪽으로 (보기 전용)
-export function PageThumbs({ pageCount, renderPage, current, entries, onSelect }: PageThumbsProps) {
+export function PageThumbs({ pageCount, renderPage, current, entries, notes, onSelect }: PageThumbsProps) {
   const currentRef = useRef<HTMLButtonElement>(null)
 
   // 다른 칸에서 쪽이 바뀌어도 고른 카드가 보이게
@@ -18,7 +18,7 @@ export function PageThumbs({ pageCount, renderPage, current, entries, onSelect }
         <span className="page-thumbs-count">{pageCount}쪽</span>
       </div>
       {Array.from({ length: pageCount }, (_, i) => {
-        const count = entries.filter((e) => e.page === i).length
+        const note = notes?.[i] ?? `${entries.filter((e) => e.page === i).length}문항`
         const isCurrent = i === current
         return (
           <button
@@ -27,7 +27,7 @@ export function PageThumbs({ pageCount, renderPage, current, entries, onSelect }
             ref={isCurrent ? currentRef : undefined}
             className={`page-thumb${isCurrent ? ' current' : ''}`}
             aria-current={isCurrent ? 'page' : undefined}
-            aria-label={`${i + 1}쪽, ${count}문항`}
+            aria-label={`${i + 1}쪽, ${note}`}
             onClick={() => onSelect(i)}
           >
             <span className="page-thumb-clip">
@@ -37,7 +37,7 @@ export function PageThumbs({ pageCount, renderPage, current, entries, onSelect }
             </span>
             <span className="page-thumb-meta">
               <span className="page-thumb-no">{i + 1}</span>
-              <span className="page-thumb-badge">{count}문항</span>
+              <span className="page-thumb-badge">{note}</span>
             </span>
           </button>
         )

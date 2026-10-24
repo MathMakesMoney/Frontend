@@ -1,13 +1,29 @@
+import { useState } from 'react'
 import { labelText } from '../../shared/labelText'
 import { RichText } from '../../shared/RichText'
-import { figureUrl, type Problem } from '../../shared/api'
+import { editItem, figureUrl, type Job, type Problem } from '../../shared/api'
 import { ReviseRequest } from './ReviseRequest'
+import { decisionText } from './HoldPanel'
+import { ItemEditor } from './ItemEditor'
 
-// 문항 한 개: 검토 필요면 사유를 그대로 보여 주고 정답처럼 보이지 않게 한다
-export function ProblemCard({ jobId, jobTitle, problem }: { jobId: string; jobTitle: string; problem: Problem }) {
-  const needsReview = problem.review !== null
+// 문항 한 개: 검토 필요면 사유를 그대로 보여 주고 정답처럼 보이지 않게 한다.
+// 학원 작업(문항 데이터 item 이 있음)은 발문·선지·표 칸·정답을 고친다 (onSaved 로 새 작업, cellsEditable 은 hml 문항)
+// typingOnly(해설을 안 고른 작업)는 풀이가 없어 정답표 답을 정답으로 보이고 독립 검증·해설 고쳐 달라 칸은 숨긴다
+export function ProblemCard({ jobId, jobTitle, problem, cellsEditable = false, typingOnly = false, onSaved }: {
+  jobId: string
+  jobTitle: string
+  problem: Problem
+  cellsEditable?: boolean
+  typingOnly?: boolean
+  onSaved?: (job: Job) => void
+}) {
+  const [editing, setEditing] = useState(false)
+  // 보류 결정으로 정한 문항(결정이 있고 남은 보류 사유가 없음)은 미확정으로 보이지 않는다
+  const decided = !!problem.decision && problem.hold === null
+  const needsReview = problem.review !== null && !decided
   // 백엔드가 정한 표시 번호 (겹치면 20-1, 번호 없으면 2-1)
   const label = labelText(problem.label ?? problem.no)
+  const answer = typingOnly ? problem.item?.answer : problem.answer
 
   return (
     <article className={`problem-card${needsReview ? ' needs-review' : ''}`}>
@@ -15,7 +31,19 @@ export function ProblemCard({ jobId, jobTitle, problem }: { jobId: string; jobTi
         <span className="problem-no">{label}</span>
         {needsReview && <span className="review-badge">검토 필요: {problem.review}</span>}
         {problem.editedByTeacher && <span className="edited-badge">강사 수정</span>}
+        {problem.decision && <span className="edited-badge">보류 결정: {decisionText(problem.decision)}</span>}
+        {problem.item && onSaved && (
+          <button type="button" className="button-plain" onClick={() => setEditing(!editing)}>{editing ? '고치기 닫기' : '문항 고치기'}</button>
+        )}
       </header>
+
+      {editing && problem.item && onSaved && (
+        <ItemEditor problem={problem} answer={problem.item.answer} answerLabel="정답표 답 (정답 쪽과 정답 대조에 쓰는 답)" cells={cellsEditable}
+          onSave={async fields => {
+            onSaved(await editItem(jobId, problem.no, fields))
+            setEditing(false)
+          }} />
+      )}
 
       <p className="problem-stem">
         <RichText text={problem.stem} />
@@ -42,7 +70,7 @@ export function ProblemCard({ jobId, jobTitle, problem }: { jobId: string; jobTi
       <div className="answer-row">
         <span className="field-label">정답</span>
         <span className={needsReview ? 'answer-unconfirmed' : 'answer'}>
-          {problem.answer ? <RichText text={problem.answer} /> : '(없음)'}
+          {answer ? <RichText text={answer} /> : '(없음)'}
           {needsReview && ' (미확정)'}
         </span>
       </div>
@@ -60,10 +88,12 @@ export function ProblemCard({ jobId, jobTitle, problem }: { jobId: string; jobTi
         </div>
       )}
 
-      <div className="verification-row">
-        <span className="field-label">독립 검증 답</span>
-        <span>{problem.blindAnswer ? <RichText text={problem.blindAnswer} /> : '(없음)'}</span>
-      </div>
+      {!typingOnly && (
+        <div className="verification-row">
+          <span className="field-label">독립 검증 답</span>
+          <span>{problem.blindAnswer ? <RichText text={problem.blindAnswer} /> : '(없음)'}</span>
+        </div>
+      )}
 
       {problem.verification && (
         <div className="verification-row">
@@ -77,7 +107,8 @@ export function ProblemCard({ jobId, jobTitle, problem }: { jobId: string; jobTi
       {!!problem.revisionCount && problem.revisionCount > 0 && (
         <p className="hint">다시 저장 {problem.revisionCount}번</p>
       )}
-      <ReviseRequest jobId={jobId} jobTitle={jobTitle} label={label} requests={problem.editRequests ?? []} />
+      {/* 풀이가 아직 없는 문항(풀이 누락)은 고쳐 달라고 할 해설이 없다 */}
+      {!typingOnly && (problem.answer !== null || problem.steps.length > 0) && <ReviseRequest jobId={jobId} jobTitle={jobTitle} label={label} requests={problem.editRequests ?? []} />}
     </article>
   )
 }

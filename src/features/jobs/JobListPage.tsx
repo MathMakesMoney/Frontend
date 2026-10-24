@@ -2,14 +2,33 @@ import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { deleteJob, fetchJobs, type Job } from '../../shared/api'
-import { stageText } from '../../shared/stage'
+import { featureText, jobPhase, stageText } from '../../shared/stage'
+import { ProgressStatus } from '../../shared/ProgressStatus'
 import { HangulCover } from '../../shared/HangulCover'
 
 // 진행 상태 점 색: 완료 초록, 문항·풀이 저장 중 파랑, 업로드만 된 것 회색
 function statusClass(job: Job): string {
-  if (job.stage === 'done') return 'job-status done'
-  if (job.stage === 'uploaded') return 'job-status'
-  return 'job-status working'
+  const phase = jobPhase(job)
+  return phase === 'done' ? 'job-status done' : phase === 'uploaded' ? 'job-status' : 'job-status working'
+}
+
+// 묶음으로 올린 작업은 묶음 번호로 모으고(시험지 순서대로), 나머지는 낱개로 둔다. 묶음 순서는 목록에서 처음 나온 순
+// 끝난 작업의 링크 글: 해설을 안 고른 작업(타이핑만 등)은 해설지가 없으니 결과물 보기
+export const doneLinkText = (job: Pick<Job, 'features'>) =>
+  job.features && !job.features.includes('haesol') ? '결과물 보기' : '해설지 다시 보기'
+
+export function groupBatches(jobs: Job[]): { batches: { id: string; name: string; jobs: Job[] }[]; singles: Job[] } {
+  const batches = new Map<string, { id: string; name: string; jobs: Job[] }>()
+  const singles: Job[] = []
+  for (const job of jobs) {
+    if (!job.batch) { singles.push(job); continue }
+    const group = batches.get(job.batch.id) ?? { id: job.batch.id, name: job.batch.name, jobs: [] }
+    group.jobs.push(job)
+    batches.set(job.batch.id, group)
+  }
+  const list = [...batches.values()]
+  list.forEach(group => group.jobs.sort((a, b) => a.batch!.order - b.batch!.order))
+  return { batches: list, singles }
 }
 
 // 검색과 진행 상태를 적용한 뒤 날짜순으로 정렬한다
@@ -17,9 +36,7 @@ export function visibleJobs(jobs: Job[], query: string, status: string, order: s
   const search = query.trim().toLocaleLowerCase()
   return jobs.filter(job =>
     [job.title, job.school, job.scope].join(' ').toLocaleLowerCase().includes(search)
-    && (status === 'all' || (status === 'working'
-      ? job.stage !== 'uploaded' && job.stage !== 'done'
-      : job.stage === status)),
+    && (status === 'all' || jobPhase(job) === status),
   ).sort((a, b) => (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) * (order === 'oldest' ? 1 : -1))
 }
 
@@ -38,7 +55,8 @@ export function JobListPage() {
     return queryClient.invalidateQueries({ queryKey: ['jobs'] })
   } })
   const overview = query.trim() === '' && status === 'all' && order === 'latest'
-  const recent = overview ? filteredJobs[0] : undefined
+  const { batches, singles } = groupBatches(filteredJobs)
+  const recent = overview ? singles[0] : undefined
   const groups = [
     { status: 'working', title: '이어갈 작업', description: '풀이가 만들어지는 시험지' },
     { status: 'uploaded', title: '올려둔 시험지', description: '수업 준비를 시작해 보세요' },
@@ -47,6 +65,8 @@ export function JobListPage() {
 
   // 삭제 버튼은 작업 링크 밖에 두고 확인 후 기존 API로 삭제한다
   function jobCard(job: Job, featured = false) {
+    // 학원 작업은 보류 문항 수(보류일 때만, 결정하면 줄어든다), 그 밖은 검토 필요 수
+    const reviews = job.progress ? (job.progress === 'hold' ? job.holdCount ?? 0 : 0) : job.reviewCount
     const cover = (<div className="job-cover-sheet">
               <span className="job-cover-details">{job.school || '시험지'}{job.grade ? ` · ${job.grade.endsWith('학년') ? job.grade : `${job.grade}학년`}` : ''}</span>
               <strong>{job.title}</strong>
@@ -56,10 +76,10 @@ export function JobListPage() {
               <span className="job-cover-brand">풀이담</span>
             </div>)
     return (
-      <li key={job.id} data-status={job.stage === 'done' ? 'done' : job.stage === 'uploaded' ? 'uploaded' : 'working'} className={`job-card${featured ? ' job-card-featured' : ''}`}>
+      <li key={job.id} data-status={jobPhase(job)} className={`job-card${featured ? ' job-card-featured' : ''}`}>
         <Link to={`/jobs/${job.id}`} className="job-row">
           <div className="job-cover" aria-hidden="true">
-            {job.inputType === 'PDF' ? cover : <HangulCover jobId={job.id} inputType={job.inputType} title={job.title} className="job-cover-preview">{cover}</HangulCover>}
+            {job.inputType !== 'HWP' && job.inputType !== 'HWPX' ? cover : <HangulCover jobId={job.id} inputType={job.inputType} title={job.title} className="job-cover-preview">{cover}</HangulCover>}
             {job.inputType === 'PDF' && <img className="job-cover-preview" src={`/api/jobs/${encodeURIComponent(job.id)}/pages/1.png`} alt="" loading="lazy" onError={event => { event.currentTarget.hidden = true }} />}
             <span className={`file-type${job.inputType === 'PDF' ? ' pdf' : ''}`}>{job.inputType}</span>
           </div>
@@ -70,11 +90,12 @@ export function JobListPage() {
               <span className="job-date">{new Date(job.createdAt).toLocaleString('ko-KR', { dateStyle: 'medium', timeStyle: 'short' })}</span>
             </span>
             <div className="job-card-status">
-              <span className={statusClass(job)}>{stageText(job.stage, job.solvedCount, job.problemCount)}</span>
-              {job.reviewCount > 0 && <span className="job-review">검토 필요 {job.reviewCount}</span>}
+              {job.progress ? <ProgressStatus job={job} /> : <span className={statusClass(job)}>{stageText(job.stage, job.solvedCount, job.problemCount)}</span>}
+              {job.features && <span className="job-features">{featureText(job.features)}</span>}
+              {reviews > 0 && <span className="job-review">검토 필요 {reviews}</span>}
               <span className="job-chevron" aria-hidden="true">↗</span>
             </div>
-            {featured && <span className="job-feature-action">{job.stage === 'done' ? '해설지 다시 보기' : '이어서 보기'} <span aria-hidden="true">→</span></span>}
+            {featured && <span className="job-feature-action">{job.stage === 'done' ? doneLinkText(job) : '이어서 보기'} <span aria-hidden="true">→</span></span>}
           </div>
         </Link>
         <button type="button" className="job-delete" aria-label={`${job.title} 삭제`} disabled={deletion.isPending} onClick={() => {
@@ -146,13 +167,20 @@ export function JobListPage() {
           </div>
         </div>
       )}
+      {batches.map(batch => <section className="jobs-section jobs-batch" key={batch.id}>
+        <div className="jobs-section-heading">
+          <h2>{batch.name} <span>{batch.jobs.length}</span></h2>
+          <Link to={`/batches/${batch.id}`} className="jobs-batch-link">묶음 화면 <span aria-hidden="true">→</span></Link>
+        </div>
+        <ul className="job-list">{batch.jobs.map(job => jobCard(job))}</ul>
+      </section>)}
       {overview ? groups.map(group => {
-        const grouped = visibleJobs(filteredJobs, '', group.status, order).filter(job => job.id !== recent?.id)
+        const grouped = visibleJobs(singles, '', group.status, order).filter(job => job.id !== recent?.id)
         return grouped.length > 0 && <section className="jobs-section" key={group.status}>
           <div className="jobs-section-heading"><h2>{group.title} <span>{grouped.length}</span></h2><p>{group.description}</p></div>
           <ul className="job-list">{grouped.map(job => jobCard(job))}</ul>
         </section>
-      }) : filteredJobs.length > 0 && <ul className="job-list">{filteredJobs.map(job => jobCard(job))}</ul>}
+      }) : singles.length > 0 && <ul className="job-list">{singles.map(job => jobCard(job))}</ul>}
       <dialog ref={deleteDialog} className="jobs-delete-dialog" aria-labelledby="jobs-delete-title" onClose={() => setSelectedJob(null)}>
         <span className="jobs-delete-icon" aria-hidden="true">×</span>
         <h2 id="jobs-delete-title">이 작업을 삭제할까요</h2>

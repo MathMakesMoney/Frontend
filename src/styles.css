@@ -354,6 +354,8 @@ button {
 
 .problem-stem {
   margin: 8px 0;
+  /* 발문의 줄바꿈(<보 기> ㄱ. ㄴ. ㄷ.)을 그대로 보인다 */
+  white-space: pre-line;
 }
 
 .choices {
@@ -712,6 +714,16 @@ button {
 
 .job-status.working::before {
   background: #2563eb;
+  animation: job-working 1.6s ease-in-out infinite;
+}
+
+/* 진행 중 점이 천천히 깜빡여 작업이 도는 중임을 알린다 */
+@keyframes job-working {
+  50% { opacity: .25; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .job-status.working::before { animation: none; }
 }
 
 .job-review {
@@ -1635,3 +1647,72 @@ button {
 .job-download-label { color: #6b7684; font-size: 13px; margin-right: 4px; }
 .job-download-note { color: #8b95a1; font-size: 12px; }
 @media (max-width: 760px) { .job-download-note { flex-basis: 100%; margin-left: 0; } }
+
+/* 학원 시험지 제작: 묶음 올리기·목록·묶음 화면 */
+.job-status.hold { color: #b45309; }
+.job-status.hold::before { background: #f59e0b; }
+.job-status.failed { color: #b42318; }
+.job-status.failed::before { background: #ef4444; }
+.jobs-page .job-status.hold { background: #fff6e5; }
+.jobs-page .job-status.failed { background: #fff0ed; }
+.job-features { color: #6b7684; font-size: 12px; }
+.job-hold { color: #b45309; background: #fff6e5; border-radius: 10px; padding: 12px 16px; font-size: 14px; }
+.job-academy { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.jobs-page .jobs-batch-link { color: #2868e8; font-size: 13px; text-decoration: none; }
+.upload-features { display: flex; flex-wrap: wrap; gap: 16px; grid-column: 1 / -1; }
+.upload-page .upload-form .upload-feature { flex-direction: row; align-items: center; gap: 8px; }
+.upload-page .upload-form .upload-feature input { width: auto; }
+.upload-page .upload-folder-picker { color: #2868e8; font-size: 13px; text-align: center; cursor: pointer; }
+.upload-page .upload-folder-picker input { display: none; }
+.upload-page .upload-apply { grid-column: 1 / -1; justify-self: start; border: 1px solid #c9dafe; background: #eef3ff; color: #2868e8; border-radius: 8px; padding: 9px 14px; font-weight: 600; }
+.upload-page .upload-row legend { font-size: 14px; overflow-wrap: anywhere; }
+.upload-errors { color: #b42318; line-height: 1.7; padding-left: 20px; }
+.batch-page .batch-count { color: #8b97a8; font-size: 18px; font-weight: 500; }
+.batch-page .batch-back { font-size: 13px; text-decoration: none; }
+.batch-page .batch-jobs { list-style: none; margin: 18px 0 28px; padding: 0; border: 1px solid #e7ebf1; border-radius: 14px; background: #fff; }
+.batch-page .batch-jobs li { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 14px 18px; }
+.batch-page .batch-jobs li + li { border-top: 1px solid #edf0f4; }
+.batch-page .batch-job-title { font-weight: 650; color: #191f28; text-decoration: none; margin-right: auto; overflow-wrap: anywhere; }
+.batch-page .batch-job-files { display: flex; flex-wrap: wrap; gap: 8px; }
+.batch-page > section { border: 1px solid #e7ebf1; border-radius: 14px; background: #fff; padding: 18px; margin-bottom: 18px; }
+.batch-page > section > h2 { margin: 0 0 8px; font-size: 17px; }
+.batch-page .batch-run-actions { display: flex; gap: 10px; }
+.batch-page .batch-sentence { background: #f5f7fa; border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+/* 보류 결정 (HoldPanel): 보류 문항마다 사유·세 답·다섯 선택지 */
+.hold-panel { border: 1px solid #fde4b8; border-radius: 14px; background: #fffaf0; padding: 18px; margin: 16px 0; }
+.hold-panel > h2 { margin: 0 0 4px; font-size: 17px; }
+.hold-item { border-top: 1px solid #f3e2c0; padding: 14px 0 6px; display: flex; flex-direction: column; gap: 10px; }
+.hold-answers { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 0; font-size: 14px; }
+.hold-answers dt { color: #6b7684; }
+.hold-answers dd { margin: 0; overflow-wrap: anywhere; }
+.hold-choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.hold-item .revise-box input { font: inherit; font-size: 14px; padding: 8px 10px; border: 1px solid #d0d5dd; border-radius: 6px; }
+.hold-item .revise-box .button { align-self: flex-start; }
+/* 문항 손 수정 편집기 (ItemEditor): 선지·정답 입력, 자료 표는 칸마다 입력 */
+.item-editor input { font: inherit; font-size: 14px; padding: 8px 10px; border: 1px solid #d0d5dd; border-radius: 6px; }
+.item-editor .button { align-self: flex-start; }
+.item-table { border-collapse: collapse; }
+.item-table td { border: 1px solid #d0d5dd; padding: 4px; text-align: center; }
+.item-table input { width: 100%; min-width: 80px; box-sizing: border-box; }
+/* 글 + 수식 칩 편집칸 (EqText): 글은 눌러서 그 조각만 입력칸, 칩은 눌러서 아래 작은 창 */
+.item-editor-mode { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; }
+.item-editor-mode [aria-pressed='true'] { font-weight: 700; text-decoration: underline; }
+.eq-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 8px 10px; border: 1px solid #d0d5dd; border-radius: 6px; background: #fff; font-size: 14px; line-height: 1.9; text-align: left; }
+.eq-row { min-height: 1.9em; white-space: pre-wrap; overflow-wrap: anywhere; }
+.eq-text { cursor: text; border-radius: 3px; }
+.eq-text:hover, .eq-text:focus-visible { background: #f1f5f9; outline: none; box-shadow: 0 0 0 2px #bfdbfe; }
+.eq-gap { display: inline-block; min-width: 12px; height: 1.2em; vertical-align: middle; }
+/* 빈 글 자리는 평소엔 안 보이고(점선이 .. 로 보임) 가리키거나 포커스할 때만 밑줄 */
+.eq-gap:hover, .eq-gap:focus-visible { border-bottom: 1px dashed #c7d2fe; }
+.eq-chip-btn { display: inline-block; max-width: 100%; overflow-x: auto; vertical-align: middle; margin: 0 2px; padding: 0 5px; border: 1px solid #c7d2fe; border-radius: 4px; background: #eef2ff; color: inherit; font: inherit; line-height: 1.6; }
+.eq-chip-btn:hover, .eq-chip-btn.active { border-color: #2563eb; background: #e0e7ff; }
+.eq-chip-btn:focus-visible { outline: 2px solid #2563eb; outline-offset: 1px; }
+.eq-chip-btn .eq-chip { margin: 0; padding: 0; background: none; }
+.eq-editing { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; max-width: 100%; }
+.item-editor .eq-editing input { max-width: 100%; min-width: 0; padding: 2px 6px; }
+.eq-pop { display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px solid #c7d2fe; border-radius: 8px; background: #f8faff; white-space: normal; }
+.eq-pop textarea { font-family: ui-monospace, 'SF Mono', monospace; font-size: 13px; padding: 6px 8px; border: 1px solid #d0d5dd; border-radius: 6px; resize: vertical; }
+.eq-preview { min-height: 2.2em; overflow-x: auto; padding: 4px 8px; border-radius: 6px; background: #fff; }
+.eq-pop-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.eq-pop-actions .eq-remove { color: #dc2626; }
+.item-table .eq-field { min-width: 80px; padding: 4px 6px; border: none; }

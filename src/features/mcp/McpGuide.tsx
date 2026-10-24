@@ -1,14 +1,14 @@
 import { useState } from 'react'
-import { mcpCommand, type McpClient, type CommandShell } from '../../shared/mcpCommand'
+import { mcpRunCommand, type McpClient, type CommandShell } from '../../shared/mcpCommand'
 
 // 현재 기기에 맞는 명령을 만들고 AI 선택과 복사만 보여 준다.
-export function McpGuide({ jobId, jobTitle }: { jobId: string; jobTitle: string }) {
+export function McpGuide({ prompt }: { prompt: string }) {
   const [client, setClient] = useState<McpClient>('codex')
   const [copied, setCopied] = useState(false)
   const [copyError, setCopyError] = useState(false)
   const shell: CommandShell = /Win/i.test(navigator.platform) ? 'powershell' : 'posix'
   const origin = window.location.origin
-  const command = mcpCommand(origin, jobId, jobTitle, shell, client)
+  const command = mcpRunCommand(origin, prompt, shell, client)
   const name = client === 'claude' ? 'Claude Code' : 'Codex'
 
   async function copyCommand() {

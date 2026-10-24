@@ -2,29 +2,38 @@ import { useEffect, useRef, useState } from 'react'
 import { figureUrl, pageImageUrl, type Job } from '../../shared/api'
 import './OriginalPages.css'
 import { loadRhwp } from '../../shared/hangulRenderer'
+import { equationSource, hwpxEquations, pairEquations, stripEquations, type EqBox, type PageEq } from './hwpEquations'
+
+// 화면 위에서 30% 지점을 지난 마지막 쪽을 현재 쪽으로 알린다. 그만 볼 때 부를 정리 함수를 돌려준다
+export function watchCurrentPage(box: HTMLElement, onChange: (page: number) => void): () => void {
+  const onScroll = () => {
+    const imgs = box.children
+    const line = window.innerHeight * 0.3
+    let now = 0
+    for (let i = 0; i < imgs.length; i++) if (imgs[i].getBoundingClientRect().top <= line) now = i
+    onChange(now)
+  }
+  onScroll()
+  // 쪽 이미지를 불러와 상자 크기가 바뀌면 다시 잰다 (처음엔 이미지 높이가 0 이라 모든 쪽이 30% 지점을 지난 것으로 잰다)
+  const resized = new ResizeObserver(onScroll)
+  resized.observe(box)
+  window.addEventListener('scroll', onScroll, { passive: true })
+  window.addEventListener('resize', onScroll)
+  return () => {
+    resized.disconnect()
+    window.removeEventListener('scroll', onScroll)
+    window.removeEventListener('resize', onScroll)
+  }
+}
 
 // 쪽 이미지 + 오른쪽 쪽 이동판 (PDF, 한글 공통)
-function PageImages({ urls }: { urls: string[] }) {
+function PageImages({ urls, name }: { urls: string[]; name: string }) {
   const box = useRef<HTMLDivElement>(null)
   const [cur, setCur] = useState(0)
 
-  // 화면 위에서 30% 지점을 지난 마지막 쪽을 현재 쪽으로 본다
+  // 지금 보는 쪽을 따라간다
   useEffect(() => {
-    const onScroll = () => {
-      const imgs = box.current?.children
-      if (!imgs) return
-      const line = window.innerHeight * 0.3
-      let now = 0
-      for (let i = 0; i < imgs.length; i++) if (imgs[i].getBoundingClientRect().top <= line) now = i
-      setCur(now)
-    }
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll)
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
-    }
+    if (box.current) return watchCurrentPage(box.current, setCur)
   }, [urls])
 
   const go = (i: number) => {
@@ -37,10 +46,10 @@ function PageImages({ urls }: { urls: string[] }) {
     <div className="page-viewer">
       <div className="page-images" ref={box}>
         {urls.map((u, i) => (
-          <img key={u} src={u} alt={`원본 ${i + 1}쪽`} />
+          <img key={u} src={u} alt={`${name} ${i + 1}쪽`} />
         ))}
       </div>
-      <nav className="page-nav" aria-label="원본 시험지 쪽 이동">
+      <nav className="page-nav" aria-label={`${name} 쪽 이동`}>
         <div className="page-nav-count">
           {cur + 1} / {urls.length}
         </div>
@@ -66,42 +75,170 @@ function PageImages({ urls }: { urls: string[] }) {
   )
 }
 
-// 한글 원본을 쪽마다 SVG 로 그려 이미지로 보인다 (쪽끼리 SVG id 가 겹치지 않게 img 로 띄운다)
-function HwpPages({ jobId, path }: { jobId: string; path: string }) {
-  const [urls, setUrls] = useState<string[] | null>(null)
-  const [error, setError] = useState('')
+type CellDoc = {
+  getParaBounds(list: number, para: number): string
+  getLineStarts(list: number, para: number): string
+  insertTextAtCursor(list: number, para: number, pos: number, text: string): string
+  deleteAtCursor(list: number, para: number, from: number, to: number): string
+}
+
+// reflowLinesegs 는 칸 한 겹만 다시 계산해 칸 속 상자(<보기>, 표 속 표)의 줄이 상자 끝에서 잘린다.
+// 줄 배치가 없는 칸 문단에 글자 하나를 넣었다 지우면 rhwp 가 그 문단을 다시 계산한다. 목록 번호(칸)는 1부터 촘촘하다 (../Backend 오류 기록 050)
+export function reflowNestedCells(doc: CellDoc): number {
+  let fixed = 0
+  let failed = 0
+  for (let list = 1, miss = 0; miss < 20; list++) {
+    if (doc.getParaBounds(list, 0) === '{}') {
+      miss++
+      continue
+    }
+    miss = 0
+    for (let p = 0; doc.getParaBounds(list, p) !== '{}'; p++) {
+      if (JSON.parse(doc.getParaBounds(list, p)).end > 0 && doc.getLineStarts(list, p) === '[]') {
+        // 한 문단이 실패해도(rhwp 예외) 나머지 문단은 계속한다. 그 문단만 한 줄로 남는다
+        try {
+          doc.insertTextAtCursor(list, p, 0, ' ')
+          doc.deleteAtCursor(list, p, 0, 1)
+          fixed++
+        } catch {
+          failed++ // 다음 문단으로
+        }
+      }
+    }
+  }
+  // 실패 수는 문단마다가 아니라 한 번만 남긴다
+  if (failed > 0) console.warn(`칸 속 문단 ${failed}개의 줄 다시 계산에 실패했습니다`)
+  return fixed
+}
+
+// rhwp 는 수식을 저장된 상자 폭에 맞춰 가로로 늘린다. 1.5배 넘게 늘어나면(어림 폭이 크게 틀린 수식) 한글처럼 제 크기로 그린다
+export function unstretchEquations(svg: string): string {
+  return svg.replace(/(<g transform="translate\([^)]*\) )scale\(([\d.]+),([\d.]+)\)/g, (m, head, sx, sy) =>
+    Number(sx) > 1.5 ? `${head}scale(1,${sy})` : m,
+  )
+}
+
+type HwpDoc = InstanceType<Awaited<ReturnType<typeof loadRhwp>>['HwpDocument']>
+type RenderDoc = CellDoc & { reflowLinesegs(): number; pageCount(): number; renderPageSvg(page: number): string; free(): void }
+
+// 문서를 쪽마다 SVG 로 그리고 read 값(과 readEq 값)을 함께 돌려준다. read 가 실패하면 값 없이 쪽 그림만, 어디서 실패하든 문서는 닫는다
+export function renderHwpDoc<D extends RenderDoc, T, E = never>(
+  doc: D,
+  reflow: boolean,
+  read?: (doc: D) => T,
+  readEq?: (doc: D) => E,
+): { svgs: string[]; data?: T; eq?: E; readFailed: boolean } {
+  try {
+    // 줄 배치를 비운 문단(결과 문서 미리보기 사본)은 rhwp 가 줄을 다시 나눈다. 원본 시험지는 한글이 저장한 줄 배치 그대로
+    if (reflow) {
+      doc.reflowLinesegs()
+      reflowNestedCells(doc)
+    }
+    // 글상자 안쪽 영역 자르기는 뺀다: 한글은 글상자 안 개체(<보기> 테두리 상자)가 안쪽 여백을 넘어도 그대로 그린다 (경안고)
+    const svgs = Array.from({ length: doc.pageCount() }, (_, i) => {
+      const svg = doc.renderPageSvg(i).replace(/ clip-path="url\(#textbox-clip-\d+\)"/g, '')
+      return reflow ? unstretchEquations(svg) : svg
+    })
+    let data: T | undefined
+    let readFailed = false
+    try {
+      data = read?.(doc)
+    } catch (e) {
+      readFailed = true // 목록(결과 문서 쪽별 번호)을 못 읽어도 쪽 그림은 보인다. 번호 없음과 구분하려고 표시한다
+      console.warn('문항 목록(쪽별 번호)을 읽지 못했습니다', e)
+    }
+    let eq: E | undefined
+    try {
+      eq = readEq?.(doc)
+    } catch (e) {
+      eq = undefined // 수식 원본을 못 읽으면 그 문서는 rhwp 수식 그대로
+      console.warn('수식 원본을 읽지 못해 rhwp 수식 그대로 보입니다', e)
+    }
+    return { svgs, data, eq, readFailed }
+  } finally {
+    doc.free()
+  }
+}
+
+// 가운데 쪽(picked 있음, 선택 없음은 null)은 수식을 뺀 stageUrls, 썸네일(picked 없음)은 rhwp 수식이 든 urls
+export function stageSrc(p: { urls: string[] | null; stageUrls: string[] | null }, index: number, picked?: string | null): string | undefined {
+  return (picked !== undefined && p.stageUrls ? p.stageUrls : p.urls)?.[index]
+}
+
+// 쪽 그림 SVG 를 주소로 만들고, 수식 원본이 있으면 수식을 뺀 쪽 그림(stageUrls)도 만든다. 수식 읽기·짝짓기·빼기·주소 만들기가
+// 어디서 실패해도 rhwp 수식 그대로(stageUrls = urls)로 돌아가고, 만들다 만 stageUrls 는 거둔다. made 는 나중에 거둘 주소 전부
+export async function pageUrls(
+  svgs: string[],
+  eq: { hwpx: Uint8Array; boxes: EqBox[][] } | undefined,
+  toUrl: (svg: string) => string,
+  revoke: (url: string) => void,
+) {
+  const urls = svgs.map(toUrl)
+  const plain = { urls, stageUrls: urls, equations: null as PageEq[][] | null, made: urls }
+  if (!eq) return plain
+  const stage: string[] = []
+  try {
+    const pages = pairEquations(eq.boxes, await hwpxEquations(eq.hwpx))
+    if (!pages) return plain
+    for (let i = 0; i < svgs.length; i++) stage.push(toUrl(stripEquations(svgs[i], pages[i])))
+    return { urls, stageUrls: stage, equations: pages, made: [...urls, ...stage] }
+  } catch (e) {
+    console.warn('수식을 웹 수식으로 바꾸지 못해 rhwp 수식 그대로 보입니다', e)
+    stage.forEach((u) => revoke(u))
+    return plain
+  }
+}
+
+// 한글 파일(url)을 rhwp 로 쪽마다 SVG 이미지 주소로 만든다 (쪽끼리 SVG id 가 겹치지 않게 img 로 띄운다). url 이 null 이면 아무것도 안 한다.
+// read 가 있으면 문서를 닫기 전에 불러 그 값(결과 문서 쪽별 번호 등)을 같이 돌려준다. version 이 바뀌면 다시 받는다.
+// equations 면 수식 스크립트와 쪽 수식 상자를 짝지어(equations) 수식을 뺀 쪽 그림(stageUrls)도 만든다. 못 짝지으면 equations 는 null, stageUrls 는 urls
+export function useHwpPages<T>(url: string | null, reflow: boolean, read?: (doc: HwpDoc) => T, version?: number, equations = false) {
+  const [state, setState] = useState<{ urls: string[]; stageUrls: string[]; equations: PageEq[][] | null; data?: T; readFailed: boolean } | null>(null)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
+    if (!url) return
     let alive = true
     let made: string[] = []
-    Promise.all([loadRhwp(), fetch(figureUrl(jobId, path)).then((res) => res.arrayBuffer())])
-      .then(([core, buf]) => {
+    setState(null)
+    setError(false)
+    const toUrl = (svg: string) => URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }))
+    Promise.all([loadRhwp(), fetch(url, { cache: 'no-store' }).then((res) => res.arrayBuffer())])
+      .then(async ([core, buf]) => {
         const doc = new core.HwpDocument(new Uint8Array(buf))
-        // 글상자 안쪽 영역 자르기는 뺀다: 한글은 글상자 안 개체(<보기> 테두리 상자)가 안쪽 여백을 넘어도 그대로 그린다 (경안고)
-        made = Array.from({ length: doc.pageCount() }, (_, i) =>
-          URL.createObjectURL(
-            new Blob([doc.renderPageSvg(i).replace(/ clip-path="url\(#textbox-clip-\d+\)"/g, '')], { type: 'image/svg+xml' }),
-          ),
-        )
-        doc.free()
-        if (alive) setUrls(made)
+        const { svgs, data, eq, readFailed } = renderHwpDoc(doc, reflow, read, equations ? equationSource : undefined)
+        const out = await pageUrls(svgs, eq, toUrl, (u) => URL.revokeObjectURL(u))
+        made = out.made
+        if (alive) setState({ urls: out.urls, stageUrls: out.stageUrls, equations: out.equations, data, readFailed })
         else made.forEach((u) => URL.revokeObjectURL(u))
       })
-      .catch(() => alive && setError('원본 시험지를 그리지 못했습니다'))
+      .catch((e) => {
+        console.warn('한글 파일을 쪽 그림으로 그리지 못했습니다', e)
+        if (alive) setError(true)
+      })
     return () => {
       alive = false
       made.forEach((u) => URL.revokeObjectURL(u))
     }
-  }, [jobId, path])
+  }, [url, reflow, read, version, equations])
 
-  if (error) return <p className="error">{error}</p>
-  if (!urls) return <p className="job-meta">원본 시험지를 그리는 중...</p>
-  return <PageImages urls={urls} />
+  return { urls: state?.urls ?? null, stageUrls: state?.stageUrls ?? null, equations: state?.equations ?? null, data: state?.data, readFailed: state?.readFailed ?? false, error }
+}
+
+// 한글 파일(url)을 쪽마다 그려 오른쪽 쪽 이동판과 보인다 (원본 시험지, 작업 상세의 결과 문서 보기)
+export function HwpPages({ url, name, reflow = false }: { url: string; name: string; reflow?: boolean }) {
+  const { urls, error } = useHwpPages(url, reflow)
+  if (error) return <p className="error">{name}를 그리지 못했습니다</p>
+  if (!urls) return <p className="job-meta">{name}를 그리는 중...</p>
+  return <PageImages urls={urls} name={name} />
 }
 
 // 원본 시험지 (접기/펼치기). 기본은 접어 둔다 (쪽이 많으면 화면이 길어지고 그리는 데 오래 걸려서, 2026-09-29 요청)
 export function OriginalPages({ job }: { job: Job }) {
   const [open, setOpen] = useState(false)
+
+  // HML 작업은 쪽 이미지도 원본 미리보기도 없다
+  if (job.inputType === 'HML') return null
 
   return (
     <section className="original-pages">
@@ -117,10 +254,10 @@ export function OriginalPages({ job }: { job: Job }) {
       )}
       {open && job.inputType === 'PDF' && (
         // 쪽 번호는 1부터 pages 까지 (백엔드가 고른 쪽만 모아 1쪽부터 다시 매김)
-        <PageImages urls={Array.from({ length: job.pages }, (_, i) => pageImageUrl(job.id, i + 1))} />
+        <PageImages name="원본 시험지" urls={Array.from({ length: job.pages }, (_, i) => pageImageUrl(job.id, i + 1))} />
       )}
-      {open && job.inputType === 'HWPX' && <HwpPages jobId={job.id} path="view.hwpx" />}
-      {open && job.inputType === 'HWP' && <HwpPages jobId={job.id} path="source.hwp" />}
+      {open && job.inputType === 'HWPX' && <HwpPages name="원본 시험지" url={figureUrl(job.id, 'view.hwpx')} />}
+      {open && job.inputType === 'HWP' && <HwpPages name="원본 시험지" url={figureUrl(job.id, 'source.hwp')} />}
     </section>
   )
 }

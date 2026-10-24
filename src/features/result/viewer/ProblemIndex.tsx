@@ -5,7 +5,7 @@ import type { ProblemEntry, ProblemIndexProps } from './types'
 import './ProblemIndex.css'
 
 // 오른쪽 칸: 쪽별로 묶은 문항 목록 (보기 전용)
-export function ProblemIndex({ entries, pageCount, current, active, hideAnswers, onSelect }: ProblemIndexProps) {
+export function ProblemIndex({ entries, pageCount, current, active, hideAnswers, readFailed, onSelect, onHover }: ProblemIndexProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [closed, setClosed] = useState<Set<number>>(new Set()) // 접힌 쪽 (기본은 모두 펼침)
 
@@ -41,6 +41,8 @@ export function ProblemIndex({ entries, pageCount, current, active, hideAnswers,
         <span className="pindex-count">{entries.length}문항</span>
         {reviewCount > 0 && <span className="pindex-badge">검토 필요 {reviewCount}</span>}
       </div>
+      {entries.length === 0 && readFailed && <p className="pindex-muted">문항 목록을 읽지 못했어요. 왼쪽 쪽 목록으로 넘겨 보세요</p>}
+      {entries.length === 0 && !readFailed && <p className="pindex-muted">이 문서에는 번호 붙은 문제 쪽이 없어요. 왼쪽 쪽 목록으로 넘겨 보세요</p>}
       {groups.map(({ page, list }) => {
         const open = !closed.has(page)
         return (
@@ -71,6 +73,10 @@ export function ProblemIndex({ entries, pageCount, current, active, hideAnswers,
                       data-label={e.label}
                       aria-current={isActive ? 'true' : undefined}
                       onClick={() => onSelect(e)}
+                      onMouseEnter={() => onHover?.(e.label)}
+                      onMouseLeave={() => onHover?.(null)}
+                      onFocus={() => onHover?.(e.label)}
+                      onBlur={() => onHover?.(null)}
                     >
                       <span className="pindex-row-top">
                         <strong>{labelText(e.label)}</strong>
