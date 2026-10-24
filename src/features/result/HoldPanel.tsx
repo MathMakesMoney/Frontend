@@ -23,14 +23,19 @@ export function decisionText(decision: HoldDecision): string {
   }
 }
 
+const REVISE_HINT = 'AI 연결 대화창에서 이어 하거나 묶음 실행을 다시 누르면 이 문항을 고쳐요'
+
 // 보류 작업의 보류 문항 목록: 사유, AI 답, 독립 검증 답, 정답표 답과 다섯 선택지. 결정하면 새 작업을 onDecided 로 넘긴다
+// 해설 고쳐 달라는 요청이 남아 해설 차례로 돌아간 작업도 보여 결정을 바꿀 수 있다 (백엔드 결정 043)
 export function HoldPanel({ job, onDecided }: { job: Job; onDecided: (job: Job) => void }) {
-  if (job.progress !== 'hold') return null
+  const revising = job.progress === 'haesol' && (job.problems ?? []).some(p => p.decision?.choice === 'revise')
+  if (job.progress !== 'hold' && !revising) return null
   const holds = (job.problems ?? []).filter(p => p.hold)
   return (
     <section className="hold-panel" aria-label="보류 문항 결정">
       <h2>보류 문항 {holds.length}개</h2>
       <p className="hint">문항마다 하나를 고르면 결과 문서에 반영돼요. 모두 정하면 결과 문서를 다시 만들어요</p>
+      {revising && <p className="hint">해설 고쳐 달라는 요청이 남았어요. {REVISE_HINT}</p>}
       {holds.map(p => <HoldItem key={p.no} jobId={job.id} problem={p} cells={job.inputType === 'HML'} onDecided={onDecided} />)}
     </section>
   )
@@ -83,7 +88,7 @@ function HoldItem({ jobId, problem, cells, onDecided }: { jobId: string; problem
       )}
       {open === 'revise' && (
         <div className="revise-box">
-          <label htmlFor={`hold-request-${problem.no}`}>어떻게 고칠까요? (AI 연결 대화창에서 다음에 이 문항을 고쳐요)</label>
+          <label htmlFor={`hold-request-${problem.no}`}>어떻게 고칠까요? ({REVISE_HINT})</label>
           <textarea id={`hold-request-${problem.no}`} rows={2} value={request} onChange={e => setRequest(e.target.value)} />
           <button type="button" className="button" disabled={busy || !request.trim()} onClick={() => decide({ choice: 'revise', request })}>요청 저장</button>
         </div>

@@ -27,6 +27,17 @@ describe('HoldPanel', () => {
 
   it('보류가 아니면 아무것도 그리지 않는다', () => {
     expect(renderToStaticMarkup(<HoldPanel job={job('done', [problem(20, { hold: null })])} onDecided={() => {}} />)).toBe('')
+    expect(renderToStaticMarkup(<HoldPanel job={job('haesol', [problem(20, { hold: '검증 실패' })])} onDecided={() => {}} />)).toBe('')
+  })
+
+  it('해설 고쳐 달라는 요청이 남은 작업(해설 차례)도 보류 문항을 보여 결정을 바꿀 수 있고, 대화창이나 묶음 실행으로 고친다고 알린다', () => {
+    const html = renderToStaticMarkup(<HoldPanel job={job('haesol', [
+      problem(20, { hold: '독립 검증 답 다름', decision: { choice: 'revise', at: '', request: '계산 다시' } }),
+    ])} onDecided={() => {}} />)
+    expect(html).toContain('20번')
+    expect(html).toContain('해설 고쳐 달라고 함: 계산 다시')
+    expect(html).toContain('AI 답으로 정하기')
+    expect(html).toContain('AI 연결 대화창에서 이어 하거나 묶음 실행을 다시 누르면')
   })
 })
 
