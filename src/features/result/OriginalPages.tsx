@@ -93,9 +93,14 @@ export function reflowNestedCells(doc: CellDoc): number {
     miss = 0
     for (let p = 0; doc.getParaBounds(list, p) !== '{}'; p++) {
       if (JSON.parse(doc.getParaBounds(list, p)).end > 0 && doc.getLineStarts(list, p) === '[]') {
-        doc.insertTextAtCursor(list, p, 0, ' ')
-        doc.deleteAtCursor(list, p, 0, 1)
-        fixed++
+        // 한 문단이 실패해도(rhwp 예외) 나머지 문단은 계속한다. 그 문단만 한 줄로 남는다
+        try {
+          doc.insertTextAtCursor(list, p, 0, ' ')
+          doc.deleteAtCursor(list, p, 0, 1)
+          fixed++
+        } catch {
+          // 다음 문단으로
+        }
       }
     }
   }
@@ -110,6 +115,32 @@ export function unstretchEquations(svg: string): string {
 }
 
 type HwpDoc = InstanceType<Awaited<ReturnType<typeof loadRhwp>>['HwpDocument']>
+type RenderDoc = CellDoc & { reflowLinesegs(): number; pageCount(): number; renderPageSvg(page: number): string; free(): void }
+
+// 문서를 쪽마다 SVG 로 그리고 read 값을 함께 돌려준다. read 가 실패하면 값 없이 쪽 그림만, 어디서 실패하든 문서는 닫는다
+export function renderHwpDoc<D extends RenderDoc, T>(doc: D, reflow: boolean, read?: (doc: D) => T): { svgs: string[]; data?: T } {
+  try {
+    // 줄 배치를 비운 문단(결과 문서 미리보기 사본)은 rhwp 가 줄을 다시 나눈다. 원본 시험지는 한글이 저장한 줄 배치 그대로
+    if (reflow) {
+      doc.reflowLinesegs()
+      reflowNestedCells(doc)
+    }
+    // 글상자 안쪽 영역 자르기는 뺀다: 한글은 글상자 안 개체(<보기> 테두리 상자)가 안쪽 여백을 넘어도 그대로 그린다 (경안고)
+    const svgs = Array.from({ length: doc.pageCount() }, (_, i) => {
+      const svg = doc.renderPageSvg(i).replace(/ clip-path="url\(#textbox-clip-\d+\)"/g, '')
+      return reflow ? unstretchEquations(svg) : svg
+    })
+    let data: T | undefined
+    try {
+      data = read?.(doc)
+    } catch {
+      data = undefined // 목록(결과 문서 쪽별 번호)을 못 읽어도 쪽 그림은 보인다
+    }
+    return { svgs, data }
+  } finally {
+    doc.free()
+  }
+}
 
 // 한글 파일(url)을 rhwp 로 쪽마다 SVG 이미지 주소로 만든다 (쪽끼리 SVG id 가 겹치지 않게 img 로 띄운다). url 이 null 이면 아무것도 안 한다.
 // read 가 있으면 문서를 닫기 전에 불러 그 값(결과 문서 쪽별 번호 등)을 같이 돌려준다. version 이 바뀌면 다시 받는다
@@ -125,19 +156,8 @@ export function useHwpPages<T>(url: string | null, reflow: boolean, read?: (doc:
     setError(false)
     Promise.all([loadRhwp(), fetch(url, { cache: 'no-store' }).then((res) => res.arrayBuffer())])
       .then(([core, buf]) => {
-        const doc = new core.HwpDocument(new Uint8Array(buf))
-        // 줄 배치를 비운 문단(결과 문서 미리보기 사본)은 rhwp 가 줄을 다시 나눈다. 원본 시험지는 한글이 저장한 줄 배치 그대로
-        if (reflow) {
-          doc.reflowLinesegs()
-          reflowNestedCells(doc)
-        }
-        // 글상자 안쪽 영역 자르기는 뺀다: 한글은 글상자 안 개체(<보기> 테두리 상자)가 안쪽 여백을 넘어도 그대로 그린다 (경안고)
-        made = Array.from({ length: doc.pageCount() }, (_, i) => {
-          const svg = doc.renderPageSvg(i).replace(/ clip-path="url\(#textbox-clip-\d+\)"/g, '')
-          return URL.createObjectURL(new Blob([reflow ? unstretchEquations(svg) : svg], { type: 'image/svg+xml' }))
-        })
-        const data = read?.(doc)
-        doc.free()
+        const { svgs, data } = renderHwpDoc(new core.HwpDocument(new Uint8Array(buf)), reflow, read)
+        made = svgs.map((svg) => URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' })))
         if (alive) setState({ urls: made, data })
         else made.forEach((u) => URL.revokeObjectURL(u))
       })

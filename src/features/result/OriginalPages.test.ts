@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest'
-import { reflowNestedCells, unstretchEquations, watchCurrentPage } from './OriginalPages'
+import { reflowNestedCells, renderHwpDoc, unstretchEquations, watchCurrentPage } from './OriginalPages'
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -55,4 +55,56 @@ it('수식 묶음의 가로 늘림이 1.5 를 넘으면 1 로 되돌린다', () 
       '<g transform="translate(3,4) scale(1.2422,1.0000)"><text>f</text></g>' +
       '<text transform="translate(5,6) scale(0.9747,1)">0</text>',
   )
+})
+
+// 한 문단 다시 계산이 실패해도(rhwp 예외) 나머지 문단은 계속한다
+it('칸 문단 다시 계산이 한 문단에서 실패해도 나머지는 다시 계산한다', () => {
+  const paras: Record<number, { end: number; lines: string }[]> = { 1: [{ end: 5, lines: '[]' }, { end: 3, lines: '[]' }] }
+  const done: string[] = []
+  const doc = {
+    getParaBounds: (l: number, p: number) => (paras[l]?.[p] ? JSON.stringify({ end: paras[l][p].end }) : '{}'),
+    getLineStarts: (l: number, p: number) => paras[l][p].lines,
+    insertTextAtCursor: (_l: number, p: number) => {
+      if (p === 0) throw new Error('rhwp 편집 실패')
+      return ''
+    },
+    deleteAtCursor: (l: number, p: number) => (done.push(`${l}.${p}`), ''),
+  }
+  expect(reflowNestedCells(doc)).toBe(1)
+  expect(done).toEqual(['1.1'])
+})
+
+// 쪽 그림 만들기: 목록 읽기(read)가 실패해도 쪽 그림은 돌려주고, 어디서 실패하든 문서를 닫는다
+function fakeDoc(failRender = false) {
+  const calls: string[] = []
+  return {
+    calls,
+    reflowLinesegs: () => (calls.push('reflow'), 0),
+    getParaBounds: () => '{}',
+    getLineStarts: () => '[]',
+    insertTextAtCursor: () => '',
+    deleteAtCursor: () => '',
+    pageCount: () => 2,
+    renderPageSvg: (i: number) => {
+      if (failRender) throw new Error('그리기 실패')
+      return `<svg>${i}<g clip-path="url(#textbox-clip-3)"></g></svg>`
+    },
+    free: () => calls.push('free'),
+  }
+}
+
+it('목록 읽기가 실패해도 쪽 그림은 돌려주고 문서를 닫는다', () => {
+  const doc = fakeDoc()
+  const out = renderHwpDoc(doc, true, () => {
+    throw new Error('목록 실패')
+  })
+  expect(out.svgs).toEqual(['<svg>0<g></g></svg>', '<svg>1<g></g></svg>'])
+  expect(out.data).toBeUndefined()
+  expect(doc.calls).toEqual(['reflow', 'free'])
+})
+
+it('쪽 그리기가 실패해도 문서는 닫는다', () => {
+  const doc = fakeDoc(true)
+  expect(() => renderHwpDoc(doc, false)).toThrow('그리기 실패')
+  expect(doc.calls).toEqual(['free'])
 })

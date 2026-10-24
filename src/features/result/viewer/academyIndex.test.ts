@@ -70,3 +70,22 @@ it('쪽별 번호를 문항 목록과 쪽 메모(정답, 붙인 문서)로 바�
   expect(academyIndex(pages, problems, ['typing', 'variant']).notes.slice(3)).toEqual(['변형', '변형'])
   expect(academyIndex(pages, problems, ['typing', 'haesol', 'variant']).notes.slice(3)).toEqual(['해설·변형', '해설·변형'])
 })
+
+// 문항 카드가 없는 작업(문항 목록이 빈 값)은 번호 칸 번호를 그대로 표시 번호로
+it('문항 정보가 없으면 번호 칸 번호를 표시 번호로 쓴다', () => {
+  const pages = [{ numbers: ['02', '01'], answer: false }, { numbers: [], answer: true }]
+  expect(academyIndex(pages, [], ['typing']).entries).toEqual([
+    { label: '1', page: 0, answer: null, review: null, hasFigure: false },
+    { label: '2', page: 0, answer: null, review: null, hasFigure: false },
+  ])
+})
+
+// 정답 쪽 뒤에 붙은 해설지·변형 문서의 표 칸 숫자는 문항 번호가 아니다
+it('정답 쪽 뒤 쪽의 번호는 문항으로 잇지 않는다', () => {
+  const pages = [
+    { numbers: ['01'], answer: false },
+    { numbers: [], answer: true },
+    { numbers: ['02', '10'], answer: false },
+  ]
+  expect(academyIndex(pages, [prob(1), prob(2)], ['typing', 'haesol']).entries.map((e) => `${e.page}:${e.label}`)).toEqual(['0:1'])
+})
