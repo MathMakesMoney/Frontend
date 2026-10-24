@@ -193,7 +193,7 @@ export function HaesolViewerPage({ variant = false }: { variant?: boolean }) {
         </div>
       </div>
       {!variant && !showAcademy && job.problemCount > 0 && job.stage !== 'done' && (
-        <p className="hint">지금까지 저장된 풀이로 받습니다 · 안 푼 문항은 검토 필요: 풀이 누락으로 표시됩니다</p>
+        <p className="hint">미리보기는 푼 문항만 보입니다 · 초안 다운로드는 안 푼 문항을 검토 필요: 풀이 누락으로 넣어 받습니다</p>
       )}
       {!showMunje && !showAcademy && layout.measure}
       {showAcademy && academy.error ? (
