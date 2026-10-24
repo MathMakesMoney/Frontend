@@ -57,6 +57,7 @@ export function HaesolViewerPage({ variant = false }: { variant?: boolean }) {
   const showMunje = variant && tab === 'munje'
   const [current, setCurrent] = useState(0)
   const [active, setActive] = useState<string | null>(null)
+  const [listPicks, setListPicks] = useState(0) // 목록에서 문항을 누른 횟수
   const [hovered, setHovered] = useState<string | null>(null) // 오른쪽 목록에서 마우스를 올린 문항
   const header = job?.header ?? ''
   const lines = (variant ? variantLines : job?.draft) ?? []
@@ -144,6 +145,7 @@ export function HaesolViewerPage({ variant = false }: { variant?: boolean }) {
   function selectEntry(entry: ProblemEntry) {
     setCurrent(entry.page)
     setActive(entry.label)
+    setListPicks((n) => n + 1)
   }
 
   const empty = showAcademy ? false : showMunje ? !munje : lines.length === 0
@@ -205,7 +207,7 @@ export function HaesolViewerPage({ variant = false }: { variant?: boolean }) {
       ) : (
         <div className="viewer-grid">
           <PageThumbs pageCount={pageCount} renderPage={(i) => renderPage(i)} current={current} entries={entries} notes={academyIdx?.notes} onSelect={selectPage} />
-          <PageStage pageCount={pageCount} renderPage={renderPage} current={current} active={active} hovered={hovered} onChange={selectPage} onPick={pickLabel} />
+          <PageStage pageCount={pageCount} renderPage={renderPage} current={current} active={active} hovered={hovered} listPicks={listPicks} onChange={selectPage} onPick={pickLabel} />
           <ProblemIndex entries={entries} pageCount={pageCount} current={current} active={active} hideAnswers={showMunje} readFailed={showAcademy && academy.readFailed} onSelect={selectEntry} onHover={setHovered} />
         </div>
       )}

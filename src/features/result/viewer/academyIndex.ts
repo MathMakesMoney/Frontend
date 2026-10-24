@@ -47,18 +47,19 @@ export function academyPages(doc: LayoutDoc): AcademyPage[] {
   })
 }
 
-// 쪽별 번호를 오른쪽 문항 목록(번호 NN = 문항 순서 NN 번째, 제외한 문항도 칸에 남는다)과 왼쪽 쪽 메모로 바꾼다.
+// 쪽별 번호를 오른쪽 문항 목록(번호 NN = 읽은 순서(no 순) NN 번째, 제외한 문항도 칸에 남는다)과 왼쪽 쪽 메모로 바꾼다.
 // 문항 정보가 없으면 번호 칸 번호를 그대로 표시 번호로. 정답 쪽 뒤에 붙은 문서(해설지·변형)의 표 칸 숫자는 문항이 아니라 건너뛴다.
 // 정답 쪽은 '정답', 그 뒤 쪽은 고른 기능대로 '해설', '변형', '해설·변형'
 export function academyIndex(pages: AcademyPage[], problems: Problem[], features: Feature[] = []) {
   const answerAt = pages.findIndex((p) => p.answer)
+  const reading = [...problems].sort((a, b) => a.no - b.no) // 번호 칸은 읽은 순서, 문항 목록은 인쇄 번호 순으로 올 수 있다
   const entries: ProblemEntry[] = pages.flatMap((pg, page) =>
     answerAt >= 0 && page > answerAt
       ? []
       : [...pg.numbers]
           .sort((a, b) => Number(a) - Number(b))
           .map((n) => {
-            const p = problems[Number(n) - 1]
+            const p = reading[Number(n) - 1]
             const box = pg.boxes[n]
             if (!p) return { label: String(Number(n)), page, answer: null, review: null, hasFigure: false, box }
             return { label: p.label ?? String(p.no), page, answer: p.answer ?? p.item?.answer ?? null, review: p.review ?? null, hasFigure: p.figures.length > 0, box }
