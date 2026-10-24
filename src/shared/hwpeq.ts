@@ -40,7 +40,7 @@ const SYMBOLS: Record<string, string> = {
   cdots: '\\cdots', ldots: '\\ldots', vdots: '\\vdots', ddots: '\\ddots', dots: '\\dots',
   sim: '\\sim', simeq: '\\simeq', approx: '\\approx', cong: '\\cong', equiv: '\\equiv',
   neq: '\\neq', ne: '\\neq', geq: '\\geq', ge: '\\geq', leq: '\\leq', le: '\\leq', gg: '\\gg', ll: '\\ll',
-  in: '\\in', IN: '\\in', notin: '\\notin', ni: '\\ni', owns: '\\ni',
+  in: '\\in', IN: '\\in', notin: '\\notin', nin: '\\notin', nsubset: '\\not\\subset', vert: '\\vert', ni: '\\ni', owns: '\\ni',
   subset: '\\subset', supset: '\\supset', superset: '\\supset', subseteq: '\\subseteq', supseteq: '\\supseteq',
   supersetEQ: '\\supseteq', smallinter: '\\cap', cap: '\\cap', smallunion: '\\cup', cup: '\\cup',
   rarrow: '\\rightarrow', larrow: '\\leftarrow', lrarrow: '\\leftrightarrow', uparrow: '\\uparrow', downarrow: '\\downarrow',
@@ -58,7 +58,7 @@ const PREFIX: Record<string, string> = {
   sqrt: '\\sqrt', overline: '\\overline', underline: '\\underline', under: '\\underline', bar: '\\bar',
   hat: '\\hat', tilde: '\\tilde', vec: '\\vec', dyad: '\\overleftrightarrow', arch: '\\overgroup',
   overrightarrow: '\\overrightarrow', overleftarrow: '\\overleftarrow', dot: '\\dot', ddot: '\\ddot',
-  acute: '\\acute', grave: '\\grave', check: '\\check',
+  acute: '\\acute', grave: '\\grave', check: '\\check', box: '\\boxed',
 }
 
 const ENVS: Record<string, string> = {

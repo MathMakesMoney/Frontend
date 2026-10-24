@@ -90,6 +90,14 @@ const cases: [string, string][] = [
   ['(삼각형 AOD의 넓이)', '( \\text{삼각형 } AOD \\text{의} \\text{ 넓이} )'],
   ['LEFT ( rm 가 RIGHT )', '\\left( \\text{가} \\right)'],
   ['a & (log _{3} a "이 자연수인 경우")', 'a \\& ( \\log_{3} a \\text{이 자연수인 경우} )'],
+  // 기록 045: nin, NSUBSET 은 기호, vert 는 세로선, box 는 상자 (한글 경계 사례 포함)
+  ['x nin P', 'x \\notin P'],
+  ['A NSUBSET B', 'A \\not\\subset B'],
+  ['{(x+y)^3 vert x, y in A}', '{( x + y )^{3} \\vert x , y \\in A}'],
+  ['vert x vert', '\\vert x \\vert'],
+  ['box{X}', '\\boxed{X}'],
+  ['가nin', '\\text{가} \\notin'],
+  ['LEFT | x vert RIGHT |', '\\left| x \\vert \\right|'],
   // 경우 나누기
   ['f(x)= cases {3x+a & (x LEQ 1) # 2 & (x>1)}', 'f ( x ) = \\begin{cases}3 x + a & ( x \\leq 1 ) \\\\ 2 & ( x > 1 )\\end{cases}'],
   ['CASES{5 &(x) # 1}', '\\begin{cases}5 & ( x ) \\\\ 1\\end{cases}'],
