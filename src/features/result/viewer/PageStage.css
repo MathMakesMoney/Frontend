@@ -45,6 +45,8 @@
 
 .page-stage-inner .haesol-keep[data-label]:hover:not(.haesol-active),
 .page-stage-inner .munje-cell[data-label]:hover:not(.haesol-active),
+.page-stage-inner .haesol-keep[data-label].academy-hover:not(.haesol-active),
+.page-stage-inner .munje-cell[data-label].academy-hover:not(.haesol-active),
 .page-stage-inner .academy-box:hover:not(.haesol-active),
 .page-stage-inner .academy-box.academy-hover {
   outline: 2px solid #93c5fd;

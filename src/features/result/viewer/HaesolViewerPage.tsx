@@ -69,6 +69,7 @@ export function HaesolViewerPage({ variant = false }: { variant?: boolean }) {
   useEffect(() => {
     setCurrent(0)
     setActive(null)
+    setHovered(null)
   }, [tab, resultTab])
 
   // 쪽이 줄면 마지막 쪽으로
@@ -111,7 +112,7 @@ export function HaesolViewerPage({ variant = false }: { variant?: boolean }) {
                 <div
                   key={e.label}
                   data-label={e.label}
-                  className={`academy-box${e.label === picked ? ' haesol-active' : e.label === hovered ? ' academy-hover' : ''}`}
+                  className={`academy-box${e.label === picked ? ' haesol-active' : ''}`}
                   style={{ left: e.box.x, top: e.box.y, width: e.box.w, height: e.box.h }}
                 />
               ),
@@ -197,7 +198,7 @@ export function HaesolViewerPage({ variant = false }: { variant?: boolean }) {
       ) : (
         <div className="viewer-grid">
           <PageThumbs pageCount={pageCount} renderPage={(i) => renderPage(i)} current={current} entries={entries} notes={academyIdx?.notes} onSelect={selectPage} />
-          <PageStage pageCount={pageCount} renderPage={renderPage} current={current} active={active} onChange={selectPage} onPick={pickLabel} />
+          <PageStage pageCount={pageCount} renderPage={renderPage} current={current} active={active} hovered={hovered} onChange={selectPage} onPick={pickLabel} />
           <ProblemIndex entries={entries} pageCount={pageCount} current={current} active={active} hideAnswers={showMunje} onSelect={selectEntry} onHover={setHovered} />
         </div>
       )}

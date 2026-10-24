@@ -29,6 +29,7 @@ export interface PageStageProps {
   renderPage: (index: number, active: string | null) => ReactNode
   current: number
   active: string | null
+  hovered: string | null // 오른쪽 목록에서 마우스를 올린 문항
   onChange: (page: number) => void
   onPick: (label: string) => void // 쪽 위의 문항을 누르면 (오른쪽 목록에 표시)
 }
