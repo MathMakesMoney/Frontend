@@ -1,0 +1,51 @@
+{
+  "id": "1",
+  "title": "예시 모의고사",
+  "scope": "공통수학",
+  "inputType": "HML",
+  "pages": 0,
+  "createdAt": "2026-01-01T00:00:00",
+  "sourceName": "sample.hml",
+  "stage": "done",
+  "problemCount": 6,
+  "solvedCount": 6,
+  "reviewCount": 0,
+  "files": { "hwp": false, "hwpx": false },
+  "features": ["haesol"],
+  "progress": "done",
+  "header": "예시고등학교 1학년 · 중간고사 · 범위: 다항식",
+  "draft": [
+    "예시 모의고사 해설",
+    "",
+    "1번  정답 ③",
+    "<<EQ>>x^2+2x+1=(x+1)^2<</EQ>> 이므로 식의 값은 <<EQ>>{x+1} over {2}<</EQ>> 이다.",
+    "",
+    "2번  정답 ①",
+    "<<EQ>>sqrt {3} times sqrt {12} = 6<</EQ>>",
+    "",
+    "20-1번  정답 2",
+    "<<EQ>>lim _{x -> 0} {sin x} over x = 1<</EQ>>",
+    "",
+    "20-2번  정답 5",
+    "<<EQ>>sum _{k=1} ^{n} k = {n(n+1)} over {2}<</EQ>>"
+  ],
+  "problems": [
+    {
+      "no": 1, "label": "1", "printedNo": 1,
+      "stem": "다음 중 옳은 것은? <<EQ>>x^2<</EQ>>\nㄱ. a는 1이다.\nㄴ. b는 2이다.\nㄷ. c는 3이다.",
+      "choices": ["ㄱ", "ㄴ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
+      "figures": [], "answer": "③", "steps": ["<<EQ>>x^2<</EQ>> 을 계산한다."],
+      "verification": { "pass": true, "reason": "" }, "blindAnswer": "③", "review": null,
+      "item": {
+        "answer": "3",
+        "choices": ["ㄱ", "ㄴ", "ㄱ, ㄴ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ"],
+        "parts": [{ "kind": "L", "text": "다음 중 옳은 것은? <<EQ>>x^2<</EQ>>", "box": [] }]
+      }
+    },
+    { "no": 2, "label": "2", "printedNo": 2, "stem": "둘째 문항", "choices": [], "figures": [], "answer": "2", "steps": [], "verification": null, "blindAnswer": null, "review": null },
+    { "no": 3, "label": "3", "printedNo": 3, "stem": "셋째 문항", "choices": [], "figures": [], "answer": "3", "steps": [], "verification": null, "blindAnswer": null, "review": null },
+    { "no": 4, "label": "20-1", "printedNo": 20, "stem": "스무째 문항 하나", "choices": [], "figures": [], "answer": "4", "steps": [], "verification": null, "blindAnswer": null, "review": null },
+    { "no": 5, "label": "20-2", "printedNo": 20, "stem": "스무째 문항 둘", "choices": [], "figures": [], "answer": "5", "steps": [], "verification": null, "blindAnswer": null, "review": null },
+    { "no": 6, "label": "21", "printedNo": 21, "stem": "스물한째 문항", "choices": [], "figures": [], "answer": "6", "steps": [], "verification": null, "blindAnswer": null, "review": null }
+  ]
+}

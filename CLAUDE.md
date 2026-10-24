@@ -15,7 +15,7 @@
 | 서버 상태 | TanStack Query (작업 상세는 SSE `changed` 이벤트를 받으면 다시 받는다, `src/features/result/CLAUDE.md`) |
 | 라우팅 | React Router |
 | 스타일 | 일반 CSS 한 파일 (`src/styles.css`), 프레임워크 없음 |
-| 테스트 | Vitest (수식 나누기 등 순수 로직만, PoC 단계라 Playwright e2e는 아직 없음) |
+| 테스트 | Vitest (순수 로직, 컴포넌트) + Playwright 브라우저 스모크 `e2e/` (chromium, 백엔드 없이 `/api` 를 가짜 응답으로). PR 마다 GitHub Actions `ci.yml` 이 tsc, vitest, e2e 를 돌린다 |
 | 수식 표시 | 한글 수식 스크립트를 `src/shared/hwpeq.ts` 로 LaTeX 로 바꾼 뒤 KaTeX 로 그린다. 실패하면 원문 칩 (`src/shared/CLAUDE.md`) |
 | 배포 | 미정. 로컬 개발은 Vite dev 서버 프록시로 `/api`, `/mcp` 를 백엔드(8080)로 넘긴다 |
 
@@ -26,7 +26,8 @@
 - `npm install`
 - `npm run dev`: 개발 서버 (5173), `/api`, `/mcp` 는 `http://localhost:8080` 으로 프록시
 - `npm run build`: 타입 체크 + `dist/` 로 빌드
-- `npm test`: Vitest 실행
+- `npm test`: Vitest 실행 (`src/**/*.test.*` 만)
+- `npm run test:e2e`: Playwright 스모크 (처음 한 번 `npx playwright install chromium`). 개발 서버를 5190 에 직접 띄운다. 가짜 응답만 쓴다: `e2e/fixtures/` 는 지어낸 문제만 넣고 실제 시험지 글은 절대 넣지 않는다 (저장소가 공개될 수 있고 저작권). 응답 모양은 `src/shared/api.ts` 타입에서 가져온다. 결정과 이유: `e2e/DECISION.md`
 - `npm run preview`: 빌드 결과 미리보기
 
 ## 폴더 구조 (기능별)
