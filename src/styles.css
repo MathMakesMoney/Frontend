@@ -354,6 +354,8 @@ button {
 
 .problem-stem {
   margin: 8px 0;
+  /* 발문의 줄바꿈(<보 기> ㄱ. ㄴ. ㄷ.)을 그대로 보인다 */
+  white-space: pre-line;
 }
 
 .choices {
@@ -1699,7 +1701,9 @@ button {
 .eq-row { min-height: 1.9em; white-space: pre-wrap; overflow-wrap: anywhere; }
 .eq-text { cursor: text; border-radius: 3px; }
 .eq-text:hover, .eq-text:focus-visible { background: #f1f5f9; outline: none; box-shadow: 0 0 0 2px #bfdbfe; }
-.eq-gap { display: inline-block; min-width: 12px; height: 1.2em; vertical-align: middle; border-bottom: 1px dashed #c7d2fe; }
+.eq-gap { display: inline-block; min-width: 12px; height: 1.2em; vertical-align: middle; }
+/* 빈 글 자리는 평소엔 안 보이고(점선이 .. 로 보임) 가리키거나 포커스할 때만 밑줄 */
+.eq-gap:hover, .eq-gap:focus-visible { border-bottom: 1px dashed #c7d2fe; }
 .eq-chip-btn { display: inline-block; max-width: 100%; overflow-x: auto; vertical-align: middle; margin: 0 2px; padding: 0 5px; border: 1px solid #c7d2fe; border-radius: 4px; background: #eef2ff; color: inherit; font: inherit; line-height: 1.6; }
 .eq-chip-btn:hover, .eq-chip-btn.active { border-color: #2563eb; background: #e0e7ff; }
 .eq-chip-btn:focus-visible { outline: 2px solid #2563eb; outline-offset: 1px; }

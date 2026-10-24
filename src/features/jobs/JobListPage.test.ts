@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest'
-import { groupBatches, visibleJobs } from './JobListPage'
+import { doneLinkText, groupBatches, visibleJobs } from './JobListPage'
 import type { Job } from '../../shared/api'
 
 it('검색과 상태를 함께 적용하고 원본을 유지하며 날짜순으로 정렬한다', () => {
@@ -37,4 +37,10 @@ it('진행(progress)이 있으면 그것으로 상태를 가른다: 해설·보�
   ] as Job[]
   expect(visibleJobs(jobs, '', 'working', 'oldest').map(j => j.id)).toEqual(['1', '2', '4'])
   expect(visibleJobs(jobs, '', 'done', 'oldest').map(j => j.id)).toEqual(['3'])
+})
+
+it('끝난 작업 링크 글은 해설을 고르지 않았으면 결과물 보기다', () => {
+  expect(doneLinkText({ features: ['typing'] })).toBe('결과물 보기')
+  expect(doneLinkText({ features: ['typing', 'haesol'] })).toBe('해설지 다시 보기')
+  expect(doneLinkText({})).toBe('해설지 다시 보기')
 })

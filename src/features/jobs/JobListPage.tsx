@@ -13,6 +13,10 @@ function statusClass(job: Job): string {
 }
 
 // 묶음으로 올린 작업은 묶음 번호로 모으고(시험지 순서대로), 나머지는 낱개로 둔다. 묶음 순서는 목록에서 처음 나온 순
+// 끝난 작업의 링크 글: 해설을 안 고른 작업(타이핑만 등)은 해설지가 없으니 결과물 보기
+export const doneLinkText = (job: Pick<Job, 'features'>) =>
+  job.features && !job.features.includes('haesol') ? '결과물 보기' : '해설지 다시 보기'
+
 export function groupBatches(jobs: Job[]): { batches: { id: string; name: string; jobs: Job[] }[]; singles: Job[] } {
   const batches = new Map<string, { id: string; name: string; jobs: Job[] }>()
   const singles: Job[] = []
@@ -91,7 +95,7 @@ export function JobListPage() {
               {reviews > 0 && <span className="job-review">검토 필요 {reviews}</span>}
               <span className="job-chevron" aria-hidden="true">↗</span>
             </div>
-            {featured && <span className="job-feature-action">{job.stage === 'done' ? '해설지 다시 보기' : '이어서 보기'} <span aria-hidden="true">→</span></span>}
+            {featured && <span className="job-feature-action">{job.stage === 'done' ? doneLinkText(job) : '이어서 보기'} <span aria-hidden="true">→</span></span>}
           </div>
         </Link>
         <button type="button" className="job-delete" aria-label={`${job.title} 삭제`} disabled={deletion.isPending} onClick={() => {
