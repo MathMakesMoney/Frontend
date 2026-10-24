@@ -15,9 +15,9 @@
 | 서버 상태 | TanStack Query (작업 상세는 SSE `changed` 이벤트를 받으면 다시 받는다, `src/features/result/CLAUDE.md`) |
 | 라우팅 | React Router |
 | 스타일 | 일반 CSS 한 파일 (`src/styles.css`), 프레임워크 없음 |
-| 테스트 | Vitest (순수 로직, 컴포넌트) + Playwright 브라우저 스모크 `e2e/` (chromium, 백엔드 없이 `/api` 를 가짜 응답으로). PR 마다 GitHub Actions `ci.yml` 이 tsc, vitest, e2e 를 돌린다 |
+| 테스트 | Vitest (순수 로직, 컴포넌트) + Playwright 브라우저 스모크 `e2e/` (chromium, 백엔드 없이 `/api` 를 가짜 응답으로). PR 과 main push 마다 GitHub Actions `ci.yml` 이 tsc, vitest, e2e 를 돌린다 |
 | 수식 표시 | 한글 수식 스크립트를 `src/shared/hwpeq.ts` 로 LaTeX 로 바꾼 뒤 KaTeX 로 그린다. 실패하면 원문 칩 (`src/shared/CLAUDE.md`) |
-| 배포 | 미정. 로컬 개발은 Vite dev 서버 프록시로 `/api`, `/mcp` 를 백엔드(8080)로 넘긴다 |
+| 배포 | Vercel. `vercel.json` 이 `/api`, `/mcp` 를 백엔드(`backend.math2hwp.com`)로 넘기고 나머지는 `index.html` (2026-10-24 갱신). 로컬 개발은 Vite dev 서버 프록시로 백엔드(8080), 로컬 PoC 용 `Dockerfile`+`nginx.conf` 도 남아 있다 |
 
 - 로그인, 결제, 작업 상세의 단일 AI API 실행 버튼은 이번 PoC 범위 밖. 묶음 화면은 API 실행·중지를 지원하고, 변형을 골랐으면 해설 뒤 변형과 결과 문서까지 진행한다 (`src/features/jobs/CLAUDE.md`)
 
@@ -28,6 +28,7 @@
 - `npm run build`: 타입 체크 + `dist/` 로 빌드
 - `npm test`: Vitest 실행 (`src/**/*.test.*` 만)
 - `npm run test:e2e`: Playwright 스모크 (처음 한 번 `npx playwright install chromium`). 개발 서버를 5190 에 직접 띄운다. 가짜 응답만 쓴다: `e2e/fixtures/` 는 지어낸 문제만 넣고 실제 시험지 글은 절대 넣지 않는다 (저장소가 공개될 수 있고 저작권). 응답 모양은 `src/shared/api.ts` 타입에서 가져온다. 결정과 이유: `e2e/DECISION.md`
+- 이 저장소는 squash 머지만 허용한다 (2026-10-24 갱신)
 - main 으로 바로 푸시하면 git 훅 `.githooks/pre-push` 가 tsc, vitest, e2e 를 돌려 실패 시 막는다. 다른 브랜치는 PR CI. 켜기 `git config core.hooksPath .githooks` (사람마다 한 번)
 - `npm run preview`: 빌드 결과 미리보기
 
@@ -35,9 +36,10 @@
 
 ```
 src
+├ (바로 아래)       App.tsx 라우팅, 공개 랜딩·로그인·시작·요금제 화면(`Landing*.tsx`, `SubscriptionPlans.tsx`, 설계 `DESIGN.md`, `LANDING-STORYBOARD.md`)
 ├ shared            API 호출, 수식 표시(<<EQ>>), 공통 컴포넌트
 └ features
-  ├ account         로그인, 내 정보, 요금제·크레딧, 사용량
+  ├ account         로그인, 내 정보, 요금제·크레딧, 사용량 (사양 문서만, 코드는 아직 없음. 2026-10-24 확인)
   ├ upload          작업 만들기 (파일 하나 또는 묶음, 제목, 교과 범위, 쪽 범위, 만들 기능, 버전)
   ├ jobs            작업 목록, 진행 단계, 실행·이어서·중지·삭제
   ├ result          문항별 결과 확인·수정, 검토 필요, 다시 풀기, 다운로드

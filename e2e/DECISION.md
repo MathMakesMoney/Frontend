@@ -26,3 +26,8 @@
 
 - 한글 IME 조합 입력은 Playwright 로 흉내내기 어렵다 (조합 중 Enter 무시 로직은 사람이 확인). 필요해지면 따로 정한다.
 - 새 화면 버그가 나오면 같은 커밋에서 이 스모크에 재현 시험을 더한다.
+
+## 갱신 (2026-10-24, #10)
+
+- main 으로 바로 푸시할 때만 git 훅 `.githooks/pre-push` 가 `tsc --noEmit`, `vitest run`, `test:e2e` 를 돌려 실패하면 푸시를 막는다 (약 15초). 다른 브랜치는 PR CI 가 본다. 사람마다 한 번 `git config core.hooksPath .githooks` 로 켠다. 건너뛰기 `git push --no-verify`.
+- 이 저장소는 squash 머지만 허용한다.
