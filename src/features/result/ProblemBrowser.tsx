@@ -1,10 +1,17 @@
 import { useRef, useState } from 'react'
-import type { Problem } from '../../shared/api'
+import type { Job, Problem } from '../../shared/api'
 import { shortLabel, labelText } from '../../shared/labelText'
 import { ProblemCard } from './ProblemCard'
 
 // 문항별 결과: 오른쪽 번호판에서 고른 문항 한 개만 보인다 (전체 보기를 누르면 모두). 검토 필요 번호는 경고 색, 처음엔 첫 검토 필요 문항
-export function ProblemBrowser({ jobId, jobTitle, problems }: { jobId: string; jobTitle: string; problems: Problem[] }) {
+// cellsEditable·onSaved 는 문항 카드 손 수정 (ProblemCard)
+export function ProblemBrowser({ jobId, jobTitle, problems, cellsEditable, onSaved }: {
+  jobId: string
+  jobTitle: string
+  problems: Problem[]
+  cellsEditable?: boolean
+  onSaved?: (job: Job) => void
+}) {
   const [picked, setPicked] = useState<number | null>(null)
   const [all, setAll] = useState(false)
   const top = useRef<HTMLElement>(null)
@@ -28,9 +35,9 @@ export function ProblemBrowser({ jobId, jobTitle, problems }: { jobId: string; j
       <div className="problem-browser">
         <div>
           {all ? (
-            problems.map((p) => <ProblemCard key={p.no} jobId={jobId} jobTitle={jobTitle} problem={p} />)
+            problems.map((p) => <ProblemCard key={p.no} jobId={jobId} jobTitle={jobTitle} problem={p} cellsEditable={cellsEditable} onSaved={onSaved} />)
           ) : (
-            <ProblemCard key={current.no} jobId={jobId} jobTitle={jobTitle} problem={current} />
+            <ProblemCard key={current.no} jobId={jobId} jobTitle={jobTitle} problem={current} cellsEditable={cellsEditable} onSaved={onSaved} />
           )}
         </div>
         <nav className="problem-nav" aria-label="문항 번호">

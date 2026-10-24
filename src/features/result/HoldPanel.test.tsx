@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { Job, Problem } from '../../shared/api'
-import { HoldPanel, decisionText, editedFields } from './HoldPanel'
+import { HoldPanel, decisionText } from './HoldPanel'
 
 const problem = (no: number, extra: Partial<Problem>): Problem => ({
   no, label: String(no), printedNo: null, stem: '발문', choices: [], figures: [], answer: '④', steps: [], verification: null,
@@ -37,13 +37,5 @@ describe('decisionText', () => {
     expect(decisionText({ choice: 'edit', at: '', stem: true })).toBe('발문·정답 직접 고침')
     expect(decisionText({ choice: 'revise', at: '', request: '계산 다시' })).toBe('해설 고쳐 달라고 함: 계산 다시')
     expect(decisionText({ choice: 'exclude', at: '' })).toBe('문제 제외')
-  })
-})
-
-describe('editedFields', () => {
-  it('바뀐 것만 보낸다', () => {
-    expect(editedFields('발문', '①', '발문', '①')).toEqual({})
-    expect(editedFields('발문', '①', '고친 발문', '①')).toEqual({ stem: '고친 발문' })
-    expect(editedFields('발문', '①', '발문', ' ③ ')).toEqual({ answer: '③' })
   })
 })

@@ -1686,3 +1686,9 @@ button {
 .hold-choices { display: flex; flex-wrap: wrap; gap: 8px; }
 .hold-item .revise-box input { font: inherit; font-size: 14px; padding: 8px 10px; border: 1px solid #d0d5dd; border-radius: 6px; }
 .hold-item .revise-box .button { align-self: flex-start; }
+/* 문항 손 수정 편집기 (ItemEditor): 선지·정답 입력, 자료 표는 칸마다 입력 */
+.item-editor input { font: inherit; font-size: 14px; padding: 8px 10px; border: 1px solid #d0d5dd; border-radius: 6px; }
+.item-editor .button { align-self: flex-start; }
+.item-table { border-collapse: collapse; }
+.item-table td { border: 1px solid #d0d5dd; padding: 4px; text-align: center; }
+.item-table input { width: 100%; min-width: 80px; box-sizing: border-box; }

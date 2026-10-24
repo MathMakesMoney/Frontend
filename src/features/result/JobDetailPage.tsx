@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { deleteJob, fetchJob, fetchVariantLines, haesolDraftUrl, haesolUrl, variantUrl } from '../../shared/api'
+import { deleteJob, fetchJob, fetchVariantLines, haesolDraftUrl, haesolUrl, variantUrl, type Job } from '../../shared/api'
 import { featureText, stageText } from '../../shared/stage'
 import { mcpPrompt } from '../../shared/mcpCommand'
 import { ProgressStatus } from '../../shared/ProgressStatus'
@@ -62,6 +62,12 @@ export function JobDetailPage() {
 
   const problems = job.problems ?? []
   const draft = job.draft ?? []
+  // 보류 결정·문항 손 수정 뒤: 응답의 새 작업으로 바로 그리고, 목록·묶음 화면도 새로 받게 한다
+  const onChanged = (next: Job) => {
+    queryClient.setQueryData(['job', id], next)
+    queryClient.invalidateQueries({ queryKey: ['jobs'] })
+    queryClient.invalidateQueries({ queryKey: ['batch'] })
+  }
 
   return (
     <div className="page job-detail-page">
@@ -84,12 +90,7 @@ export function JobDetailPage() {
       </p>}
       {job.features?.includes('variant') && <p className="hint">풀이담 AI 실행은 해설 뒤 변형 문제·풀이와 결과 문서까지 만들어요. 보류 문항이 있으면 먼저 결정해 주세요. 변형 중 멈춰도 다시 실행하면 남은 것부터 이어져요.</p>}
       {job.progress === 'hold' && <p className="job-hold" role="status">검토 필요: 해설 판정에 사람이 확인할 문항이 있어 결과 문서를 만들지 않았어요</p>}
-      {/* 결정하면 응답의 새 작업으로 바로 그리고, 목록·묶음 화면도 새로 받게 한다 */}
-      <HoldPanel job={job} onDecided={next => {
-        queryClient.setQueryData(['job', id], next)
-        queryClient.invalidateQueries({ queryKey: ['jobs'] })
-        queryClient.invalidateQueries({ queryKey: ['batch'] })
-      }} />
+      <HoldPanel job={job} onDecided={onChanged} />
 
       <OriginalPages job={job} />
       {/* 작업을 다시 받을 때마다(SSE changed, 보류 결정) 펼쳐 둔 결과 문서을 새로 받는다 */}
@@ -128,7 +129,7 @@ export function JobDetailPage() {
         </div>
       )}
 
-      {problems.length > 0 && <ProblemBrowser jobId={job.id} jobTitle={job.title} problems={problems} />}
+      {problems.length > 0 && <ProblemBrowser jobId={job.id} jobTitle={job.title} problems={problems} cellsEditable={job.inputType === 'HML'} onSaved={onChanged} />}
     </div>
   )
 }

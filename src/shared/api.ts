@@ -27,6 +27,33 @@ export interface Problem {
   hold?: string | null
   decision?: HoldDecision | null
   keyAnswer?: string | null
+  // 학원 작업의 문항 데이터 (items.json, 문항 카드 손 수정용). 문항 뽑기 전·해설지 작업에는 없다
+  item?: AcademyItem
+}
+
+// 문항 데이터 조각: L 줄, S 배점, B 상자(text 제목, box 상자 줄), T 자료 표(text "행 열 [행,열,행 수,열 수].. [inbox] [noborder]", box 칸 글 행 순서), P 그림
+export interface AcademyPart {
+  kind: 'L' | 'S' | 'B' | 'T' | 'P'
+  text: string
+  box: string[]
+}
+export interface AcademyItem {
+  answer: string
+  parts: AcademyPart[]
+  choices: string[]
+}
+
+// 손 수정: 바뀐 것만. stem 해설용 발문 전체, choices 선지 전체(개수 그대로), cells 자료 표 칸, answer 정답
+export interface ItemCell {
+  part: number
+  index: number
+  text: string
+}
+export interface ItemFields {
+  stem?: string
+  choices?: string[]
+  cells?: ItemCell[]
+  answer?: string
 }
 
 // 보류 결정 (decisions.json 그 문항): ai AI 답, key 정답표 답, edit 직접 고침, revise 해설 고쳐 달라, exclude 문제 제외
@@ -202,12 +229,22 @@ export async function controlBatch(id: string, action: 'run' | 'cancel'): Promis
 export async function decideHold(
   jobId: string,
   no: number,
-  body: { choice: HoldChoice; stem?: string; answer?: string; request?: string },
+  body: { choice: HoldChoice; request?: string } & ItemFields,
 ): Promise<Job> {
   const res = await fetch(`/api/jobs/${jobId}/problems/${no}/decision`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
+  })
+  return handle<Job>(res)
+}
+
+// 문항 카드 손 수정 (학원 작업, 보류가 아니어도): 고친 뒤 작업을 돌려준다. 400 사유(고친 곳이 없다 등)는 그대로 던진다
+export async function editItem(jobId: string, no: number, fields: ItemFields): Promise<Job> {
+  const res = await fetch(`/api/jobs/${jobId}/problems/${no}/item`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(fields),
   })
   return handle<Job>(res)
 }

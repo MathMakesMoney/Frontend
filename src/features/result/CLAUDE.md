@@ -7,6 +7,7 @@
 - `GET /api/jobs/{id}/problems` -> `[{"no", "printedNo", "stem", "choices", "figures", "answer", "steps", "verification": {"pass", "reason"}, "blindAnswer", "review": ["사유"], "typesetting": {"outside", "hangulInEq", "unbalanced"}, "editedByTeacher", "revisionCount", "model"}]`. `answer` 는 풀이 누락이면 null
 - `PATCH /api/jobs/{id}/problems/{no}`: `{"stem"?, "choices"?, "answer"?, "steps"?, "reviewResolved"?}`
 - `POST /api/jobs/{id}/problems/{no}/rerun`: 그 문항만 풀이 -> 검증 -> 독립 검증 -> 판정 다시
+- `PUT /api/jobs/{id}/problems/{no}/item` (학원 작업 문항 손 수정, `shared/api.ts` 의 `editItem`): `{stem?, choices?, cells?: [{part, index, text}], answer?}` 바뀐 것만 -> 새 작업. 학원 작업 문항에는 `item`(문항 데이터 조각·선지·정답)이 온다. 모양은 `../Backend/.../job/presentation/CLAUDE.md`
 - `GET /api/jobs/{id}/pages/{page}.png`: 원본 쪽 이미지 (150dpi, PDF)
 - `GET /api/jobs/{id}/files?path=source.hwpx` 또는 `source.hwp`: 한글 입력의 원본 파일 (어느 쪽인지는 `inputType`)
 - 작업 JSON 의 `draft`: 지금까지 저장된 풀이로 만든 해설지 줄 (`haesol_pdf.txt` 와 같은 모양, 푼 문항만)
@@ -40,17 +41,23 @@
 
 ## 다운로드
 
-- HML 작업(`inputType` `HML`, 쪽 이미지·문항·풀이 없음, `stage` `done`): 원본 시험지 접기, MCP 연결 안내, 문항 목록을 보이지 않는다. `files.academyHwp`·`academyHwpx` 가 있으면 다운로드 줄에 `결과 문서 HWP`, `결과 문서 HWPX` (`AcademyDownloads.tsx`, `/api/jobs/{id}/academy.{hwp,hwpx}`). 목록 표지는 원본 미리보기 없이 글자 표지
+- HML 작업(`inputType` `HML`, 쪽 이미지·풀이 없음, `stage` `done`): 원본 시험지 접기, MCP 연결 안내를 보이지 않는다. 타이핑만 고른 작업도 백엔드가 문항 데이터로 카드를 보내 문항 목록(손 수정용)이 보인다 (결정 041, 풀이 칸은 빈 값). `files.academyHwp`·`academyHwpx` 가 있으면 다운로드 줄에 `결과 문서 HWP`, `결과 문서 HWPX` (`AcademyDownloads.tsx`, `/api/jobs/{id}/academy.{hwp,hwpx}`). 목록 표지는 원본 미리보기 없이 글자 표지
 
 - 학원 시험지 작업(`features` 있음): 제목 아래에 만들 기능·진행·소속 묶음 링크. `progress` 가 hold 면 `검토 필요` 안내와 보류 결정 목록. HML 이라도 `progress` 가 haesol·variant 면 MCP 연결 안내를 보인다
 - 변형 선택 작업은 `변형 차례`, 끝나면 `변형 완료` 를 보인다. 변형 실패 사유(`variantError`)는 차례 옆에 그대로 보이고 진행은 variant 를 유지한다. API 실행이 해설 뒤 변형 문제·풀이와 결과 문서까지 만들며, 보류 결정 후 재실행·변형 실패 후 재실행은 남은 것부터 이어진다고 안내한다
 
 ## 보류 결정 (사이트 3단계, 기준 `../Backend/docs/exec-plans/active/academy-hold.md`)
 
-- `HoldPanel.tsx`: `progress` 가 hold 일 때 `hold` 가 있는 문항마다 사유, AI 답(`answer`), 독립 검증 답, 정답표 답(`keyAnswer`)과 다섯 버튼 (AI 답으로 정하기, 정답표 답으로 정하기, 발문·정답 직접 고치기, 해설 고쳐 달라고 하기, 문제 제외하기). 직접 고치기는 발문 전체(줄 수 그대로)와 정답 입력, 바뀐 것만 보낸다. 해설 고쳐 달라는 요청 입력
+- `HoldPanel.tsx`: `progress` 가 hold 일 때 `hold` 가 있는 문항마다 사유, AI 답(`answer`), 독립 검증 답, 정답표 답(`keyAnswer`)과 다섯 버튼 (AI 답으로 정하기, 정답표 답으로 정하기, 발문·정답 직접 고치기, 해설 고쳐 달라고 하기, 문제 제외하기). 직접 고치기는 문항 카드와 같은 편집기(`ItemEditor`, 아래 손 수정)로 decision edit 을 보낸다. 해설 고쳐 달라는 요청 입력
 - `POST /api/jobs/{id}/problems/{no}/decision` 응답(새 작업)으로 바로 다시 그리고 목록·묶음 질의를 새로 받게 한다. 400 사유는 그대로 보인다
 - 문항 카드: 결정이 있으면 `보류 결정: ...` 표시, 결정이 있고 `hold` 가 null 이면 미확정으로 보이지 않는다. 번호판은 처음에 첫 보류 문항
 - 해설 고쳐 달라고 하면 진행이 해설 차례(haesol)로 돌아가 MCP 안내가 보이고, AI 가 save_revision 으로 고치면 SSE 로 새로 고쳐진다
+
+## 문항 손 수정 (결정 041, `../Backend/docs/design-docs/decisions/041-academy-edit-choices-and-cells.md`)
+
+- `ItemEditor.tsx`: 발문 textarea, 선지마다 입력(개수 그대로), hml 문항(`inputType` HML)은 자료 표 T 를 칸마다 입력(합친 칸은 rowSpan·colSpan, 가려진 칸은 빼고, 그림 칸은 `(그림)` 읽기 전용, `gridRows`), 정답 입력. 바뀐 것만 보낸다(`changedFields`: 선지는 하나라도 바뀌면 전체, 칸은 바뀐 칸만). AI 로 뽑은 문항은 표가 발문의 표 줄이라 표 입력 없이 발문에서 고친다. 400 사유는 그대로 보인다
+- 문항 카드(`ProblemCard`)는 `item` 이 있으면 `문항 고치기` 버튼으로 같은 편집기를 열어 `editItem` 을 부르고, 응답 작업으로 바로 다시 그린다(`JobDetailPage` 의 `onChanged`, 보류 결정과 같다). 보류가 아니어도, 타이핑만 고른 작업도
+- 발문·선지·표를 고치면 해설을 고른 작업은 그 문항을 다시 푼다고 안내한다 (판정은 백엔드)
 
 - 해설지는 저장된 최신 결과로 그때 만든다. 수정 뒤 다시 받으라고 안내
 - 다 풀기 전(문항이 있고 완료 전): `haesol-draft.hwp`, `haesol-draft.hwpx` 로 지금까지 풀이로 만든 해설지를 받는 버튼. 받을 때마다 새로 만들고, 안 푼 문항은 `검토 필요: 풀이 누락` 으로 들어간다고 한 줄 알린다. 완료 뒤에는 최종 다운로드 버튼만
