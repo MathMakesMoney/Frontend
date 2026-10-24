@@ -89,12 +89,13 @@ export function EqText({ value, label, onChange }: { value: string; label: strin
 
   const pop = (e: Edit) => (
     <div className="eq-pop" role="group" aria-label={`${label} 수식 고치기`}>
+      {/* 수식은 한 줄이어야 저장된다: 붙여넣은 줄바꿈은 빈칸으로 */}
       <textarea autoFocus rows={2} aria-label="수식 스크립트" value={e.text}
-        onChange={ev => setEdit({ ...e, text: ev.target.value })}
+        onChange={ev => setEdit({ ...e, text: ev.target.value.replace(/\r?\n/g, ' ') })}
         onKeyDown={ev => {
           if (composing(ev)) return
           if (ev.key === 'Escape') { ev.preventDefault(); cancel(e) }
-          else if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); apply(e) }
+          else if (ev.key === 'Enter') { ev.preventDefault(); apply(e) }
         }} />
       <div className="eq-preview" aria-label="미리보기">
         {e.text.trim() ? <Equation script={e.text} /> : <span className="hint">스크립트를 쓰면 여기에 모양이 보여요</span>}
