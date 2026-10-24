@@ -165,3 +165,12 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* 결과 문서 쪽 그림 (rhwp SVG, 해설지 쪽과 같은 크기) */
+.academy-page {
+  display: block;
+  width: 794px;
+  height: 1123px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}

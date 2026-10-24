@@ -54,9 +54,10 @@ export function PageStage({ pageCount, renderPage, current, active, onChange, on
     if (!el) return
     if (active && active === picked.current) {
       // 쪽 위에서 누른 문항: 그 자리 그대로
-    } else if (active) {
-      el.querySelector(`[data-label="${CSS.escape(active)}"]`)?.scrollIntoView({ block: 'center' })
+    } else if (active && el.querySelector(`[data-label="${CSS.escape(active)}"]`)) {
+      el.querySelector(`[data-label="${CSS.escape(active)}"]`)!.scrollIntoView({ block: 'center' })
     } else if (current !== reported.current) {
+      // 쪽 그림(결과 문서)처럼 문항 자리가 없으면 그 쪽 맨 위로
       el.querySelector(`[data-page="${current}"]`)?.scrollIntoView({ block: 'start' })
     }
     reported.current = current
