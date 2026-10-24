@@ -712,6 +712,16 @@ button {
 
 .job-status.working::before {
   background: #2563eb;
+  animation: job-working 1.6s ease-in-out infinite;
+}
+
+/* 진행 중 점이 천천히 깜빡여 작업이 도는 중임을 알린다 */
+@keyframes job-working {
+  50% { opacity: .25; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .job-status.working::before { animation: none; }
 }
 
 .job-review {
