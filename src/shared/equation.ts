@@ -34,3 +34,8 @@ export function splitEquation(input: string): Part[] {
   }
   return parts
 }
+
+// splitEquation 의 반대: 조각을 다시 <<EQ>>스크립트<</EQ>> 문자열로 (나눈 뒤 이으면 원문과 바이트가 같다)
+export function joinEquation(parts: Part[]): string {
+  return parts.map(p => (p.type === 'eq' ? OPEN + p.value + CLOSE : p.value)).join('')
+}

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { AcademyItem, Problem } from '../../shared/api'
-import { ItemEditor, changedFields, gridRows } from './ItemEditor'
+import { ItemEditor, changedFields, circledAnswer, gridRows } from './ItemEditor'
 import { ProblemCard } from './ProblemCard'
 
 const item: AcademyItem = {
@@ -36,16 +36,45 @@ describe('changedFields', () => {
     expect(changedFields(problem({}), '③', { ...draft, cells: { '1:1': '<<EQ>>rm B<</EQ>>', '1:3': '<<EQ>>rm E<</EQ>>' } }))
       .toEqual({ cells: [{ part: 1, index: 3, text: '<<EQ>>rm E<</EQ>>' }] })
   })
+
+  it('객관식 정답은 동그라미로 바꿔 비교한다 (바꾼 값이 원래와 같으면 안 고친 것)', () => {
+    expect(changedFields(problem({}), '③', { ...draft, answer: '3' })).toEqual({})
+    expect(changedFields(problem({}), '③', { ...draft, answer: '2,4' })).toEqual({ answer: '②, ④' })
+    expect(changedFields(problem({}), '3', { ...draft, answer: '3' })).toEqual({})
+    const essay = problem({ item: { ...item, choices: [] } })
+    expect(changedFields(essay, '3', { ...draft, choices: [], answer: '5' })).toEqual({ answer: '5' })
+  })
+})
+
+describe('circledAnswer', () => {
+  it('선지가 있으면 숫자를 동그라미 숫자로, 여러 답은 ", " 로 잇는다', () => {
+    expect(circledAnswer('3', true)).toBe('③')
+    expect(circledAnswer(' 3 ', true)).toBe('③')
+    expect(circledAnswer('2, 4', true)).toBe('②, ④')
+    expect(circledAnswer('2,4', true)).toBe('②, ④')
+    expect(circledAnswer('② 4', true)).toBe('②, ④')
+    expect(circledAnswer('10', true)).toBe('⑩')
+  })
+
+  it('서술형, 이미 동그라미, 숫자만이 아닌 답은 그대로', () => {
+    expect(circledAnswer('3', false)).toBe('3')
+    expect(circledAnswer('③', true)).toBe('③')
+    expect(circledAnswer('③,④', true)).toBe('③,④')
+    for (const s of ['3번', '11', '0', '<<EQ>>3<</EQ>>', '', '①②']) expect(circledAnswer(s, true)).toBe(s)
+  })
 })
 
 describe('ItemEditor', () => {
-  it('선지는 칸마다, 표는 글 칸만 입력, 그림 칸·가려진 칸은 읽기 전용', () => {
+  it('선지는 줄마다, 표는 글 칸만 고치고, 그림 칸·가려진 칸은 읽기 전용. 수식은 칩, 원문 보기 토글', () => {
     const html = renderToStaticMarkup(<ItemEditor problem={problem({})} answer="③" answerLabel="정답" cells onSave={async () => {}} />)
-    expect(html).toContain('value="② 2"')
-    expect(html).toContain('value="&lt;&lt;EQ&gt;&gt;rm C&lt;&lt;/EQ&gt;&gt;"')
+    expect(html).toContain('② 2')
+    expect(html).toContain('aria-label="수식 rm C"')
+    expect(html).not.toContain('&lt;&lt;EQ')
     expect(html).toContain('rowSpan="3"'.toLowerCase())
     expect(html).toContain('(그림)')
-    expect(html.match(/<input/g)?.length).toBe(2 + 3 + 1)  // 선지 2, 글 칸 3(A·B·C), 정답 1
+    expect(html.match(/role="group"/g)?.length).toBe(1 + 2 + 3)  // 발문 1, 선지 2, 글 칸 3(A·B·C)
+    expect(html.match(/<input/g)?.length).toBe(1)  // 정답만 입력칸
+    expect(html).toContain('원문으로 보기')
   })
 
   it('AI 로 뽑은 문항(cells 없음)은 표를 발문의 표 줄에서 고친다', () => {

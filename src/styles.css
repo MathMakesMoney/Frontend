@@ -1692,3 +1692,23 @@ button {
 .item-table { border-collapse: collapse; }
 .item-table td { border: 1px solid #d0d5dd; padding: 4px; text-align: center; }
 .item-table input { width: 100%; min-width: 80px; box-sizing: border-box; }
+/* 글 + 수식 칩 편집칸 (EqText): 글은 눌러서 그 조각만 입력칸, 칩은 눌러서 아래 작은 창 */
+.item-editor-mode { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; }
+.item-editor-mode [aria-pressed='true'] { font-weight: 700; text-decoration: underline; }
+.eq-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 8px 10px; border: 1px solid #d0d5dd; border-radius: 6px; background: #fff; font-size: 14px; line-height: 1.9; text-align: left; }
+.eq-row { min-height: 1.9em; white-space: pre-wrap; overflow-wrap: anywhere; }
+.eq-text { cursor: text; border-radius: 3px; }
+.eq-text:hover, .eq-text:focus-visible { background: #f1f5f9; outline: none; box-shadow: 0 0 0 2px #bfdbfe; }
+.eq-gap { display: inline-block; min-width: 12px; height: 1.2em; vertical-align: middle; border-bottom: 1px dashed #c7d2fe; }
+.eq-chip-btn { display: inline-block; max-width: 100%; overflow-x: auto; vertical-align: middle; margin: 0 2px; padding: 0 5px; border: 1px solid #c7d2fe; border-radius: 4px; background: #eef2ff; color: inherit; font: inherit; line-height: 1.6; }
+.eq-chip-btn:hover, .eq-chip-btn.active { border-color: #2563eb; background: #e0e7ff; }
+.eq-chip-btn:focus-visible { outline: 2px solid #2563eb; outline-offset: 1px; }
+.eq-chip-btn .eq-chip { margin: 0; padding: 0; background: none; }
+.eq-editing { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; max-width: 100%; }
+.item-editor .eq-editing input { max-width: 100%; min-width: 0; padding: 2px 6px; }
+.eq-pop { display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px solid #c7d2fe; border-radius: 8px; background: #f8faff; white-space: normal; }
+.eq-pop textarea { font-family: ui-monospace, 'SF Mono', monospace; font-size: 13px; padding: 6px 8px; border: 1px solid #d0d5dd; border-radius: 6px; resize: vertical; }
+.eq-preview { min-height: 2.2em; overflow-x: auto; padding: 4px 8px; border-radius: 6px; background: #fff; }
+.eq-pop-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.eq-pop-actions .eq-remove { color: #dc2626; }
+.item-table .eq-field { min-width: 80px; padding: 4px 6px; border: none; }
