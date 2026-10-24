@@ -206,7 +206,7 @@ export function HaesolViewerPage({ variant = false }: { variant?: boolean }) {
         <div className="viewer-grid">
           <PageThumbs pageCount={pageCount} renderPage={(i) => renderPage(i)} current={current} entries={entries} notes={academyIdx?.notes} onSelect={selectPage} />
           <PageStage pageCount={pageCount} renderPage={renderPage} current={current} active={active} hovered={hovered} onChange={selectPage} onPick={pickLabel} />
-          <ProblemIndex entries={entries} pageCount={pageCount} current={current} active={active} hideAnswers={showMunje} onSelect={selectEntry} onHover={setHovered} />
+          <ProblemIndex entries={entries} pageCount={pageCount} current={current} active={active} hideAnswers={showMunje} readFailed={showAcademy && academy.readFailed} onSelect={selectEntry} onHover={setHovered} />
         </div>
       )}
     </div>

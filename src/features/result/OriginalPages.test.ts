@@ -70,8 +70,11 @@ it('칸 문단 다시 계산이 한 문단에서 실패해도 나머지는 다�
     },
     deleteAtCursor: (l: number, p: number) => (done.push(`${l}.${p}`), ''),
   }
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
   expect(reflowNestedCells(doc)).toBe(1)
   expect(done).toEqual(['1.1'])
+  expect(warn).toHaveBeenCalledTimes(1) // 문단마다가 아니라 실패 수를 모아 한 번만
+  warn.mockRestore()
 })
 
 // 쪽 그림 만들기: 목록 읽기(read)가 실패해도 쪽 그림은 돌려주고, 어디서 실패하든 문서를 닫는다
@@ -100,6 +103,7 @@ it('목록 읽기가 실패해도 쪽 그림은 돌려주고 문서를 닫는다
   })
   expect(out.svgs).toEqual(['<svg>0<g></g></svg>', '<svg>1<g></g></svg>'])
   expect(out.data).toBeUndefined()
+  expect(out.readFailed).toBe(true) // 번호 없음과 구분한다
   expect(doc.calls).toEqual(['reflow', 'free'])
 })
 
@@ -118,5 +122,6 @@ it('수식 원본 읽기가 실패해도 쪽 그림과 목록은 돌려준다', 
   expect(out.svgs).toHaveLength(2)
   expect(out.data).toBe('list')
   expect(out.eq).toBeUndefined()
+  expect(out.readFailed).toBe(false)
   expect(renderHwpDoc(fakeDoc(), false, undefined, () => 'eq').eq).toBe('eq')
 })

@@ -41,6 +41,7 @@ export interface ProblemIndexProps {
   current: number
   active: string | null
   hideAnswers?: boolean // 학생용 문제지 보기: 정답·검토 사유를 숨긴다
+  readFailed?: boolean // 결과 문서 목록 읽기가 실패함 (번호 없는 문서와 다른 안내)
   onSelect: (entry: ProblemEntry) => void
   onHover?: (label: string | null) => void // 번호에 마우스를 올리면 (결과 문서의 가운데 쪽에 네모)
 }

@@ -86,6 +86,7 @@ type CellDoc = {
 // 줄 배치가 없는 칸 문단에 글자 하나를 넣었다 지우면 rhwp 가 그 문단을 다시 계산한다. 목록 번호(칸)는 1부터 촘촘하다 (../Backend 오류 기록 050)
 export function reflowNestedCells(doc: CellDoc): number {
   let fixed = 0
+  let failed = 0
   for (let list = 1, miss = 0; miss < 20; list++) {
     if (doc.getParaBounds(list, 0) === '{}') {
       miss++
@@ -100,11 +101,13 @@ export function reflowNestedCells(doc: CellDoc): number {
           doc.deleteAtCursor(list, p, 0, 1)
           fixed++
         } catch {
-          // 다음 문단으로
+          failed++ // 다음 문단으로
         }
       }
     }
   }
+  // 실패 수는 문단마다가 아니라 한 번만 남긴다
+  if (failed > 0) console.warn(`칸 속 문단 ${failed}개의 줄 다시 계산에 실패했습니다`)
   return fixed
 }
 
@@ -124,7 +127,7 @@ export function renderHwpDoc<D extends RenderDoc, T, E = never>(
   reflow: boolean,
   read?: (doc: D) => T,
   readEq?: (doc: D) => E,
-): { svgs: string[]; data?: T; eq?: E } {
+): { svgs: string[]; data?: T; eq?: E; readFailed: boolean } {
   try {
     // 줄 배치를 비운 문단(결과 문서 미리보기 사본)은 rhwp 가 줄을 다시 나눈다. 원본 시험지는 한글이 저장한 줄 배치 그대로
     if (reflow) {
@@ -137,18 +140,21 @@ export function renderHwpDoc<D extends RenderDoc, T, E = never>(
       return reflow ? unstretchEquations(svg) : svg
     })
     let data: T | undefined
+    let readFailed = false
     try {
       data = read?.(doc)
-    } catch {
-      data = undefined // 목록(결과 문서 쪽별 번호)을 못 읽어도 쪽 그림은 보인다
+    } catch (e) {
+      readFailed = true // 목록(결과 문서 쪽별 번호)을 못 읽어도 쪽 그림은 보인다. 번호 없음과 구분하려고 표시한다
+      console.warn('문항 목록(쪽별 번호)을 읽지 못했습니다', e)
     }
     let eq: E | undefined
     try {
       eq = readEq?.(doc)
-    } catch {
+    } catch (e) {
       eq = undefined // 수식 원본을 못 읽으면 그 문서는 rhwp 수식 그대로
+      console.warn('수식 원본을 읽지 못해 rhwp 수식 그대로 보입니다', e)
     }
-    return { svgs, data, eq }
+    return { svgs, data, eq, readFailed }
   } finally {
     doc.free()
   }
@@ -158,7 +164,7 @@ export function renderHwpDoc<D extends RenderDoc, T, E = never>(
 // read 가 있으면 문서를 닫기 전에 불러 그 값(결과 문서 쪽별 번호 등)을 같이 돌려준다. version 이 바뀌면 다시 받는다.
 // equations 면 수식 스크립트와 쪽 수식 상자를 짝지어(equations) 수식을 뺀 쪽 그림(stageUrls)도 만든다. 못 짝지으면 equations 는 null, stageUrls 는 urls
 export function useHwpPages<T>(url: string | null, reflow: boolean, read?: (doc: HwpDoc) => T, version?: number, equations = false) {
-  const [state, setState] = useState<{ urls: string[]; stageUrls: string[]; equations: PageEq[][] | null; data?: T } | null>(null)
+  const [state, setState] = useState<{ urls: string[]; stageUrls: string[]; equations: PageEq[][] | null; data?: T; readFailed: boolean } | null>(null)
   const [error, setError] = useState(false)
 
   useEffect(() => {
@@ -171,22 +177,25 @@ export function useHwpPages<T>(url: string | null, reflow: boolean, read?: (doc:
     Promise.all([loadRhwp(), fetch(url, { cache: 'no-store' }).then((res) => res.arrayBuffer())])
       .then(async ([core, buf]) => {
         const doc = new core.HwpDocument(new Uint8Array(buf))
-        const { svgs, data, eq } = renderHwpDoc(doc, reflow, read, equations ? equationSource : undefined)
-        const pages = eq ? pairEquations(eq.boxes, await hwpxEquations(eq.hwpx).catch(() => [])) : null
+        const { svgs, data, eq, readFailed } = renderHwpDoc(doc, reflow, read, equations ? equationSource : undefined)
+        const pages = eq ? pairEquations(eq.boxes, await hwpxEquations(eq.hwpx).catch((e) => (console.warn('수식 원본 압축 풀기에 실패했습니다', e), []))) : null
         const urls = svgs.map(toUrl)
         const stageUrls = pages ? svgs.map((svg, i) => toUrl(stripEquations(svg, pages[i]))) : urls
         made = pages ? [...urls, ...stageUrls] : urls
-        if (alive) setState({ urls, stageUrls, equations: pages, data })
+        if (alive) setState({ urls, stageUrls, equations: pages, data, readFailed })
         else made.forEach((u) => URL.revokeObjectURL(u))
       })
-      .catch(() => alive && setError(true))
+      .catch((e) => {
+        console.warn('한글 파일을 쪽 그림으로 그리지 못했습니다', e)
+        if (alive) setError(true)
+      })
     return () => {
       alive = false
       made.forEach((u) => URL.revokeObjectURL(u))
     }
   }, [url, reflow, read, version, equations])
 
-  return { urls: state?.urls ?? null, stageUrls: state?.stageUrls ?? null, equations: state?.equations ?? null, data: state?.data, error }
+  return { urls: state?.urls ?? null, stageUrls: state?.stageUrls ?? null, equations: state?.equations ?? null, data: state?.data, readFailed: state?.readFailed ?? false, error }
 }
 
 // 한글 파일(url)을 쪽마다 그려 오른쪽 쪽 이동판과 보인다 (원본 시험지, 작업 상세의 결과 문서 보기)
