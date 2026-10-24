@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import type { Box } from './academyIndex'
 
 // 해설지 보기(3칸) 부품끼리 주고받는 값. 쪽 번호 page 는 0부터
 
@@ -9,6 +10,7 @@ export interface ProblemEntry {
   answer: string | null // <<EQ>> 가 섞인 답 원문 (RichText 로 그린다)
   review: string | null // 검토 필요 사유 (null 이면 통과)
   hasFigure: boolean
+  box?: Box // 결과 문서(쪽 그림)에서 문항 자리 (쪽 그림 좌표)
 }
 
 // 왼쪽: 쪽 썸네일 목록
@@ -39,4 +41,5 @@ export interface ProblemIndexProps {
   active: string | null
   hideAnswers?: boolean // 학생용 문제지 보기: 정답·검토 사유를 숨긴다
   onSelect: (entry: ProblemEntry) => void
+  onHover?: (label: string | null) => void // 번호에 마우스를 올리면 (결과 문서의 가운데 쪽에 네모)
 }

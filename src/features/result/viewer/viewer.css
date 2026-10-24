@@ -174,3 +174,13 @@
   background: #fff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 }
+
+/* 결과 문서 쪽 그림 위에 겹치는 문항 자리: 평소엔 투명, 올리거나 고르면 해설지 쪽과 같은 네모 (.haesol-active 는 styles.css) */
+.academy-sheet {
+  position: relative;
+}
+
+.academy-box {
+  position: absolute;
+  cursor: pointer;
+}

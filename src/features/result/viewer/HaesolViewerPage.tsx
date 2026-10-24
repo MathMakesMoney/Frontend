@@ -56,6 +56,7 @@ export function HaesolViewerPage({ variant = false }: { variant?: boolean }) {
   const showMunje = variant && tab === 'munje'
   const [current, setCurrent] = useState(0)
   const [active, setActive] = useState<string | null>(null)
+  const [hovered, setHovered] = useState<string | null>(null) // 오른쪽 목록에서 마우스를 올린 문항
   const header = job?.header ?? ''
   const lines = (variant ? variantLines : job?.draft) ?? []
   const layout = useHaesolLayout(job?.id ?? '', header, lines, !!job && !showMunje && !showAcademy)
@@ -97,13 +98,29 @@ export function HaesolViewerPage({ variant = false }: { variant?: boolean }) {
           }),
       )
 
-  const renderPage = (index: number, picked: string | null = null) =>
+  // 결과 문서 쪽 그림 위에 문항 자리를 겹친다 (해설지 쪽의 data-label 문항 덩어리 역할). 썸네일은 picked 를 안 넘겨 겹치지 않는다
+  const renderPage = (index: number, picked?: string | null) =>
     showAcademy ? (
-      <img className="academy-page" src={academy.urls?.[index]} alt={`결과 문서 ${index + 1}쪽`} />
+      <div className="academy-sheet">
+        <img className="academy-page" src={academy.urls?.[index]} alt={`결과 문서 ${index + 1}쪽`} />
+        {picked !== undefined &&
+          entries.map(
+            (e) =>
+              e.page === index &&
+              e.box && (
+                <div
+                  key={e.label}
+                  data-label={e.label}
+                  className={`academy-box${e.label === picked ? ' haesol-active' : e.label === hovered ? ' academy-hover' : ''}`}
+                  style={{ left: e.box.x, top: e.box.y, width: e.box.w, height: e.box.h }}
+                />
+              ),
+          )}
+      </div>
     ) : showMunje ? (
-      <MunjePage title={munje?.title ?? ''} header={header} cells={cells} index={index} active={picked} />
+      <MunjePage title={munje?.title ?? ''} header={header} cells={cells} index={index} active={picked ?? null} />
     ) : (
-      <HaesolPage jobId={job.id} header={header} layout={layout} index={index} active={picked} />
+      <HaesolPage jobId={job.id} header={header} layout={layout} index={index} active={picked ?? null} />
     )
 
   function selectPage(page: number) {
@@ -181,7 +198,7 @@ export function HaesolViewerPage({ variant = false }: { variant?: boolean }) {
         <div className="viewer-grid">
           <PageThumbs pageCount={pageCount} renderPage={(i) => renderPage(i)} current={current} entries={entries} notes={academyIdx?.notes} onSelect={selectPage} />
           <PageStage pageCount={pageCount} renderPage={renderPage} current={current} active={active} onChange={selectPage} onPick={pickLabel} />
-          <ProblemIndex entries={entries} pageCount={pageCount} current={current} active={active} hideAnswers={showMunje} onSelect={selectEntry} />
+          <ProblemIndex entries={entries} pageCount={pageCount} current={current} active={active} hideAnswers={showMunje} onSelect={selectEntry} onHover={setHovered} />
         </div>
       )}
     </div>

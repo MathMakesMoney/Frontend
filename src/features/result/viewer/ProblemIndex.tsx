@@ -5,7 +5,7 @@ import type { ProblemEntry, ProblemIndexProps } from './types'
 import './ProblemIndex.css'
 
 // 오른쪽 칸: 쪽별로 묶은 문항 목록 (보기 전용)
-export function ProblemIndex({ entries, pageCount, current, active, hideAnswers, onSelect }: ProblemIndexProps) {
+export function ProblemIndex({ entries, pageCount, current, active, hideAnswers, onSelect, onHover }: ProblemIndexProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [closed, setClosed] = useState<Set<number>>(new Set()) // 접힌 쪽 (기본은 모두 펼침)
 
@@ -72,6 +72,10 @@ export function ProblemIndex({ entries, pageCount, current, active, hideAnswers,
                       data-label={e.label}
                       aria-current={isActive ? 'true' : undefined}
                       onClick={() => onSelect(e)}
+                      onMouseEnter={() => onHover?.(e.label)}
+                      onMouseLeave={() => onHover?.(null)}
+                      onFocus={() => onHover?.(e.label)}
+                      onBlur={() => onHover?.(null)}
                     >
                       <span className="pindex-row-top">
                         <strong>{labelText(e.label)}</strong>
