@@ -43,6 +43,8 @@ const cases: [string, string][] = [
   ['β =2', 'β = 2'],
   ['M= LEFT lfloor n RIGHT rfloor', 'M = \\left\\lfloor n \\right\\rfloor'],
   ['aLEFT (16-t RIGHT ) =6', 'a \\left( 16 - t \\right) = 6'],
+  // LEFT 뒤 사용자 정의 영역 글자 U+E04D 는 세로선 (작업 8 12번 보기 ㄱ)
+  ['LEFT { x` LEFT \ue04d `x GEQ  {5} over {3} it RIGHT } RIGHT .', '\\left\\{ x \\, \\left| \\, x \\geq \\frac{5}{3} \\right\\} \\right.'],
   // 글꼴
   ['overline {AB}', '\\overline{AB}'],
   ['rm A', '\\mathrm{A}'],
