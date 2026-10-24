@@ -30,6 +30,13 @@ describe('HoldPanel', () => {
     expect(renderToStaticMarkup(<HoldPanel job={job('haesol', [problem(20, { hold: '검증 실패' })])} onDecided={() => {}} />)).toBe('')
   })
 
+  it('요청을 이미 고친 문항(revised)뿐이면 해설 차례여도 대기 안내와 보류 목록을 그리지 않는다', () => {
+    const html = renderToStaticMarkup(<HoldPanel job={job('haesol', [
+      problem(20, { hold: null, revised: true, decision: { choice: 'revise', at: '', request: '계산 다시' } }),
+    ])} onDecided={() => {}} />)
+    expect(html).toBe('')
+  })
+
   it('해설 고쳐 달라는 요청이 남은 작업(해설 차례)도 보류 문항을 보여 결정을 바꿀 수 있고, 대화창이나 묶음 실행으로 고친다고 알린다', () => {
     const html = renderToStaticMarkup(<HoldPanel job={job('haesol', [
       problem(20, { hold: '독립 검증 답 다름', decision: { choice: 'revise', at: '', request: '계산 다시' } }),

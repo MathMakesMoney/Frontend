@@ -51,7 +51,7 @@
 - `HoldPanel.tsx`: `progress` 가 hold 일 때, 또는 해설 고쳐 달라는 요청이 남아 haesol 로 돌아간 작업(문항 `decision.choice` 가 revise)일 때 `hold` 가 있는 문항마다 사유, AI 답(`answer`), 독립 검증 답, 정답표 답(`keyAnswer`)과 다섯 버튼 (AI 답으로 정하기, 정답표 답으로 정하기, 발문·정답 직접 고치기, 해설 고쳐 달라고 하기, 문제 제외하기). 직접 고치기는 문항 카드와 같은 편집기(`ItemEditor`, 아래 손 수정)로 decision edit 을 보낸다. 해설 고쳐 달라는 요청 입력
 - `POST /api/jobs/{id}/problems/{no}/decision` 응답(새 작업)으로 바로 다시 그리고 목록·묶음 질의를 새로 받게 한다. 400 사유는 그대로 보인다
 - 문항 카드: 결정이 있으면 `보류 결정: ...` 표시, 결정이 있고 `hold` 가 null 이면 미확정으로 보이지 않는다. 번호판은 처음에 첫 보류 문항
-- 해설 고쳐 달라고 하면 진행이 해설 차례(haesol)로 돌아가 MCP 안내가 보이고, AI 가 save_revision 으로 고치면 SSE 로 새로 고쳐진다. API 버전은 묶음 실행을 다시 누르면 서버가 그 문항만 고친다 (`../Backend/docs/design-docs/decisions/043-academy-api-revise-stage.md`). 고치기 전까지 보류 목록이 남아 결정을 바꿀 수 있고, 안내는 `AI 연결 대화창에서 이어 하거나 묶음 실행을 다시 누르면 이 문항을 고쳐요`
+- 해설 고쳐 달라고 하면 진행이 해설 차례(haesol)로 돌아가 MCP 안내가 보이고, AI 가 save_revision 으로 고치면 SSE 로 새로 고쳐진다. API 버전은 묶음 실행을 다시 누르면 서버가 그 문항만 고친다 (`../Backend/docs/design-docs/decisions/043-academy-api-revise-stage.md`). 고치기 전까지 보류 목록이 남아 결정을 바꿀 수 있고(요청이 아직 안 고쳐진 문항 = `decision.choice` 가 revise 이고 `revised` 가 false 일 때만, 이미 고쳤는데 progress 가 다른 이유로 haesol 이면 열지 않는다), 안내는 `AI 연결 대화창에서 이어 하거나 묶음 실행을 다시 누르면 이 문항을 고쳐요`
 
 ## 문항 손 수정 (결정 041, `../Backend/docs/design-docs/decisions/041-academy-edit-choices-and-cells.md`)
 

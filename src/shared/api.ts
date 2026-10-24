@@ -26,6 +26,8 @@ export interface Problem {
   // 해설을 고른 학원 작업에만: 보류 사유(결정까지 덧씌운 해설 판정, 없으면 null), 보류 결정, 정답표 답
   hold?: string | null
   decision?: HoldDecision | null
+  // 해설 고쳐 달라는 요청을 이미 고쳤는지 (save_revision 뒤 true). 예전 백엔드에는 없다
+  revised?: boolean
   keyAnswer?: string | null
   // 학원 작업의 문항 데이터 (items.json, 문항 카드 손 수정용). 문항 뽑기 전·해설지 작업에는 없다
   item?: AcademyItem

@@ -28,7 +28,7 @@ const REVISE_HINT = 'AI 연결 대화창에서 이어 하거나 묶음 실행을
 // 보류 작업의 보류 문항 목록: 사유, AI 답, 독립 검증 답, 정답표 답과 다섯 선택지. 결정하면 새 작업을 onDecided 로 넘긴다
 // 해설 고쳐 달라는 요청이 남아 해설 차례로 돌아간 작업도 보여 결정을 바꿀 수 있다 (백엔드 결정 043)
 export function HoldPanel({ job, onDecided }: { job: Job; onDecided: (job: Job) => void }) {
-  const revising = job.progress === 'haesol' && (job.problems ?? []).some(p => p.decision?.choice === 'revise')
+  const revising = job.progress === 'haesol' && (job.problems ?? []).some(p => p.decision?.choice === 'revise' && !p.revised)
   if (job.progress !== 'hold' && !revising) return null
   const holds = (job.problems ?? []).filter(p => p.hold)
   return (
