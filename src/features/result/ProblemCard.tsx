@@ -8,11 +8,13 @@ import { ItemEditor } from './ItemEditor'
 
 // 문항 한 개: 검토 필요면 사유를 그대로 보여 주고 정답처럼 보이지 않게 한다.
 // 학원 작업(문항 데이터 item 이 있음)은 발문·선지·표 칸·정답을 고친다 (onSaved 로 새 작업, cellsEditable 은 hml 문항)
-export function ProblemCard({ jobId, jobTitle, problem, cellsEditable = false, onSaved }: {
+// typingOnly(해설을 안 고른 작업)는 풀이가 없어 정답표 답을 정답으로 보이고 독립 검증·해설 고쳐 달라 칸은 숨긴다
+export function ProblemCard({ jobId, jobTitle, problem, cellsEditable = false, typingOnly = false, onSaved }: {
   jobId: string
   jobTitle: string
   problem: Problem
   cellsEditable?: boolean
+  typingOnly?: boolean
   onSaved?: (job: Job) => void
 }) {
   const [editing, setEditing] = useState(false)
@@ -21,6 +23,7 @@ export function ProblemCard({ jobId, jobTitle, problem, cellsEditable = false, o
   const needsReview = problem.review !== null && !decided
   // 백엔드가 정한 표시 번호 (겹치면 20-1, 번호 없으면 2-1)
   const label = labelText(problem.label ?? problem.no)
+  const answer = typingOnly ? problem.item?.answer : problem.answer
 
   return (
     <article className={`problem-card${needsReview ? ' needs-review' : ''}`}>
@@ -67,7 +70,7 @@ export function ProblemCard({ jobId, jobTitle, problem, cellsEditable = false, o
       <div className="answer-row">
         <span className="field-label">정답</span>
         <span className={needsReview ? 'answer-unconfirmed' : 'answer'}>
-          {problem.answer ? <RichText text={problem.answer} /> : '(없음)'}
+          {answer ? <RichText text={answer} /> : '(없음)'}
           {needsReview && ' (미확정)'}
         </span>
       </div>
@@ -85,10 +88,12 @@ export function ProblemCard({ jobId, jobTitle, problem, cellsEditable = false, o
         </div>
       )}
 
-      <div className="verification-row">
-        <span className="field-label">독립 검증 답</span>
-        <span>{problem.blindAnswer ? <RichText text={problem.blindAnswer} /> : '(없음)'}</span>
-      </div>
+      {!typingOnly && (
+        <div className="verification-row">
+          <span className="field-label">독립 검증 답</span>
+          <span>{problem.blindAnswer ? <RichText text={problem.blindAnswer} /> : '(없음)'}</span>
+        </div>
+      )}
 
       {problem.verification && (
         <div className="verification-row">
@@ -102,7 +107,7 @@ export function ProblemCard({ jobId, jobTitle, problem, cellsEditable = false, o
       {!!problem.revisionCount && problem.revisionCount > 0 && (
         <p className="hint">다시 저장 {problem.revisionCount}번</p>
       )}
-      <ReviseRequest jobId={jobId} jobTitle={jobTitle} label={label} requests={problem.editRequests ?? []} />
+      {!typingOnly && <ReviseRequest jobId={jobId} jobTitle={jobTitle} label={label} requests={problem.editRequests ?? []} />}
     </article>
   )
 }

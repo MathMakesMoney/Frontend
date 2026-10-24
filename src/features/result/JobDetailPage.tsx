@@ -129,7 +129,7 @@ export function JobDetailPage() {
         </div>
       )}
 
-      {problems.length > 0 && <ProblemBrowser jobId={job.id} jobTitle={job.title} problems={problems} cellsEditable={job.inputType === 'HML'} onSaved={onChanged} />}
+      {problems.length > 0 && <ProblemBrowser jobId={job.id} jobTitle={job.title} problems={problems} cellsEditable={job.inputType === 'HML'} typingOnly={!!job.features && !job.features.includes('haesol')} onSaved={onChanged} />}
     </div>
   )
 }
