@@ -41,6 +41,7 @@ export function ProblemIndex({ entries, pageCount, current, active, hideAnswers,
         <span className="pindex-count">{entries.length}문항</span>
         {reviewCount > 0 && <span className="pindex-badge">검토 필요 {reviewCount}</span>}
       </div>
+      {entries.length === 0 && <p className="pindex-muted">이 문서에는 번호 붙은 문제 쪽이 없어요. 왼쪽 쪽 목록으로 넘겨 보세요</p>}
       {groups.map(({ page, list }) => {
         const open = !closed.has(page)
         return (

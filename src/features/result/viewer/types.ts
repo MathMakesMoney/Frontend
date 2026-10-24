@@ -17,6 +17,7 @@ export interface PageThumbsProps {
   renderPage: (index: number) => ReactNode // 쪽 한 장 (해설지 쪽 또는 문제지 쪽)
   current: number
   entries: ProblemEntry[]
+  notes?: (string | undefined)[] // 쪽 번호 옆 글을 문항 수 대신 (결과 문서의 정답 쪽, 붙인 해설 쪽)
   onSelect: (page: number) => void
 }
 

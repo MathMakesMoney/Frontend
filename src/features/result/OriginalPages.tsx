@@ -74,37 +74,87 @@ function PageImages({ urls, name }: { urls: string[]; name: string }) {
   )
 }
 
-// 한글 파일(url)을 쪽마다 SVG 로 그려 이미지로 보인다 (쪽끼리 SVG id 가 겹치지 않게 img 로 띄운다). 결과 문서 보기도 쓴다
-export function HwpPages({ url, name, reflow = false }: { url: string; name: string; reflow?: boolean }) {
-  const [urls, setUrls] = useState<string[] | null>(null)
-  const [error, setError] = useState('')
+type CellDoc = {
+  getParaBounds(list: number, para: number): string
+  getLineStarts(list: number, para: number): string
+  insertTextAtCursor(list: number, para: number, pos: number, text: string): string
+  deleteAtCursor(list: number, para: number, from: number, to: number): string
+}
+
+// reflowLinesegs 는 칸 한 겹만 다시 계산해 칸 속 상자(<보기>, 표 속 표)의 줄이 상자 끝에서 잘린다.
+// 줄 배치가 없는 칸 문단에 글자 하나를 넣었다 지우면 rhwp 가 그 문단을 다시 계산한다. 목록 번호(칸)는 1부터 촘촘하다 (../Backend 오류 기록 050)
+export function reflowNestedCells(doc: CellDoc): number {
+  let fixed = 0
+  for (let list = 1, miss = 0; miss < 20; list++) {
+    if (doc.getParaBounds(list, 0) === '{}') {
+      miss++
+      continue
+    }
+    miss = 0
+    for (let p = 0; doc.getParaBounds(list, p) !== '{}'; p++) {
+      if (JSON.parse(doc.getParaBounds(list, p)).end > 0 && doc.getLineStarts(list, p) === '[]') {
+        doc.insertTextAtCursor(list, p, 0, ' ')
+        doc.deleteAtCursor(list, p, 0, 1)
+        fixed++
+      }
+    }
+  }
+  return fixed
+}
+
+// rhwp 는 수식을 저장된 상자 폭에 맞춰 가로로 늘린다. 1.5배 넘게 늘어나면(어림 폭이 크게 틀린 수식) 한글처럼 제 크기로 그린다
+export function unstretchEquations(svg: string): string {
+  return svg.replace(/(<g transform="translate\([^)]*\) )scale\(([\d.]+),([\d.]+)\)/g, (m, head, sx, sy) =>
+    Number(sx) > 1.5 ? `${head}scale(1,${sy})` : m,
+  )
+}
+
+type HwpDoc = InstanceType<Awaited<ReturnType<typeof loadRhwp>>['HwpDocument']>
+
+// 한글 파일(url)을 rhwp 로 쪽마다 SVG 이미지 주소로 만든다 (쪽끼리 SVG id 가 겹치지 않게 img 로 띄운다). url 이 null 이면 아무것도 안 한다.
+// read 가 있으면 문서를 닫기 전에 불러 그 값(결과 문서 쪽별 번호 등)을 같이 돌려준다. version 이 바뀌면 다시 받는다
+export function useHwpPages<T>(url: string | null, reflow: boolean, read?: (doc: HwpDoc) => T, version?: number) {
+  const [state, setState] = useState<{ urls: string[]; data?: T } | null>(null)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
+    if (!url) return
     let alive = true
     let made: string[] = []
+    setState(null)
+    setError(false)
     Promise.all([loadRhwp(), fetch(url, { cache: 'no-store' }).then((res) => res.arrayBuffer())])
       .then(([core, buf]) => {
         const doc = new core.HwpDocument(new Uint8Array(buf))
         // 줄 배치를 비운 문단(결과 문서 미리보기 사본)은 rhwp 가 줄을 다시 나눈다. 원본 시험지는 한글이 저장한 줄 배치 그대로
-        if (reflow) doc.reflowLinesegs()
+        if (reflow) {
+          doc.reflowLinesegs()
+          reflowNestedCells(doc)
+        }
         // 글상자 안쪽 영역 자르기는 뺀다: 한글은 글상자 안 개체(<보기> 테두리 상자)가 안쪽 여백을 넘어도 그대로 그린다 (경안고)
-        made = Array.from({ length: doc.pageCount() }, (_, i) =>
-          URL.createObjectURL(
-            new Blob([doc.renderPageSvg(i).replace(/ clip-path="url\(#textbox-clip-\d+\)"/g, '')], { type: 'image/svg+xml' }),
-          ),
-        )
+        made = Array.from({ length: doc.pageCount() }, (_, i) => {
+          const svg = doc.renderPageSvg(i).replace(/ clip-path="url\(#textbox-clip-\d+\)"/g, '')
+          return URL.createObjectURL(new Blob([reflow ? unstretchEquations(svg) : svg], { type: 'image/svg+xml' }))
+        })
+        const data = read?.(doc)
         doc.free()
-        if (alive) setUrls(made)
+        if (alive) setState({ urls: made, data })
         else made.forEach((u) => URL.revokeObjectURL(u))
       })
-      .catch(() => alive && setError(`${name}를 그리지 못했습니다`))
+      .catch(() => alive && setError(true))
     return () => {
       alive = false
       made.forEach((u) => URL.revokeObjectURL(u))
     }
-  }, [url, name, reflow])
+  }, [url, reflow, read, version])
 
-  if (error) return <p className="error">{error}</p>
+  return { urls: state?.urls ?? null, data: state?.data, error }
+}
+
+// 한글 파일(url)을 쪽마다 그려 오른쪽 쪽 이동판과 보인다 (원본 시험지, 작업 상세의 결과 문서 보기)
+export function HwpPages({ url, name, reflow = false }: { url: string; name: string; reflow?: boolean }) {
+  const { urls, error } = useHwpPages(url, reflow)
+  if (error) return <p className="error">{name}를 그리지 못했습니다</p>
   if (!urls) return <p className="job-meta">{name}를 그리는 중...</p>
   return <PageImages urls={urls} name={name} />
 }
