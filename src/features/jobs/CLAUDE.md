@@ -4,6 +4,7 @@
 
 ## API
 
+- 2026-10-24 확인: 아래 단일 작업 `run`/`cancel`/`stages`/`usage` 는 백엔드 사양이고 프론트 호출은 아직 없다 (`src/shared/api.ts` 는 목록·상세·삭제·묶음 `run|cancel`·보류 결정·문항 손 수정만). 단일 작업 실행 버튼은 PoC 범위 밖 (루트 `CLAUDE.md`)
 - `GET /api/jobs`: 목록 (최신순, 페이지)
 - `GET /api/jobs/{id}` -> `{"id", "title", "status", "mode", "stages": [{"name", "status", "error"}], "problemCount", "reviewCount", "usage": {"inputTokens", "outputTokens", "costUsd"}}`
 - `POST /api/jobs/{id}/run`: 실행 시작, 또는 실패 단계부터 이어서 (AI API 버전만). 크레딧 부족 402
