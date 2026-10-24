@@ -12,5 +12,6 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    include: ['src/**/*.test.{ts,tsx}'], // e2e/ 는 Playwright 가 돌린다
   },
 })
