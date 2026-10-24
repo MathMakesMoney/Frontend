@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { figureUrl, pageImageUrl, type Job } from '../../shared/api'
 import './OriginalPages.css'
 import { loadRhwp } from '../../shared/hangulRenderer'
-import { equationSource, hwpxEquations, pairEquations, stripEquations, type PageEq } from './hwpEquations'
+import { equationSource, hwpxEquations, pairEquations, stripEquations, type EqBox, type PageEq } from './hwpEquations'
 
 // 화면 위에서 30% 지점을 지난 마지막 쪽을 현재 쪽으로 알린다. 그만 볼 때 부를 정리 함수를 돌려준다
 export function watchCurrentPage(box: HTMLElement, onChange: (page: number) => void): () => void {
@@ -160,6 +160,35 @@ export function renderHwpDoc<D extends RenderDoc, T, E = never>(
   }
 }
 
+// 가운데 쪽(picked 있음, 선택 없음은 null)은 수식을 뺀 stageUrls, 썸네일(picked 없음)은 rhwp 수식이 든 urls
+export function stageSrc(p: { urls: string[] | null; stageUrls: string[] | null }, index: number, picked?: string | null): string | undefined {
+  return (picked !== undefined && p.stageUrls ? p.stageUrls : p.urls)?.[index]
+}
+
+// 쪽 그림 SVG 를 주소로 만들고, 수식 원본이 있으면 수식을 뺀 쪽 그림(stageUrls)도 만든다. 수식 읽기·짝짓기·빼기·주소 만들기가
+// 어디서 실패해도 rhwp 수식 그대로(stageUrls = urls)로 돌아가고, 만들다 만 stageUrls 는 거둔다. made 는 나중에 거둘 주소 전부
+export async function pageUrls(
+  svgs: string[],
+  eq: { hwpx: Uint8Array; boxes: EqBox[][] } | undefined,
+  toUrl: (svg: string) => string,
+  revoke: (url: string) => void,
+) {
+  const urls = svgs.map(toUrl)
+  const plain = { urls, stageUrls: urls, equations: null as PageEq[][] | null, made: urls }
+  if (!eq) return plain
+  const stage: string[] = []
+  try {
+    const pages = pairEquations(eq.boxes, await hwpxEquations(eq.hwpx))
+    if (!pages) return plain
+    for (let i = 0; i < svgs.length; i++) stage.push(toUrl(stripEquations(svgs[i], pages[i])))
+    return { urls, stageUrls: stage, equations: pages, made: [...urls, ...stage] }
+  } catch (e) {
+    console.warn('수식을 웹 수식으로 바꾸지 못해 rhwp 수식 그대로 보입니다', e)
+    stage.forEach((u) => revoke(u))
+    return plain
+  }
+}
+
 // 한글 파일(url)을 rhwp 로 쪽마다 SVG 이미지 주소로 만든다 (쪽끼리 SVG id 가 겹치지 않게 img 로 띄운다). url 이 null 이면 아무것도 안 한다.
 // read 가 있으면 문서를 닫기 전에 불러 그 값(결과 문서 쪽별 번호 등)을 같이 돌려준다. version 이 바뀌면 다시 받는다.
 // equations 면 수식 스크립트와 쪽 수식 상자를 짝지어(equations) 수식을 뺀 쪽 그림(stageUrls)도 만든다. 못 짝지으면 equations 는 null, stageUrls 는 urls
@@ -178,11 +207,9 @@ export function useHwpPages<T>(url: string | null, reflow: boolean, read?: (doc:
       .then(async ([core, buf]) => {
         const doc = new core.HwpDocument(new Uint8Array(buf))
         const { svgs, data, eq, readFailed } = renderHwpDoc(doc, reflow, read, equations ? equationSource : undefined)
-        const pages = eq ? pairEquations(eq.boxes, await hwpxEquations(eq.hwpx).catch((e) => (console.warn('수식 원본 압축 풀기에 실패했습니다', e), []))) : null
-        const urls = svgs.map(toUrl)
-        const stageUrls = pages ? svgs.map((svg, i) => toUrl(stripEquations(svg, pages[i]))) : urls
-        made = pages ? [...urls, ...stageUrls] : urls
-        if (alive) setState({ urls, stageUrls, equations: pages, data, readFailed })
+        const out = await pageUrls(svgs, eq, toUrl, (u) => URL.revokeObjectURL(u))
+        made = out.made
+        if (alive) setState({ urls: out.urls, stageUrls: out.stageUrls, equations: out.equations, data, readFailed })
         else made.forEach((u) => URL.revokeObjectURL(u))
       })
       .catch((e) => {

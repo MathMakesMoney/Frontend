@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { academyUrl, fetchJob, fetchVariantLines, fetchVariantMunje, haesolDraftUrl, haesolUrl, variantUrl } from '../../../shared/api'
 import { HEAD, HaesolPage, labelsOf, useHaesolLayout } from '../haesolPages'
-import { useHwpPages } from '../OriginalPages'
+import { stageSrc, useHwpPages } from '../OriginalPages'
 import { resultTabs } from '../resultTabs'
 import { MunjePage, munjeCells, munjePageCount } from './MunjePage'
 import { PageThumbs } from './PageThumbs'
@@ -107,7 +107,7 @@ export function HaesolViewerPage({ variant = false }: { variant?: boolean }) {
       <div className="academy-sheet">
         <img
           className="academy-page"
-          src={(picked !== undefined && academy.stageUrls ? academy.stageUrls : academy.urls)?.[index]}
+          src={stageSrc(academy, index, picked)}
           alt={`결과 문서 ${index + 1}쪽`}
         />
         {picked !== undefined && academy.equations && <EquationLayer eqs={academy.equations[index]} />}

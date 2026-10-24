@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest'
+import { expect, it, vi } from 'vitest'
 import { eqTransform, equationBoxes, hwpxEquations, pairEquations, parseEquations, stripEquations } from './hwpEquations'
 
 // 결과 문서 탭: rhwp 수식을 빼고 그 자리에 해설지 탭과 같은 웹 수식(RichText)을 겹쳐 그린다 (../Backend 오류 기록 051)
@@ -99,6 +99,36 @@ it('수식 개수가 다르거나 저장 크기가 상자와 1px 넘게 다르�
   expect(pairEquations([[box(1, 30), box(2, 40)]], [eq('a', 40), eq('b', 30)])).toBeNull()
 })
 
+// 쪽마다 수식 상자 수만큼 HWPX 수식을 나눠 쪽 단위로 크기 열을 맞춰 본다: 한 쪽이라도 어긋나면 문서 전체가 rhwp 수식 그대로
+it('쪽 단위로 크기가 어긋나면 다른 쪽이 맞아도 짝짓지 않는다', () => {
+  expect(pairEquations([[box(1, 30)], [box(2, 40)], [box(3, 50)]], [eq('a', 30), eq('b', 40), eq('c', 50)])).not.toBeNull()
+  expect(pairEquations([[box(1, 30)], [box(2, 40)], [box(3, 50)]], [eq('a', 30), eq('b', 50), eq('c', 50)])).toBeNull()
+  // 한 쪽이 수식을 하나 더 가지면 나머지 쪽이 한 칸씩 밀려 크기 열이 어긋난다
+  expect(pairEquations([[box(1, 30), box(2, 30)], [box(3, 50)]], [eq('a', 30), eq('b', 50), eq('c', 30)])).toBeNull()
+})
+
+// 머리말·꼬리말 수식은 쪽마다 상자로 나오지만 HWPX 에는 한 번만 있다: 개수가 달라 rhwp 수식 그대로
+it('머리말 수식이 쪽마다 반복되면(HWPX 에는 한 번) 개수 불일치로 짝짓지 않는다', () => {
+  const pages = [[box(1, 30), box(2, 40)], [box(1, 30), box(3, 50)]]
+  expect(pairEquations(pages, [eq('head', 30), eq('a', 40), eq('b', 50)])).toBeNull()
+})
+
+// 짝짓기를 포기하면 이유(어느 검사에서, 얼마나)를 console.warn 한 줄로 남긴다
+it('짝짓기를 포기하면 이유를 한 줄 남긴다 (개수 불일치, 쪽 크기 불일치)', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  pairEquations([[box(1, 30), box(2, 40)], [box(3, 50)]], [eq('a', 30)])
+  expect(warn).toHaveBeenCalledTimes(1)
+  expect(warn.mock.calls[0][0]).toContain('개수 불일치 (쪽 수식 상자 3개, HWPX 수식 1개)')
+  warn.mockClear()
+  pairEquations([[box(1, 30)], [box(2, 40), box(3, 50)]], [eq('a', 30), eq('b', 40), eq('c', 70)])
+  expect(warn).toHaveBeenCalledTimes(1)
+  expect(warn.mock.calls[0][0]).toContain('2쪽 크기 불일치 (2번째 수식 상자 50x16.5, HWPX 70x16.5)')
+  warn.mockClear()
+  pairEquations([[box(1, 30)]], [eq('a', 30)])
+  expect(warn).not.toHaveBeenCalled()
+  warn.mockRestore()
+})
+
 it('짝지은 수식의 rhwp 묶음(늘림 있는 것, 없는 것)만 쪽 그림에서 뺀다', () => {
   const svg =
     '<svg><text x="1" y="2">가</text>' +
@@ -124,4 +154,19 @@ it('바깥 묶음 안의 수식 묶음도 뺀다', () => {
 it('그린 수식이 상자보다 넓으면 상자 폭으로 줄이고, 좁으면 제 크기. 기준선을 놓을 자리에 맞춘다', () => {
   expect(eqTransform(80, 100, 15)).toBe('translate(0px, -12px) scale(0.8)')
   expect(eqTransform(80, 60, 15)).toBe('translate(0px, -15px) scale(1)')
+})
+
+// 짝지은 수식보다 적게 뺐으면 그 수식은 쪽 그림에 두 번(rhwp 와 웹) 그려진다: 원인을 남긴다
+it('짝지은 수식보다 적게 빼면 경고를 한 줄 남긴다', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  const page = [
+    { x: 127.9, y: 299.8, w: 79, h: 40, baseline: 311, script: 'y', size: 14.67 },
+    { x: 415.7, y: 238.7, w: 177, h: 16.5, baseline: 252, script: 'Y', size: 14.67 },
+  ]
+  stripEquations('<g transform="translate(127.9,299.8)"><text>y</text></g>', page)
+  expect(warn).toHaveBeenCalledTimes(1)
+  warn.mockClear()
+  stripEquations('<g transform="translate(127.9,299.8)"><text>y</text></g><g transform="translate(415.7,238.7)"><text>Y</text></g>', page)
+  expect(warn).not.toHaveBeenCalled()
+  warn.mockRestore()
 })

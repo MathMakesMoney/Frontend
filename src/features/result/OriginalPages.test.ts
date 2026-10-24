@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest'
-import { reflowNestedCells, renderHwpDoc, unstretchEquations, watchCurrentPage } from './OriginalPages'
+import { pageUrls, reflowNestedCells, renderHwpDoc, stageSrc, unstretchEquations, watchCurrentPage } from './OriginalPages'
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -124,4 +124,64 @@ it('수식 원본 읽기가 실패해도 쪽 그림과 목록은 돌려준다', 
   expect(out.eq).toBeUndefined()
   expect(out.readFailed).toBe(false)
   expect(renderHwpDoc(fakeDoc(), false, undefined, () => 'eq').eq).toBe('eq')
+})
+
+// 쪽 그림 주소 만들기: 수식 짝짓기·빼기·주소 만들기가 어디서 실패해도 탭은 rhwp 수식 그대로 보이고, 만들다 만 주소는 거둔다
+const SVGS = ['<svg>0</svg>', '<svg>1</svg>']
+// 항목 없는 빈 zip(끝 디렉터리 22바이트만): 수식 0개로 읽혀 쪽마다 빈 짝이 된다
+const emptyZip = () => {
+  const z = new Uint8Array(22)
+  new DataView(z.buffer).setUint32(0, 0x06054b50, true)
+  return z
+}
+const noEq = { hwpx: emptyZip(), boxes: [[], []] }
+
+it('수식 원본이 없으면 stageUrls 는 urls 와 같다', async () => {
+  const toUrl = vi.fn((s: string) => `blob:${s}`)
+  const out = await pageUrls(SVGS, undefined, toUrl, vi.fn())
+  expect(out.stageUrls).toBe(out.urls)
+  expect(out.equations).toBeNull()
+})
+
+it('HWPX 수식 읽기가 실패하면 rhwp 수식 그대로(stageUrls = urls) 돌려준다', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  const out = await pageUrls(SVGS, { hwpx: new Uint8Array(4), boxes: [[], []] }, (s) => `blob:${s}`, vi.fn())
+  expect(out.urls).toHaveLength(2)
+  expect(out.stageUrls).toBe(out.urls)
+  expect(out.equations).toBeNull()
+  expect(out.made).toBe(out.urls)
+  expect(warn).toHaveBeenCalled()
+  warn.mockRestore()
+})
+
+it('수식을 뺀 쪽 그림 주소를 만들다 실패하면 만든 주소는 거두고 rhwp 수식 그대로 돌려준다', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  let n = 0
+  const toUrl = (s: string) => {
+    if (++n === 4) throw new Error('blob 실패') // urls 2개, stage 첫 쪽 1개, 둘째 쪽에서 실패
+    return `blob:${n}:${s}`
+  }
+  const revoke = vi.fn()
+  const out = await pageUrls(SVGS, noEq, toUrl, revoke).catch((e) => e)
+  expect(out.stageUrls).toBe(out.urls)
+  expect(out.made).toBe(out.urls)
+  expect(revoke).toHaveBeenCalledTimes(1)
+  expect(revoke).toHaveBeenCalledWith('blob:3:<svg>0</svg>')
+  warn.mockRestore()
+})
+
+it('짝지은 수식이 있으면 stageUrls 가 따로 생기고 made 에 모두 담긴다', async () => {
+  const out = await pageUrls(SVGS, noEq, (s) => `blob:${s}`, vi.fn())
+  expect(out.stageUrls).not.toBe(out.urls)
+  expect(out.made).toHaveLength(4)
+})
+
+// 썸네일(picked 없음)은 rhwp 수식이 든 urls, 가운데 쪽(picked 있음, null 포함)은 수식을 뺀 stageUrls
+it('썸네일은 urls, 가운데 쪽은 stageUrls 를 쓴다', () => {
+  const p = { urls: ['u0', 'u1'], stageUrls: ['s0', 's1'] }
+  expect(stageSrc(p, 1)).toBe('u1')
+  expect(stageSrc(p, 1, null)).toBe('s1')
+  expect(stageSrc(p, 0, 'A')).toBe('s0')
+  expect(stageSrc({ urls: ['u0'], stageUrls: null }, 0, null)).toBe('u0')
+  expect(stageSrc({ urls: null, stageUrls: null }, 0, null)).toBeUndefined()
 })

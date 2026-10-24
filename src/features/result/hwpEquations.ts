@@ -80,22 +80,41 @@ export async function hwpxEquations(hwpx: Uint8Array): Promise<HwpxEq[]> {
   return sections.sort((a, b) => no(a.name) - no(b.name)).flatMap((s) => parseEquations(s.text))
 }
 
-// 쪽 수식 상자와 HWPX 수식을 순서대로 짝짓는다. 개수가 다르거나 저장 크기가 상자와 1px 넘게 다르면 null:
-// 다른 수식을 그 자리에 그리지 않게 그 문서는 rhwp 수식 그대로 둔다
+// 쪽 수식 상자와 HWPX 수식을 순서대로 짝짓는다. 쪽마다 상자 수만큼 HWPX 수식을 나눠 그 쪽의 크기 열(sz)이 상자와 1px 안에서
+// 맞는지 보고, 개수가 다르거나 한 쪽이라도 어긋나면 null: 다른 수식을 그 자리에 그리지 않게 그 문서는 rhwp 수식 그대로 둔다
+// (머리말·꼬리말 수식은 쪽마다 상자로 나오지만 HWPX 에는 한 번이라 개수가 달라 여기로 온다)
 export function pairEquations(pages: EqBox[][], eqs: HwpxEq[]): PageEq[][] | null {
-  if (pages.reduce((n, p) => n + p.length, 0) !== eqs.length) return null
+  const total = pages.reduce((n, p) => n + p.length, 0)
+  if (total !== eqs.length) return give(`개수 불일치 (쪽 수식 상자 ${total}개, HWPX 수식 ${eqs.length}개)`)
   let k = 0
-  const out = pages.map((boxes) => boxes.map((b) => ({ b, e: eqs[k++] })))
-  if (out.flat().some(({ b, e }) => Math.abs(b.w - e.w) > 1 || Math.abs(b.h - e.h) > 1)) return null
-  return out.map((page) => page.map(({ b, e }) => ({ ...b, script: e.script, size: e.size })))
+  const out: PageEq[][] = []
+  for (const [page, boxes] of pages.entries()) {
+    const mine = eqs.slice(k, (k += boxes.length))
+    const bad = boxes.findIndex((b, i) => Math.abs(b.w - mine[i].w) > 1 || Math.abs(b.h - mine[i].h) > 1)
+    if (bad >= 0) return give(`${page + 1}쪽 크기 불일치 (${bad + 1}번째 수식 상자 ${boxes[bad].w}x${boxes[bad].h}, HWPX ${mine[bad].w}x${mine[bad].h})`)
+    out.push(boxes.map((b, i) => ({ ...b, script: mine[i].script, size: mine[i].size })))
+  }
+  return out
+}
+
+// 짝짓기를 포기하는 이유를 남기고 null (그 문서는 rhwp 수식 그대로)
+function give(reason: string): null {
+  console.warn(`수식 짝짓기를 포기해 rhwp 수식 그대로 보입니다: ${reason}`)
+  return null
 }
 
 // 쪽 그림에서 짝지은 수식의 rhwp 묶음(<g transform="translate(x,y) [scale(..)]">)을 뺀다. 수식 묶음 안에는 g 가 없어
 // 안에 g 가 든 묶음(글상자 등)은 건너뛰고 그 안의 수식 묶음을 찾는다
 export function stripEquations(svg: string, page: PageEq[]): string {
-  return svg.replace(/<g transform="translate\(([\d.-]+),([\d.-]+)\)(?: scale\([^)]*\))?">(?:(?!<g[ >])[\s\S])*?<\/g>/g, (m, x: string, y: string) =>
-    page.some((e) => Math.abs(e.x - Number(x)) < 0.1 && Math.abs(e.y - Number(y)) < 0.1) ? '' : m,
-  )
+  let removed = 0
+  const out = svg.replace(/<g transform="translate\(([\d.-]+),([\d.-]+)\)(?: scale\([^)]*\))?">(?:(?!<g[ >])[\s\S])*?<\/g>/g, (m, x: string, y: string) => {
+    if (!page.some((e) => Math.abs(e.x - Number(x)) < 0.1 && Math.abs(e.y - Number(y)) < 0.1)) return m
+    removed++
+    return ''
+  })
+  // 적게 뺐으면 그 수식은 rhwp 와 웹 수식이 겹쳐 두 번 그려진다
+  if (removed < page.length) console.warn(`수식 ${page.length}개 중 ${removed}개만 쪽 그림에서 빼 두 번 그려질 수 있습니다`)
+  return out
 }
 
 // 그린 웹 수식(폭 width, 기준선 base: 요소 위에서 잰 값)을 상자 폭 w 에 넣는다: 넓으면 줄이고, 좁으면 제 크기로 왼쪽. 기준선은 요소 top 자리로
