@@ -107,3 +107,10 @@ it('정답 쪽 뒤 쪽의 번호는 문항으로 잇지 않는다', () => {
   ]
   expect(academyIndex(pages, [prob(1), prob(2)], ['typing', 'haesol']).entries.map((e) => `${e.page}:${e.label}`)).toEqual(['0:1'])
 })
+
+// 문항 목록이 인쇄 번호 순(1, 2, 3 = no 1, 4, 3)으로 와도 번호 칸 NN 은 읽은 순서(no 순) NN 번째
+it('문항이 보이는 순서로 와도 번호 칸은 읽은 순서로 잇는다', () => {
+  const problems = [prob(1, { label: '1' }), prob(4, { label: '2' }), prob(3, { label: '3' })]
+  const pages: AcademyPage[] = [{ numbers: ['01', '02', '03'], answer: false, boxes: {} }]
+  expect(academyIndex(pages, problems).entries.map((e) => e.label)).toEqual(['1', '3', '2'])
+})

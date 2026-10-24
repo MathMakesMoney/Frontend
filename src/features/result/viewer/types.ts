@@ -30,6 +30,7 @@ export interface PageStageProps {
   current: number
   active: string | null
   hovered: string | null // 오른쪽 목록에서 마우스를 올린 문항
+  listPicks?: number // 오른쪽 목록에서 문항을 누른 횟수 (같은 문항을 다시 눌러도 스크롤)
   onChange: (page: number) => void
   onPick: (label: string) => void // 쪽 위의 문항을 누르면 (오른쪽 목록에 표시)
 }
