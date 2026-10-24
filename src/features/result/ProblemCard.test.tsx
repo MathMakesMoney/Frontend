@@ -23,4 +23,11 @@ describe('ProblemCard 타이핑만', () => {
     expect(html).toContain('(없음)')
     expect(html).toContain('독립 검증 답')
   })
+
+  it('풀이가 없는 문항(풀이 누락)은 해설 고쳐 달라는 링크를 숨기고, 풀이가 있으면 보인다', () => {
+    const unsolved = renderToStaticMarkup(<ProblemCard jobId="3" jobTitle="t" problem={synthetic} />)
+    expect(unsolved).not.toContain('해설 고쳐 달라고')
+    const solved = renderToStaticMarkup(<ProblemCard jobId="3" jobTitle="t" problem={{ ...synthetic, answer: '②', steps: ['풀이'] }} />)
+    expect(solved).toContain('해설 고쳐 달라고')
+  })
 })

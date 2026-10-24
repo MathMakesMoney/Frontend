@@ -107,7 +107,8 @@ export function ProblemCard({ jobId, jobTitle, problem, cellsEditable = false, t
       {!!problem.revisionCount && problem.revisionCount > 0 && (
         <p className="hint">다시 저장 {problem.revisionCount}번</p>
       )}
-      {!typingOnly && <ReviseRequest jobId={jobId} jobTitle={jobTitle} label={label} requests={problem.editRequests ?? []} />}
+      {/* 풀이가 아직 없는 문항(풀이 누락)은 고쳐 달라고 할 해설이 없다 */}
+      {!typingOnly && (problem.answer !== null || problem.steps.length > 0) && <ReviseRequest jobId={jobId} jobTitle={jobTitle} label={label} requests={problem.editRequests ?? []} />}
     </article>
   )
 }
