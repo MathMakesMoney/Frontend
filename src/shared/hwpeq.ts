@@ -44,6 +44,7 @@ const SYMBOLS: Record<string, string> = {
   subset: '\\subset', supset: '\\supset', superset: '\\supset', subseteq: '\\subseteq', supseteq: '\\supseteq',
   supersetEQ: '\\supseteq', smallinter: '\\cap', cap: '\\cap', smallunion: '\\cup', cup: '\\cup',
   rarrow: '\\rightarrow', larrow: '\\leftarrow', lrarrow: '\\leftrightarrow', uparrow: '\\uparrow', downarrow: '\\downarrow',
+  nearrow: '\\nearrow', searrow: '\\searrow', nwarrow: '\\nwarrow', swarrow: '\\swarrow',
   RARROW: '\\Rightarrow', LARROW: '\\Leftarrow', LRARROW: '\\Leftrightarrow',
   prime: "'", propto: '\\propto', varpropto: '\\varpropto', aleph: '\\aleph', hbar: '\\hbar',
   sum: '\\sum', int: '\\int', dint: '\\iint', tint: '\\iiint', oint: '\\oint', prod: '\\prod',
