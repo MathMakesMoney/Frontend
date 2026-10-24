@@ -3,28 +3,36 @@ import { figureUrl, pageImageUrl, type Job } from '../../shared/api'
 import './OriginalPages.css'
 import { loadRhwp } from '../../shared/hangulRenderer'
 
+// 화면 위에서 30% 지점을 지난 마지막 쪽을 현재 쪽으로 알린다. 그만 볼 때 부를 정리 함수를 돌려준다
+export function watchCurrentPage(box: HTMLElement, onChange: (page: number) => void): () => void {
+  const onScroll = () => {
+    const imgs = box.children
+    const line = window.innerHeight * 0.3
+    let now = 0
+    for (let i = 0; i < imgs.length; i++) if (imgs[i].getBoundingClientRect().top <= line) now = i
+    onChange(now)
+  }
+  onScroll()
+  // 쪽 이미지를 불러와 상자 크기가 바뀌면 다시 잰다 (처음엔 이미지 높이가 0 이라 모든 쪽이 30% 지점을 지난 것으로 잰다)
+  const resized = new ResizeObserver(onScroll)
+  resized.observe(box)
+  window.addEventListener('scroll', onScroll, { passive: true })
+  window.addEventListener('resize', onScroll)
+  return () => {
+    resized.disconnect()
+    window.removeEventListener('scroll', onScroll)
+    window.removeEventListener('resize', onScroll)
+  }
+}
+
 // 쪽 이미지 + 오른쪽 쪽 이동판 (PDF, 한글 공통)
 function PageImages({ urls, name }: { urls: string[]; name: string }) {
   const box = useRef<HTMLDivElement>(null)
   const [cur, setCur] = useState(0)
 
-  // 화면 위에서 30% 지점을 지난 마지막 쪽을 현재 쪽으로 본다
+  // 지금 보는 쪽을 따라간다
   useEffect(() => {
-    const onScroll = () => {
-      const imgs = box.current?.children
-      if (!imgs) return
-      const line = window.innerHeight * 0.3
-      let now = 0
-      for (let i = 0; i < imgs.length; i++) if (imgs[i].getBoundingClientRect().top <= line) now = i
-      setCur(now)
-    }
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll)
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
-    }
+    if (box.current) return watchCurrentPage(box.current, setCur)
   }, [urls])
 
   const go = (i: number) => {
