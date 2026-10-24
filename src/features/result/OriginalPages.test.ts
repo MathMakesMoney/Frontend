@@ -108,3 +108,15 @@ it('쪽 그리기가 실패해도 문서는 닫는다', () => {
   expect(() => renderHwpDoc(doc, false)).toThrow('그리기 실패')
   expect(doc.calls).toEqual(['free'])
 })
+
+// 결과 문서 탭 수식 원본(HWPX, 수식 상자)을 못 읽어도 쪽 그림과 목록은 그대로 (그 문서는 rhwp 수식 그대로, ../Backend 오류 기록 051)
+it('수식 원본 읽기가 실패해도 쪽 그림과 목록은 돌려준다', () => {
+  const doc = fakeDoc()
+  const out = renderHwpDoc(doc, false, () => 'list', () => {
+    throw new Error('수식 원본 실패')
+  })
+  expect(out.svgs).toHaveLength(2)
+  expect(out.data).toBe('list')
+  expect(out.eq).toBeUndefined()
+  expect(renderHwpDoc(fakeDoc(), false, undefined, () => 'eq').eq).toBe('eq')
+})

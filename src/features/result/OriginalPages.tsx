@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { figureUrl, pageImageUrl, type Job } from '../../shared/api'
 import './OriginalPages.css'
 import { loadRhwp } from '../../shared/hangulRenderer'
+import { equationSource, hwpxEquations, pairEquations, stripEquations, type PageEq } from './hwpEquations'
 
 // 화면 위에서 30% 지점을 지난 마지막 쪽을 현재 쪽으로 알린다. 그만 볼 때 부를 정리 함수를 돌려준다
 export function watchCurrentPage(box: HTMLElement, onChange: (page: number) => void): () => void {
@@ -117,8 +118,13 @@ export function unstretchEquations(svg: string): string {
 type HwpDoc = InstanceType<Awaited<ReturnType<typeof loadRhwp>>['HwpDocument']>
 type RenderDoc = CellDoc & { reflowLinesegs(): number; pageCount(): number; renderPageSvg(page: number): string; free(): void }
 
-// 문서를 쪽마다 SVG 로 그리고 read 값을 함께 돌려준다. read 가 실패하면 값 없이 쪽 그림만, 어디서 실패하든 문서는 닫는다
-export function renderHwpDoc<D extends RenderDoc, T>(doc: D, reflow: boolean, read?: (doc: D) => T): { svgs: string[]; data?: T } {
+// 문서를 쪽마다 SVG 로 그리고 read 값(과 readEq 값)을 함께 돌려준다. read 가 실패하면 값 없이 쪽 그림만, 어디서 실패하든 문서는 닫는다
+export function renderHwpDoc<D extends RenderDoc, T, E = never>(
+  doc: D,
+  reflow: boolean,
+  read?: (doc: D) => T,
+  readEq?: (doc: D) => E,
+): { svgs: string[]; data?: T; eq?: E } {
   try {
     // 줄 배치를 비운 문단(결과 문서 미리보기 사본)은 rhwp 가 줄을 다시 나눈다. 원본 시험지는 한글이 저장한 줄 배치 그대로
     if (reflow) {
@@ -136,16 +142,23 @@ export function renderHwpDoc<D extends RenderDoc, T>(doc: D, reflow: boolean, re
     } catch {
       data = undefined // 목록(결과 문서 쪽별 번호)을 못 읽어도 쪽 그림은 보인다
     }
-    return { svgs, data }
+    let eq: E | undefined
+    try {
+      eq = readEq?.(doc)
+    } catch {
+      eq = undefined // 수식 원본을 못 읽으면 그 문서는 rhwp 수식 그대로
+    }
+    return { svgs, data, eq }
   } finally {
     doc.free()
   }
 }
 
 // 한글 파일(url)을 rhwp 로 쪽마다 SVG 이미지 주소로 만든다 (쪽끼리 SVG id 가 겹치지 않게 img 로 띄운다). url 이 null 이면 아무것도 안 한다.
-// read 가 있으면 문서를 닫기 전에 불러 그 값(결과 문서 쪽별 번호 등)을 같이 돌려준다. version 이 바뀌면 다시 받는다
-export function useHwpPages<T>(url: string | null, reflow: boolean, read?: (doc: HwpDoc) => T, version?: number) {
-  const [state, setState] = useState<{ urls: string[]; data?: T } | null>(null)
+// read 가 있으면 문서를 닫기 전에 불러 그 값(결과 문서 쪽별 번호 등)을 같이 돌려준다. version 이 바뀌면 다시 받는다.
+// equations 면 수식 스크립트와 쪽 수식 상자를 짝지어(equations) 수식을 뺀 쪽 그림(stageUrls)도 만든다. 못 짝지으면 equations 는 null, stageUrls 는 urls
+export function useHwpPages<T>(url: string | null, reflow: boolean, read?: (doc: HwpDoc) => T, version?: number, equations = false) {
+  const [state, setState] = useState<{ urls: string[]; stageUrls: string[]; equations: PageEq[][] | null; data?: T } | null>(null)
   const [error, setError] = useState(false)
 
   useEffect(() => {
@@ -154,11 +167,16 @@ export function useHwpPages<T>(url: string | null, reflow: boolean, read?: (doc:
     let made: string[] = []
     setState(null)
     setError(false)
+    const toUrl = (svg: string) => URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }))
     Promise.all([loadRhwp(), fetch(url, { cache: 'no-store' }).then((res) => res.arrayBuffer())])
-      .then(([core, buf]) => {
-        const { svgs, data } = renderHwpDoc(new core.HwpDocument(new Uint8Array(buf)), reflow, read)
-        made = svgs.map((svg) => URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' })))
-        if (alive) setState({ urls: made, data })
+      .then(async ([core, buf]) => {
+        const doc = new core.HwpDocument(new Uint8Array(buf))
+        const { svgs, data, eq } = renderHwpDoc(doc, reflow, read, equations ? equationSource : undefined)
+        const pages = eq ? pairEquations(eq.boxes, await hwpxEquations(eq.hwpx).catch(() => [])) : null
+        const urls = svgs.map(toUrl)
+        const stageUrls = pages ? svgs.map((svg, i) => toUrl(stripEquations(svg, pages[i]))) : urls
+        made = pages ? [...urls, ...stageUrls] : urls
+        if (alive) setState({ urls, stageUrls, equations: pages, data })
         else made.forEach((u) => URL.revokeObjectURL(u))
       })
       .catch(() => alive && setError(true))
@@ -166,9 +184,9 @@ export function useHwpPages<T>(url: string | null, reflow: boolean, read?: (doc:
       alive = false
       made.forEach((u) => URL.revokeObjectURL(u))
     }
-  }, [url, reflow, read, version])
+  }, [url, reflow, read, version, equations])
 
-  return { urls: state?.urls ?? null, data: state?.data, error }
+  return { urls: state?.urls ?? null, stageUrls: state?.stageUrls ?? null, equations: state?.equations ?? null, data: state?.data, error }
 }
 
 // 한글 파일(url)을 쪽마다 그려 오른쪽 쪽 이동판과 보인다 (원본 시험지, 작업 상세의 결과 문서 보기)

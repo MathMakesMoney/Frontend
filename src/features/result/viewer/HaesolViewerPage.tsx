@@ -10,6 +10,7 @@ import { PageThumbs } from './PageThumbs'
 import { PageStage } from './PageStage'
 import { ProblemIndex } from './ProblemIndex'
 import { academyIndex, academyPages } from './academyIndex'
+import { EquationLayer } from './EquationLayer'
 import type { ProblemEntry } from './types'
 import './viewer.css'
 
@@ -61,8 +62,8 @@ export function HaesolViewerPage({ variant = false }: { variant?: boolean }) {
   const lines = (variant ? variantLines : job?.draft) ?? []
   const layout = useHaesolLayout(job?.id ?? '', header, lines, !!job && !showMunje && !showAcademy)
   const cells = munjeCells(munje?.items ?? [])
-  // 작업을 다시 받을 때마다(SSE changed) 결과 문서도 새로 받아 그린다
-  const academy = useHwpPages(job && showAcademy ? academyUrl(job.id, 'view') : null, true, academyPages, dataUpdatedAt)
+  // 작업을 다시 받을 때마다(SSE changed) 결과 문서도 새로 받아 그린다. 수식은 해설지 탭과 같은 웹 수식으로 겹쳐 그린다 (EquationLayer)
+  const academy = useHwpPages(job && showAcademy ? academyUrl(job.id, 'view') : null, true, academyPages, dataUpdatedAt, true)
   const pageCount = showMunje ? munjePageCount(cells) : showAcademy ? (academy.urls?.length ?? 0) : layout.pages.length
 
   // 탭을 바꾸면 첫 쪽부터
@@ -99,11 +100,17 @@ export function HaesolViewerPage({ variant = false }: { variant?: boolean }) {
           }),
       )
 
-  // 결과 문서 쪽 그림 위에 문항 자리를 겹친다 (해설지 쪽의 data-label 문항 덩어리 역할). 썸네일은 picked 를 안 넘겨 겹치지 않는다
+  // 결과 문서 쪽 그림 위에 웹 수식, 그 위에 문항 자리를 겹친다 (해설지 쪽의 data-label 문항 덩어리 역할).
+  // 썸네일은 picked 를 안 넘겨 겹치지 않고 rhwp 수식이 든 쪽 그림 그대로
   const renderPage = (index: number, picked?: string | null) =>
     showAcademy ? (
       <div className="academy-sheet">
-        <img className="academy-page" src={academy.urls?.[index]} alt={`결과 문서 ${index + 1}쪽`} />
+        <img
+          className="academy-page"
+          src={(picked !== undefined && academy.stageUrls ? academy.stageUrls : academy.urls)?.[index]}
+          alt={`결과 문서 ${index + 1}쪽`}
+        />
+        {picked !== undefined && academy.equations && <EquationLayer eqs={academy.equations[index]} />}
         {picked !== undefined &&
           entries.map(
             (e) =>
