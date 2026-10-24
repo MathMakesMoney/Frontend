@@ -248,6 +248,8 @@ class Parser {
     const map: Record<string, string> = {
       '{': '\\{', '}': '\\}', '<': '\\langle', '>': '\\rangle', vert: '|', line: '|', dline: '\\|',
       lfloor: '\\lfloor', rfloor: '\\rfloor', lceil: '\\lceil', rceil: '\\rceil',
+      // 한글 수식의 사용자 정의 영역 글자. rhwp 도 늘어나는 세로선으로 그린다 (작업 8 12번)
+      '\ue04d': '|',
     }
     // 괄호가 아닌 단어면 먹지 않고 보이지 않는 괄호로 둔다
     if (t === undefined || (/^[A-Za-z]+$/.test(t) && !(keyword(t) in map))) return '.'
