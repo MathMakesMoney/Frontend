@@ -22,7 +22,7 @@ function renderTextPart(text: string, key: string) {
 
 // 한글 수식 스크립트를 LaTeX 로 바꿔 KaTeX 로 그린다. 실패하면 스크립트 원문 칩
 // display: 한글 수식 편집기처럼 분수·lim 아래 첨자를 크게 (해설지 쪽 모양을 한글과 맞출 때)
-function Equation({ script, display }: { script: string; display?: boolean }) {
+export function Equation({ script, display }: { script: string; display?: boolean }) {
   let html = ''
   try {
     html = katex.renderToString((display ? String.raw`\displaystyle ` : '') + toLatex(script), { throwOnError: false, strict: false })

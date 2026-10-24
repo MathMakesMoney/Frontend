@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { splitEquation } from './equation'
+import { joinEquation, splitEquation } from './equation'
 
 // CLAUDE.md 에 적힌 나누기 테스트 그대로
 describe('splitEquation', () => {
@@ -20,5 +20,13 @@ describe('splitEquation', () => {
       { type: 'text', value: '가 ' },
       { type: 'text', value: '<<EQ>>x ^{2} 깨짐' },
     ])
+  })
+})
+
+describe('joinEquation', () => {
+  it('나눈 조각을 다시 이으면 원문과 바이트가 같다', () => {
+    const samples = ['', '그냥 글자', '가 <<EQ>>x ^{2}<</EQ>> 이다', '<<EQ>>a<</EQ>><<EQ>>b<</EQ>>', '가 <<EQ>>x ^{2} 깨짐',
+      '<<EQ>><</EQ>>', '줄1\n<<EQ>>{1} over {2}<</EQ>>\n\n  줄3 ', '<</EQ>> 거꾸로 <<EQ>>', '탭\t|  칸 | <<EQ>>rm A<</EQ>>']
+    for (const s of samples) expect(joinEquation(splitEquation(s))).toBe(s)
   })
 })
