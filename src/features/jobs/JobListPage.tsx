@@ -1,10 +1,24 @@
-import { useRef, useState } from 'react'
+import { type MouseEvent, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { deleteJob, fetchJobs, type Job } from '../../shared/api'
+import { academyPartsUrl, deleteJob, fetchJobs, type DocPart, type Job } from '../../shared/api'
 import { featureText, jobPhase, stageText } from '../../shared/stage'
 import { ProgressStatus } from '../../shared/ProgressStatus'
 import { HangulCover } from '../../shared/HangulCover'
+
+const PARTS: { key: DocPart; label: string }[] = [
+  { key: 'munje', label: '문제지' }, { key: 'dap', label: '빠른정답' }, { key: 'haesol', label: '해설지' },
+]
+
+// 작업에서 받을 수 있는 분류 (서버가 결과 문서가 있을 때만 parts 를 준다)
+export function jobParts(job: Pick<Job, 'files'>): DocPart[] {
+  return job.files.parts ?? []
+}
+
+// 고른 작업 모두에 있는 분류만 받을 수 있다
+export function commonParts(jobs: Pick<Job, 'files'>[]): DocPart[] {
+  return PARTS.map(part => part.key).filter(key => jobs.every(job => jobParts(job).includes(key)))
+}
 
 // 진행 상태 점 색: 완료 초록, 문항·풀이 저장 중 파랑, 업로드만 된 것 회색
 function statusClass(job: Job): string {
@@ -49,6 +63,12 @@ export function JobListPage() {
   const filteredJobs = visibleJobs(jobs ?? [], query, status, order)
   const queryClient = useQueryClient()
   const [selectedJob, setSelectedJob] = useState<Job | null>(null)
+  const [selecting, setSelecting] = useState(false)
+  const [checked, setChecked] = useState<Set<string>>(new Set())
+  const [picked, setPicked] = useState<DocPart[]>([])
+  const downloadDialog = useRef<HTMLDialogElement>(null)
+  const selectedJobs = (jobs ?? []).filter(job => checked.has(job.id))
+  const available = commonParts(selectedJobs)
   const deleteDialog = useRef<HTMLDialogElement>(null)
   const deletion = useMutation({ mutationFn: deleteJob, onSuccess: () => {
     deleteDialog.current?.close()
@@ -63,6 +83,35 @@ export function JobListPage() {
     { status: 'done', title: '완성된 해설지', description: '다시 꺼내 쓰는 수업 자료' },
   ]
 
+  // 고른 작업마다 임시 링크를 눌러 내려받고 창과 선택을 닫는다
+  function download() {
+    for (const job of selectedJobs) {
+      const link = document.createElement('a')
+      link.href = academyPartsUrl(job.id, picked)
+      link.download = ''
+      link.click()
+    }
+    downloadDialog.current?.close()
+    stopSelecting()
+  }
+
+  // 선택 모드를 끄면 고른 작업도 비운다
+  function stopSelecting() {
+    setSelecting(false)
+    setChecked(new Set())
+  }
+
+  // 선택 모드에서 카드를 누르면 이동하지 않고 고르거나 푼다 (결과 문서가 있는 작업만)
+  function toggle(event: MouseEvent, job: Job) {
+    event.preventDefault()
+    if (jobParts(job).length === 0) return
+    setChecked(prev => {
+      const next = new Set(prev)
+      if (next.has(job.id)) next.delete(job.id); else next.add(job.id)
+      return next
+    })
+  }
+
   // 삭제 버튼은 작업 링크 밖에 두고 확인 후 기존 API로 삭제한다
   function jobCard(job: Job, featured = false) {
     // 학원 작업은 보류 문항 수(보류일 때만, 결정하면 줄어든다), 그 밖은 검토 필요 수
@@ -76,8 +125,9 @@ export function JobListPage() {
               <span className="job-cover-brand">풀이담</span>
             </div>)
     return (
-      <li key={job.id} data-status={jobPhase(job)} className={`job-card${featured ? ' job-card-featured' : ''}`}>
-        <Link to={`/jobs/${job.id}`} className="job-row">
+      <li key={job.id} data-status={jobPhase(job)} className={`job-card${featured ? ' job-card-featured' : ''}${checked.has(job.id) ? ' is-selected' : ''}${selecting && jobParts(job).length === 0 ? ' is-unselectable' : ''}`}>
+        <Link to={`/jobs/${job.id}`} className="job-row"
+          {...(selecting && { role: 'button', 'aria-pressed': checked.has(job.id), 'aria-disabled': jobParts(job).length === 0, title: jobParts(job).length === 0 ? '결과 문서가 아직 없습니다' : undefined, onClick: (event: MouseEvent) => toggle(event, job) })}>
           <div className="job-cover" aria-hidden="true">
             {job.inputType !== 'HWP' && job.inputType !== 'HWPX' ? cover : <HangulCover jobId={job.id} inputType={job.inputType} title={job.title} className="job-cover-preview">{cover}</HangulCover>}
             {job.inputType === 'PDF' && <img className="job-cover-preview" src={`/api/jobs/${encodeURIComponent(job.id)}/pages/1.png`} alt="" loading="lazy" onError={event => { event.currentTarget.hidden = true }} />}
@@ -121,6 +171,7 @@ export function JobListPage() {
       {jobs && jobs.length > 0 && (
         <div className="jobs-toolbar">
           <input type="search" aria-label="작업 검색" placeholder="시험지 제목, 학교, 교과 검색" value={query} onChange={event => setQuery(event.target.value)} />
+          <button type="button" className={`jobs-select-mode${selecting ? ' active' : ''}`} aria-pressed={selecting} onClick={() => selecting ? stopSelecting() : setSelecting(true)}>{selecting ? '선택 취소' : '선택'}</button>
           <select aria-label="진행 상태" value={status} onChange={event => setStatus(event.target.value)}>
             <option value="all">전체 상태</option>
             <option value="uploaded">업로드</option>
@@ -181,6 +232,32 @@ export function JobListPage() {
           <ul className="job-list">{grouped.map(job => jobCard(job))}</ul>
         </section>
       }) : singles.length > 0 && <ul className="job-list">{singles.map(job => jobCard(job))}</ul>}
+      {selectedJobs.length > 0 && (
+        <div className="jobs-selection-bar" role="region" aria-label="선택한 학습지">
+          <span>학습지 {selectedJobs.length}개 선택됨</span>
+          <button type="button" className="jobs-selection-download" onClick={() => { setPicked(available); downloadDialog.current?.showModal() }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 2v8M4.5 7 8 10.5 11.5 7M2.5 13h11" /></svg>
+            다운로드
+          </button>
+          <button type="button" className="jobs-selection-clear" aria-label="선택 해제" onClick={stopSelecting}>×</button>
+        </div>
+      )}
+      <dialog ref={downloadDialog} className="jobs-download-dialog" aria-labelledby="jobs-download-title"
+        onClick={event => { if (event.target === event.currentTarget) event.currentTarget.close() }}>
+        <div className="jobs-download-head">
+          <div>
+            <h2 id="jobs-download-title">학습지 다운로드</h2>
+            <p>{selectedJobs.length === 1 ? selectedJobs[0].title : `${selectedJobs.length}개`}</p>
+          </div>
+          <button type="button" aria-label="닫기" onClick={() => downloadDialog.current?.close()}>×</button>
+        </div>
+        <div className="jobs-download-parts" role="group" aria-label="분류 선택">
+          <span>분류 선택</span>
+          {PARTS.map(part => <button key={part.key} type="button" aria-pressed={picked.includes(part.key)} disabled={!available.includes(part.key)}
+            onClick={() => setPicked(prev => prev.includes(part.key) ? prev.filter(key => key !== part.key) : [...prev, part.key])}>{part.label}</button>)}
+        </div>
+        <button type="button" className="jobs-download-submit" disabled={picked.length === 0} onClick={download}>다운로드</button>
+      </dialog>
       <dialog ref={deleteDialog} className="jobs-delete-dialog" aria-labelledby="jobs-delete-title" onClose={() => setSelectedJob(null)}>
         <span className="jobs-delete-icon" aria-hidden="true">×</span>
         <h2 id="jobs-delete-title">이 작업을 삭제할까요</h2>

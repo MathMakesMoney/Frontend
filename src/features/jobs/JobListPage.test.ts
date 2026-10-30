@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
-import { doneLinkText, groupBatches, visibleJobs } from './JobListPage'
-import type { Job } from '../../shared/api'
+import { commonParts, doneLinkText, groupBatches, jobParts, visibleJobs } from './JobListPage'
+import { academyPartsUrl, type Job } from '../../shared/api'
 
 it('검색과 상태를 함께 적용하고 원본을 유지하며 날짜순으로 정렬한다', () => {
   const jobs = [
@@ -43,4 +43,17 @@ it('끝난 작업 링크 글은 해설을 고르지 않았으면 결과물 보�
   expect(doneLinkText({ features: ['typing'] })).toBe('결과물 보기')
   expect(doneLinkText({ features: ['typing', 'haesol'] })).toBe('해설지 다시 보기')
   expect(doneLinkText({})).toBe('해설지 다시 보기')
+})
+
+it('받을 수 있는 분류는 parts, 없으면 결과 문서 유무로 보고 여러 작업은 공통만 남긴다', () => {
+  const all = { files: { parts: ['munje', 'dap', 'haesol'] } } as Pick<Job, 'files'>
+  const some = { files: { parts: ['munje', 'haesol'] } } as Pick<Job, 'files'>
+  expect(jobParts({ files: { academyHwp: true } } as Job)).toEqual([])
+  expect(jobParts({ files: {} } as Job)).toEqual([])
+  expect(commonParts([all, some])).toEqual(['munje', 'haesol'])
+  expect(commonParts([all, { files: {} } as Job])).toEqual([])
+})
+
+it('분류 내려받기 주소는 문제지, 빠른정답, 해설지 순서로 붙이고 id 를 인코딩한다', () => {
+  expect(academyPartsUrl('a/1', ['haesol', 'munje'])).toBe('/api/jobs/a%2F1/academy-parts.hwp?parts=munje,haesol')
 })

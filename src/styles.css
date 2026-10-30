@@ -1716,3 +1716,28 @@ button {
 .eq-pop-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 .eq-pop-actions .eq-remove { color: #dc2626; }
 .item-table .eq-field { min-width: 80px; padding: 4px 6px; border: none; }
+
+/* 목록 카드 선택: 카드 전체 연한 파랑, 선택된 카드는 그대로 유지 */
+.jobs-page .job-row:hover, .jobs-page .job-card.is-selected .job-row { background: #eef7fd; border-color: #b6d6ee; }
+.jobs-page .jobs-toolbar .jobs-select-mode { border: 1px solid #e1e7ef; border-radius: 10px; background: #fff; color: #394452; padding: 0 18px; font: inherit; font-size: 14px; cursor: pointer; }
+.jobs-page .jobs-toolbar .jobs-select-mode.active { border-color: #2868e8; background: #eef7fd; color: #2868e8; }
+.jobs-page .job-card.is-selected .job-row { box-shadow: 0 0 0 2px #2868e8; }
+.jobs-page .job-card.is-unselectable .job-row { opacity: 0.45; cursor: not-allowed; }
+.jobs-selection-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: flex; align-items: center; gap: 12px; padding: 14px 28px; background: #1f2937; color: #fff; font-size: 14px; }
+.jobs-selection-bar > span { margin-right: auto; }
+.jobs-selection-bar button { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border: 0; border-radius: 8px; background: #2868e8; color: #fff; font: inherit; cursor: pointer; }
+.jobs-selection-bar .jobs-selection-clear { padding: 6px 10px; background: transparent; font-size: 20px; line-height: 1; }
+.jobs-download-dialog { width: min(440px, calc(100% - 40px)); padding: 28px; border: 1px solid #e3e8f0; border-radius: 16px; color: #191f28; box-shadow: 0 24px 80px #191f2826; }
+.jobs-download-dialog::backdrop { background: #19233366; }
+.jobs-download-head { display: flex; justify-content: space-between; gap: 12px; }
+.jobs-download-head h2 { margin: 0 0 6px; font-size: 20px; }
+.jobs-download-head p { margin: 0; color: #738094; font-size: 13px; overflow-wrap: anywhere; }
+.jobs-download-head button { align-self: flex-start; border: 0; background: transparent; font-size: 22px; line-height: 1; cursor: pointer; color: #738094; }
+.jobs-download-parts { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 24px 0; }
+.jobs-download-parts > span { margin-right: 8px; font-size: 14px; font-weight: 650; }
+.jobs-download-parts button { padding: 7px 14px; border: 1px solid #d0d5dd; border-radius: 999px; background: #fff; color: #53647b; font: inherit; font-size: 13px; cursor: pointer; }
+.jobs-download-parts button[aria-pressed="true"] { background: #e3f1fb; border-color: #2868e8; color: #2868e8; }
+.jobs-download-parts button:disabled { opacity: .45; cursor: not-allowed; }
+.jobs-download-submit { width: 100%; padding: 12px; border: 0; border-radius: 10px; background: #2868e8; color: #fff; font: inherit; font-weight: 650; cursor: pointer; }
+.jobs-download-submit:disabled { background: #c5d3ee; cursor: not-allowed; }
+.jobs-page:has(.jobs-selection-bar) { padding-bottom: 80px; }
