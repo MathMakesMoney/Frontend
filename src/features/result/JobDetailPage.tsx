@@ -105,8 +105,9 @@ export function JobDetailPage() {
           {(job.files.hwp || job.files.hwpx || job.files.academyHwp || (job.problemCount > 0 && job.stage !== 'done')) && (
             <div className="job-download-group">
               <span className="job-download-label">다운로드</span>
-          {job.files.hwp && <a className="job-download-link" href={haesolUrl(job.id, 'hwp')}>HWP</a>}
-          {job.files.hwpx && <a className="job-download-link" href={haesolUrl(job.id, 'hwpx')}>HWPX</a>}
+          {/* 결과 문서(타이핑+해설 묶음)가 있으면 해설지만 받는 링크는 숨긴다 */}
+          {job.files.hwp && !job.files.academyHwp && <a className="job-download-link" href={haesolUrl(job.id, 'hwp')}>HWP</a>}
+          {job.files.hwpx && !job.files.academyHwp && <a className="job-download-link" href={haesolUrl(job.id, 'hwpx')}>HWPX</a>}
           <AcademyDownloads jobId={job.id} files={job.files} />
           {job.problemCount > 0 && job.stage !== 'done' && <>
             <a className="job-download-link" href={haesolDraftUrl(job.id, 'hwp')}>진행본 HWP</a>
