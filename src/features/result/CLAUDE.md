@@ -54,6 +54,8 @@
 - 문항 카드: 결정이 있으면 `보류 결정: ...` 표시, 결정이 있고 `hold` 가 null 이면 미확정으로 보이지 않는다. 번호판은 처음에 첫 보류 문항
 - 해설 고쳐 달라고 하면 진행이 해설 차례(haesol)로 돌아가 MCP 안내가 보이고, AI 가 save_revision 으로 고치면 SSE 로 새로 고쳐진다. API 버전은 묶음 실행을 다시 누르면 서버가 그 문항만 고친다 (`../Backend/docs/design-docs/decisions/043-academy-api-revise-stage.md`). 고치기 전까지 보류 목록이 남아 결정을 바꿀 수 있고(요청이 아직 안 고쳐진 문항 = `decision.choice` 가 revise 이고 `revised` 가 false 일 때만, 이미 고쳤는데 progress 가 다른 이유로 haesol 이면 열지 않는다), 안내는 `AI 연결 대화창에서 이어 하거나 묶음 실행을 다시 누르면 이 문항을 고쳐요`
 
+- 변형 문항으로 바꾸기 (`replace`, 결정 `../Backend/docs/design-docs/decisions/049-academy-hold-replace-with-variant.md`): 여섯째 선택지. 문제 자체가 모순이라 한 문장으로 못 고칠 때 쓰고(조건 빠짐·오타·정답표와 다름은 직접 고치기), 목록 위 안내 한 줄로 구분한다. 오류 설명(`request`, 선택)을 적어 `{choice: 'replace', request}` 를 보낸다. 기다림은 `decision.choice` 가 replace 이고 `replaced`·`failed` 가 없을 때(revise 와 같이 haesol 에서도 보류 목록을 열고 안내 `... 이 문항을 변형 문항으로 바꿔요`). `failed` 는 사유를 보이고 다른 결정을 고르게 하며, `replaced` 는 같은 칸을 그대로 그리고 결정 표시만 `변형 문항으로 바꿈`. `before` 는 서버 기록이라 읽지 않는다
+
 ## 문항 손 수정 (결정 041, `../Backend/docs/design-docs/decisions/041-academy-edit-choices-and-cells.md`)
 
 - `ItemEditor.tsx`: 발문, 선지마다(개수 그대로), hml 문항(`inputType` HML)은 자료 표 T 를 칸마다(합친 칸은 rowSpan·colSpan, 가려진 칸은 빼고, 그림 칸은 `(그림)` 읽기 전용, `gridRows`), 정답 입력. 바뀐 것만 보낸다(`changedFields`: 선지는 하나라도 바뀌면 전체, 칸은 바뀐 칸만). AI 로 뽑은 문항은 표가 발문의 표 줄이라 표 입력 없이 발문에서 고친다. 400 사유는 그대로 보인다
