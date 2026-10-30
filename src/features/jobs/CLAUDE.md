@@ -45,3 +45,10 @@
 - 묶음 화면 `/batches/:id` (`BatchPage.tsx`): `GET /api/batches/{id}` 의 작업 목록·진행·결과 문서 내려받기, API 실행·중지(`POST /api/batches/{id}/run|cancel`, 503 키 없음·409 실행 중은 백엔드 사유를 그대로 보임, `run.state` 가 running 일 때만 5초 폴링), MCP 문장 복사(`묶음 N 처리해줘 ... get_batch 부터`, `mcpBatchPrompt`)와 연결 명령(`McpGuide`)
 - API 실행 안내: 고른 기능을 차례로 처리하고 변형 선택 시 해설 뒤 변형 문제·풀이와 결과 문서까지 만든다. 보류는 상세에서 먼저 결정하고, 재실행은 남은 것부터 진행한다. 새 화면·단일 작업 실행 버튼은 추가하지 않는다
 - 보류 결정(3단계)은 작업 상세에서 한다 (`src/features/result/CLAUDE.md` 보류 결정). 목록의 `검토 필요 N` 은 학원 작업이면 보류일 때의 `holdCount`(결정하면 줄고 done 이면 사라짐), 그 밖은 `reviewCount`. 묶음 화면은 `progress` 로 보류·완료가 바뀐다
+
+## 목록 선택·하단 바·다운로드 창
+
+- 검색 옆 `선택` 버튼으로 선택 모드를 켠다 (체크박스 없음). 선택 모드에서 카드를 누르면 상세로 가지 않고 고르거나 푼다(파란 테두리). `files.parts` 가 있는 작업만 고를 수 있고, 아니면 흐리게 + `결과 문서가 아직 없습니다`. `선택 취소`·하단 바 ×·다운로드 뒤에는 모드를 끄고 선택을 비운다
+- 1개 이상 고르면 화면 아래 어두운 바: `학습지 N개 선택됨`, 다운로드, 선택 해제. 인쇄는 미룸 (사용자 결정)
+- 다운로드 창(`<dialog>`): 분류 `문제지`·`빠른정답`·`해설지` 토글. 고른 작업 모두에 있는 분류만 켤 수 있고 기본은 전부 선택. 작업마다 `GET /api/jobs/{id}/academy-parts.hwp?parts=munje,dap,haesol` (`academyPartsUrl`, 순서 고정)을 임시 링크로 받고 창을 닫으며 선택을 비운다
+- 순수 함수 `jobParts`, `commonParts` (`JobListPage.tsx`)

@@ -91,7 +91,7 @@ export interface Job {
   solvedCount: number
   reviewCount: number
   // academyHwp·academyHwpx: 결과 문서가 있는 학원 작업에만 온다
-  files: { hwp: boolean; hwpx: boolean; academyHwp?: boolean; academyHwpx?: boolean }
+  files: { hwp: boolean; hwpx: boolean; academyHwp?: boolean; academyHwpx?: boolean; parts?: DocPart[] }
   // 기능을 고른 작업에만 온다. batch 는 묶음으로 올린 작업만
   features?: Feature[]
   progress?: Progress
@@ -271,9 +271,18 @@ export function haesolUrl(jobId: string, ext: 'hwp' | 'hwpx'): string {
   return `/api/jobs/${jobId}/haesol.${ext}`
 }
 
+// 결과 문서에서 따로 받을 수 있는 분류: 문제지, 빠른정답, 해설지
+export type DocPart = 'munje' | 'dap' | 'haesol'
+
 // 학원 작업의 결과 문서 (고른 기능이 다 끝난 작업)
 export function academyUrl(jobId: string, ext: 'hwp' | 'hwpx' | 'view'): string {
   return ext === 'view' ? `/api/jobs/${jobId}/academy-view.hwp` : `/api/jobs/${jobId}/academy.${ext}`
+}
+
+// 고른 분류만 담은 결과 문서. 분류는 문제지, 빠른정답, 해설지 순서로 붙인다
+export function academyPartsUrl(jobId: string, parts: DocPart[]): string {
+  const keys = (['munje', 'dap', 'haesol'] as const).filter(key => parts.includes(key))
+  return `/api/jobs/${encodeURIComponent(jobId)}/academy-parts.hwp?parts=${keys.join(',')}`
 }
 
 // 다 풀기 전 지금까지 저장된 풀이로 만든 해설지 (받을 때마다 새로 만든다)
