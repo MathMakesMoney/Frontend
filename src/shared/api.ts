@@ -58,14 +58,17 @@ export interface ItemFields {
   answer?: string
 }
 
-// 보류 결정 (decisions.json 그 문항): ai AI 답, key 정답표 답, edit 직접 고침, revise 해설 고쳐 달라, exclude 문제 제외
-export type HoldChoice = 'ai' | 'key' | 'edit' | 'revise' | 'exclude'
+// 보류 결정 (decisions.json 그 문항): ai AI 답, key 정답표 답, edit 직접 고침, revise 해설 고쳐 달라, exclude 문제 제외, replace 변형 문항으로 바꾸기
+export type HoldChoice = 'ai' | 'key' | 'edit' | 'revise' | 'exclude' | 'replace'
 export interface HoldDecision {
   choice: HoldChoice
   at: string
   answer?: string
   request?: string
   stem?: boolean
+  // replace: replaced 바꿈 끝, failed 못 바꾼 사유 (둘 다 없으면 기다림). before(원래 문항)는 서버 기록이라 화면은 읽지 않는다
+  replaced?: boolean
+  failed?: string
 }
 
 // 학원 시험지 제작: 고른 기능과 진행 (기능을 고른 작업만). extract 문항 뽑기 차례(hwp·hwpx·pdf), haesol 해설 차례, hold 보류(검토 필요), variant 변형 차례, done 결과 문서 있음, failed 결과 문서 실패

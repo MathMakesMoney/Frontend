@@ -46,6 +46,45 @@ describe('HoldPanel', () => {
     expect(html).toContain('AI 답으로 정하기')
     expect(html).toContain('AI 연결 대화창에서 이어 하거나 묶음 실행을 다시 누르면')
   })
+
+  it('선택지에 변형 문항으로 바꾸기와 고치기·바꾸기 구분 안내가 보인다', () => {
+    const html = renderToStaticMarkup(<HoldPanel job={job('hold', [problem(20, { hold: '검증 실패' })])} onDecided={() => {}} />)
+    expect(html).toContain('변형 문항으로 바꾸기')
+    expect(html).toContain('조건 빠짐·오타·정답표와 다름은')
+    expect(html).toContain('문제 자체가 모순이면')
+  })
+
+  it('변형 문항으로 바꾸기를 기다리는 작업(해설 차례)도 보류 목록과 바꾼다는 안내를 보인다', () => {
+    const html = renderToStaticMarkup(<HoldPanel job={job('haesol', [
+      problem(20, { hold: '검증 실패', decision: { choice: 'replace', at: '', request: '조건이 모순' } }),
+    ])} onDecided={() => {}} />)
+    expect(html).toContain('20번')
+    expect(html).toContain('AI 연결 대화창에서 이어 하거나 묶음 실행을 다시 누르면 이 문항을 변형 문항으로 바꿔요')
+  })
+
+  it('이미 바꿨거나(replaced) 못 바꾼(failed) 문항뿐이면 해설 차례여도 기다림으로 보지 않는다', () => {
+    const html = renderToStaticMarkup(<HoldPanel job={job('haesol', [
+      problem(20, { hold: null, decision: { choice: 'replace', at: '', replaced: true } }),
+      problem(21, { hold: '검증 실패', decision: { choice: 'replace', at: '', failed: '그림을 두고는 풀 수 없어요' } }),
+    ])} onDecided={() => {}} />)
+    expect(html).toBe('')
+  })
+
+  it('못 바꾼 문항은 사유를 보이고 다른 결정을 고르게 한다', () => {
+    const html = renderToStaticMarkup(<HoldPanel job={job('hold', [
+      problem(20, { hold: '검증 실패', decision: { choice: 'replace', at: '', failed: '그림을 두고는 풀 수 없어요' } }),
+    ])} onDecided={() => {}} />)
+    expect(html).toContain('그림을 두고는 풀 수 없어요')
+    expect(html).toContain('문제 제외하기')
+    expect(html).not.toContain('이 문항을 변형 문항으로 바꿔요')
+  })
+
+  it('바꾼 뒤 다시 보류된 문항(replaced + hold)은 보류 목록에 바꿈 표시와 함께 보인다', () => {
+    const html = renderToStaticMarkup(<HoldPanel job={job('hold', [
+      problem(20, { hold: '검증 실패', decision: { choice: 'replace', at: '', replaced: true } }),
+    ])} onDecided={() => {}} />)
+    expect(html).toContain('변형 문항으로 바꿈')
+  })
 })
 
 describe('decisionText', () => {
@@ -55,5 +94,9 @@ describe('decisionText', () => {
     expect(decisionText({ choice: 'edit', at: '', stem: true })).toBe('발문·정답 직접 고침')
     expect(decisionText({ choice: 'revise', at: '', request: '계산 다시' })).toBe('해설 고쳐 달라고 함: 계산 다시')
     expect(decisionText({ choice: 'exclude', at: '' })).toBe('문제 제외')
+    expect(decisionText({ choice: 'replace', at: '', request: '조건 모순' })).toBe('변형 문항으로 바꾸기로 함: 조건 모순')
+    expect(decisionText({ choice: 'replace', at: '' })).toBe('변형 문항으로 바꾸기로 함')
+    expect(decisionText({ choice: 'replace', at: '', replaced: true })).toBe('변형 문항으로 바꿈')
+    expect(decisionText({ choice: 'replace', at: '', failed: '사유' })).toBe('변형 문항으로 바꾸지 못함')
   })
 })
