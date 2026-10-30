@@ -83,6 +83,8 @@ const cases: [string, string][] = [
   // 도형 기호
   ['angle BAC =54°', '\\angle BAC = 54^{\\circ}'],
   ['triangle ABC', '\\triangle ABC'],
+  // SQUARE 는 빈칸 □ (작업 78 11번)
+  ['30 SQUARE SQUARE', '30 \\square \\square'],
   ['AB BOT CD, l parallel m', 'AB \\perp CD , l \\parallel m'],
   ['therefore x', '\\therefore x'],
   ['k=±3, f≠0', 'k = \\pm 3 , f \\neq 0'],

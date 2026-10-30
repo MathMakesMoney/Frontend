@@ -34,7 +34,7 @@ GREEK_MAP.omicron = 'o'
 // 기호 하나로 바뀌는 단어. 세 글자 이상은 대소문자를 가리지 않는다 (OVER, over)
 const SYMBOLS: Record<string, string> = {
   times: '\\times', cdot: '\\cdot', div: '\\div', pm: '\\pm', mp: '\\mp', circ: '\\circ', bullet: '\\bullet',
-  angle: '\\angle', triangle: '\\triangle', bot: '\\perp', perp: '\\perp', parallel: '\\parallel',
+  angle: '\\angle', triangle: '\\triangle', square: '\\square', bot: '\\perp', perp: '\\perp', parallel: '\\parallel',
   therefore: '\\therefore', because: '\\because', inf: '\\infty', infty: '\\infty', partial: '\\partial',
   nabla: '\\nabla', emptyset: '\\emptyset', forall: '\\forall', exist: '\\exists', exists: '\\exists',
   cdots: '\\cdots', ldots: '\\ldots', vdots: '\\vdots', ddots: '\\ddots', dots: '\\dots',
