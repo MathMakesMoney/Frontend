@@ -8,6 +8,7 @@ export async function mockApi(page: Page) {
   await page.route(url => url.pathname.startsWith('/api/'), route => {
     const { pathname } = new URL(route.request().url())
     const method = route.request().method()
+    if (pathname === '/api/me') return route.fulfill({ json: { id: 1, email: 'a@test.kr', name: '테스트' } }) // 로그인한 상태
     if (pathname === '/api/jobs/1' && method === 'GET') return route.fulfill({ json: job })
     if (pathname === '/api/jobs/1/problems/1/item' && method === 'PUT') {
       puts.push(route.request().postDataJSON())

@@ -1741,3 +1741,8 @@ button {
 .jobs-download-submit { width: 100%; padding: 12px; border: 0; border-radius: 10px; background: #2868e8; color: #fff; font: inherit; font-weight: 650; cursor: pointer; }
 .jobs-download-submit:disabled { background: #c5d3ee; cursor: not-allowed; }
 .jobs-page:has(.jobs-selection-bar) { padding-bottom: 80px; }
+.landing-login-card button:disabled { opacity: .6; cursor: default; }
+.landing-login-card .landing-login-switch { background: none; color: #2868e8; margin: 0 0 20px; padding: 8px; }
+.landing-social-buttons button:disabled { translate: none; box-shadow: none; }
+.app-nav .app-logout { background: none; border: 0; padding: 0; font: inherit; font-weight: 500; color: #475467; cursor: pointer; }
+.app-nav .app-logout:hover { color: #16213a; }

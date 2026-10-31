@@ -139,13 +139,70 @@ async function handle<T>(res: Response): Promise<T> {
   throw new ApiRequestError(res.status, body?.error ?? '요청에 실패했습니다')
 }
 
+// 현재 XSRF-TOKEN 쿠키 값 (백엔드가 응답마다 심는다)
+function csrfCookie(): string | undefined {
+  return document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/)?.[1]
+}
+
+// 로그인이 풀렸을 때 알리는 이벤트 이름 (App 이 받아 로그인 화면으로 보낸다)
+export const UNAUTHORIZED_EVENT = 'mmm:unauthorized'
+
+// 모든 /api 호출의 공통 입구: GET 이 아니면 CSRF 헤더를 붙이고, 로그인 밖 401 은 이벤트로 알린다
+async function apiFetch(url: string, init: RequestInit = {}): Promise<Response> {
+  const method = (init.method ?? 'GET').toUpperCase()
+  const headers = new Headers(init.headers)
+  if (method !== 'GET') {
+    // 쿠키가 아직 없으면 GET /api/me 로 먼저 받는다
+    if (!csrfCookie()) await fetch('/api/me')
+    const token = csrfCookie()
+    if (token) headers.set('X-XSRF-TOKEN', decodeURIComponent(token))
+  }
+  const res = await fetch(url, { ...init, headers })
+  if (res.status === 401 && !url.startsWith('/api/auth/') && url !== '/api/me') {
+    window.dispatchEvent(new Event(UNAUTHORIZED_EVENT))
+  }
+  return res
+}
+
+// 로그인한 회원
+export interface Me {
+  id: number
+  email: string
+  name: string
+}
+
+// 내 정보: 로그인 안 했으면 null
+export async function fetchMe(): Promise<Me | null> {
+  const res = await apiFetch('/api/me')
+  if (res.status === 401) return null
+  return handle<Me>(res)
+}
+
+export async function signup(input: { email: string; password: string; name: string }): Promise<void> {
+  const res = await apiFetch('/api/auth/signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  })
+  await handle<unknown>(res)
+}
+
+export async function login(email: string, password: string): Promise<Me> {
+  const res = await apiFetch('/api/auth/login', { method: 'POST', body: new URLSearchParams({ email, password }) })
+  return handle<Me>(res)
+}
+
+export async function logout(): Promise<void> {
+  await apiFetch('/api/auth/logout', { method: 'POST' })
+}
+
 export async function fetchJobs(): Promise<Job[]> {
-  const res = await fetch('/api/jobs')
+  const res = await apiFetch('/api/jobs')
   return handle<Job[]>(res)
 }
 
 export async function fetchJob(id: string): Promise<Job> {
-  const res = await fetch(`/api/jobs/${id}`)
+  const res = await apiFetch(`/api/jobs/${id}`)
   return handle<Job>(res)
 }
 
@@ -172,7 +229,7 @@ export async function createJob(input: CreateJobInput): Promise<{ id: string }> 
   form.set('exam', input.exam)
   form.set('range', input.range)
   if (input.features) form.set('features', input.features.join(','))
-  const res = await fetch('/api/jobs', { method: 'POST', body: form })
+  const res = await apiFetch('/api/jobs', { method: 'POST', body: form })
   return handle<{ id: string }>(res)
 }
 
@@ -200,7 +257,7 @@ export async function createBatch(files: File[], name: string, items: BatchItem[
   files.forEach(file => form.append('files', file))
   form.set('name', name)
   form.set('items', JSON.stringify(items))
-  const res = await fetch('/api/batches', { method: 'POST', body: form })
+  const res = await apiFetch('/api/batches', { method: 'POST', body: form })
   return handle<BatchCreated>(res)
 }
 
@@ -220,13 +277,13 @@ export interface BatchView {
 }
 
 export async function fetchBatch(id: string): Promise<BatchView> {
-  const res = await fetch(`/api/batches/${id}`)
+  const res = await apiFetch(`/api/batches/${id}`)
   return handle<BatchView>(res)
 }
 
 // 묶음 실행·중지: 503 키 없음, 409 실행 중(중지는 실행 중 아님)은 백엔드 사유를 그대로 던진다
 export async function controlBatch(id: string, action: 'run' | 'cancel'): Promise<void> {
-  const res = await fetch(`/api/batches/${id}/${action}`, { method: 'POST' })
+  const res = await apiFetch(`/api/batches/${id}/${action}`, { method: 'POST' })
   await handle<unknown>(res)
 }
 
@@ -236,7 +293,7 @@ export async function decideHold(
   no: number,
   body: { choice: HoldChoice; request?: string } & ItemFields,
 ): Promise<Job> {
-  const res = await fetch(`/api/jobs/${jobId}/problems/${no}/decision`, {
+  const res = await apiFetch(`/api/jobs/${jobId}/problems/${no}/decision`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -246,7 +303,7 @@ export async function decideHold(
 
 // 문항 카드 손 수정 (학원 작업, 보류가 아니어도): 고친 뒤 작업을 돌려준다. 400 사유(고친 곳이 없다 등)는 그대로 던진다
 export async function editItem(jobId: string, no: number, fields: ItemFields): Promise<Job> {
-  const res = await fetch(`/api/jobs/${jobId}/problems/${no}/item`, {
+  const res = await apiFetch(`/api/jobs/${jobId}/problems/${no}/item`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(fields),
@@ -255,7 +312,7 @@ export async function editItem(jobId: string, no: number, fields: ItemFields): P
 }
 
 export async function deleteJob(id: string): Promise<void> {
-  const res = await fetch(`/api/jobs/${id}`, { method: 'DELETE' })
+  const res = await apiFetch(`/api/jobs/${id}`, { method: 'DELETE' })
   if (!res.ok && res.status !== 404) {
     throw new ApiRequestError(res.status, '삭제에 실패했습니다')
   }
@@ -295,7 +352,7 @@ export function haesolDraftUrl(jobId: string, ext: 'hwp' | 'hwpx'): string {
 
 // 변형문제 정답+해설지 줄 (make_variant_docs 가 만든 variant/haesol.txt, 작업 draft 와 같은 모양). 아직 안 만들었으면 null
 export async function fetchVariantLines(jobId: string): Promise<string[] | null> {
-  const res = await fetch(figureUrl(jobId, 'variant/haesol.txt'))
+  const res = await apiFetch(figureUrl(jobId, 'variant/haesol.txt'))
   if (res.status === 404) return null
   if (!res.ok) throw new ApiRequestError(res.status, '변형문제를 불러오지 못했습니다')
   return (await res.text()).replace(/\s+$/, '').split(/\r?\n/)
@@ -311,7 +368,7 @@ export interface VariantMunje {
 }
 
 export async function fetchVariantMunje(jobId: string): Promise<VariantMunje | null> {
-  const res = await fetch(figureUrl(jobId, 'variant/munje.json'))
+  const res = await apiFetch(figureUrl(jobId, 'variant/munje.json'))
   if (res.status === 404) return null
   if (!res.ok) throw new ApiRequestError(res.status, '변형문제 문제지를 불러오지 못했습니다')
   return (await res.json()) as VariantMunje

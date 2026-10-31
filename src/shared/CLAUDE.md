@@ -4,10 +4,10 @@
 
 ## API 호출
 
-- 모든 요청은 `/api` 아래. 인증은 account 에서 정한 방식을 따른다 (세션 쿠키면 `credentials: 'include'`)
+- 모든 요청은 `/api` 아래, 같은 출처 쿠키(세션). GET 이 아닌 요청은 `apiFetch` 가 쿠키 `XSRF-TOKEN` 을 헤더 `X-XSRF-TOKEN` 으로 보낸다 (쿠키가 없으면 먼저 `GET /api/me`). 로그인 상태는 `useMe`(`['me']` 쿼리). 인증은 account 에서 정한 방식을 따른다 (세션 쿠키면 `credentials: 'include'`)
 - 에러 처리 공통
   - 400: 백엔드가 주는 사유를 그대로 보여 준다 (형식 불명, 암호 걸린 파일, 배포용 HWP 등)
-  - 401: 로그인 화면으로
+  - 401: 로그인 화면으로. `apiFetch`(api.ts)가 로그인·`/api/me` 밖 401 마다 `mmm:unauthorized` 이벤트를 보내고 `App.tsx` 가 `['me']` 를 null 로 바꿔 `/login` 으로 보낸다
   - 402: 크레딧 부족 안내 -> 요금제·크레딧 화면 링크
   - 404: 없는 작업 (다른 회원 작업도 404)
 - 응답 타입은 백엔드 문서 JSON 모양 그대로 TypeScript 타입으로 둔다. 필드 이름을 바꾸지 않는다
