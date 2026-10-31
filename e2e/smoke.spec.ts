@@ -61,3 +61,17 @@ test('해설지 보기: 수식이 모두 그려진다', async ({ page }) => {
   await expect(page.locator('.katex-error')).toHaveCount(0)
   await expect(page.locator('[data-eq-fallback]')).toHaveCount(0)
 })
+
+test('로그인 안 했으면 작업 화면 대신 로그인 화면, 틀린 로그인은 서버 문장 그대로', async ({ page }) => {
+  await page.route(url => url.pathname.startsWith('/api/'), route => {
+    const { pathname } = new URL(route.request().url())
+    if (pathname === '/api/auth/login') return route.fulfill({ status: 401, json: { error: '이메일 또는 비밀번호가 맞지 않습니다.' } })
+    return route.fulfill({ status: 401, json: { error: '로그인이 필요합니다.' } })
+  })
+  await page.goto('/jobs')
+  await expect(page).toHaveURL(/\/login$/)
+  await page.getByLabel('이메일').fill('a@test.kr')
+  await page.getByLabel('비밀번호').fill('password1')
+  await page.getByRole('button', { name: '로그인', exact: true }).click()
+  await expect(page.getByRole('status')).toHaveText('이메일 또는 비밀번호가 맞지 않습니다.')
+})

@@ -19,7 +19,7 @@
 | 수식 표시 | 한글 수식 스크립트를 `src/shared/hwpeq.ts` 로 LaTeX 로 바꾼 뒤 KaTeX 로 그린다. 실패하면 원문 칩 (`src/shared/CLAUDE.md`) |
 | 배포 | Vercel. `vercel.json` 이 `/api`, `/mcp` 를 백엔드(`backend.math2hwp.com`)로 넘기고 나머지는 `index.html` (2026-10-24 갱신). 로컬 개발은 Vite dev 서버 프록시로 백엔드(8080), 로컬 PoC 용 `Dockerfile`+`nginx.conf` 도 남아 있다 |
 
-- 로그인, 결제, 작업 상세의 단일 AI API 실행 버튼은 이번 PoC 범위 밖. 묶음 화면은 API 실행·중지를 지원하고, 변형을 골랐으면 해설 뒤 변형과 결과 문서까지 진행한다 (`src/features/jobs/CLAUDE.md`)
+- 이메일·비밀번호 로그인은 연결했다 (2026-10-31, `src/LandingLogin.tsx`, 소셜 로그인 버튼은 준비 중이라 눌리지 않는다). 결제, 작업 상세의 단일 AI API 실행 버튼은 이번 PoC 범위 밖. 묶음 화면은 API 실행·중지를 지원하고, 변형을 골랐으면 해설 뒤 변형과 결과 문서까지 진행한다 (`src/features/jobs/CLAUDE.md`)
 
 ### 명령
 
